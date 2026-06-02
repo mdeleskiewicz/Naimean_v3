@@ -1164,12 +1164,12 @@
           bigTvCornerScoreInitialsSubmitButtonEl.disabled = true;
         }
         const targetScore = cornerScoreInitialsTargetScore;
-        const submittedScore = Math.max(targetScore, cornerScoreValue, cornerScoreHighScoreValue);
-        await queueCornerScoreUpdate(submittedScore, {
+        const highestKnownScore = Math.max(targetScore, cornerScoreValue, cornerScoreHighScoreValue);
+        await queueCornerScoreUpdate(highestKnownScore, {
           force: true,
           initials: submittedInitials
         });
-        if (cornerScoreHighScoreValue >= submittedScore && cornerScoreHighScoreInitials === submittedInitials) {
+        if (cornerScoreHighScoreValue >= highestKnownScore && cornerScoreHighScoreInitials === submittedInitials) {
           hideCornerScoreInitialsPrompt();
           return;
         }
