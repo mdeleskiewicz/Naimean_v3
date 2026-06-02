@@ -3928,6 +3928,7 @@
             bigTvDvdOverlayEl.className = 'discord-static-overlay big-tv-dvd-overlay is-active';
             bigTvDvdOverlayEl.setAttribute('aria-hidden', 'false');
             bigTvDvdOverlayEl.setAttribute('role', 'button');
+            bigTvDvdOverlayEl.setAttribute('aria-label', 'Enable CornerCount on right monitor');
             bigTvDvdOverlayEl.tabIndex = 0;
             const toggleDvdCornerCount = () => {
               if (!isBigTvDefaultScreensaverActive() || !isRightMonitorInteractive()) {
