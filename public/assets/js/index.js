@@ -84,8 +84,9 @@
       const BIG_TV_RIGHT_MONITOR_OVERLAY_CORNER_SCORE_IMAGE_URL = 'assets/images/join_disc_green.png';
       const BIG_TV_SCREENSAVER_LOGO_URL = 'assets/images/dvd-logo.svg';
       const CORNER_SCORE_API_URL = '/api/corner-score';
-      const CORNER_SCORE_SERVER_BASELINE = 3;
+      const CORNER_SCORE_SERVER_BASELINE = 0;
       const CORNER_SCORE_INITIALS_LENGTH = 3;
+      const CORNER_SCORE_INITIALS_PLACEHOLDER = '__ __ __';
       const WRONG_AUDIO_URL = 'assets/audio/wrong.v20260424.mp3';
       const DVD_COLOR_STEPS = Object.freeze([
         { color: '#ff4d4d', hue: 0 },
@@ -1063,10 +1064,10 @@
           whiteboardCornerScoreValueEl.textContent = String(cornerScoreHighScoreValue);
         }
         if (whiteboardCornerScoreInitialsEl) {
-          whiteboardCornerScoreInitialsEl.textContent = cornerScoreHighScoreInitials;
+          whiteboardCornerScoreInitialsEl.textContent = cornerScoreHighScoreInitials || CORNER_SCORE_INITIALS_PLACEHOLDER;
         }
         if (whiteboardCornerScoreInitialsGroupEl) {
-          whiteboardCornerScoreInitialsGroupEl.hidden = !cornerScoreHighScoreInitials;
+          whiteboardCornerScoreInitialsGroupEl.hidden = false;
         }
       }
 

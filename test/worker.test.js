@@ -209,7 +209,7 @@ test('HotspotStore GET returns corner score when storage is empty', async () => 
   const body = await response.json();
 
   assert.equal(response.status, 200);
-  assert.deepEqual(body, { score: 3, initials: '' });
+  assert.deepEqual(body, { score: 0, initials: '' });
   assert.deepEqual(calls.get, ['corner-score']);
 });
 

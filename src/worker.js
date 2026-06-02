@@ -466,7 +466,7 @@ function sanitizeCornerScoreIncrement(input) {
   return Math.max(0, Math.min(1000, floored));
 }
 
-const CORNER_SCORE_BASELINE = 3;
+const CORNER_SCORE_BASELINE = 0;
 
 function getStoredCornerScoreRecord(input) {
   if (input && typeof input === 'object' && !Array.isArray(input)) {
