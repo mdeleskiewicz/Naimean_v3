@@ -2288,7 +2288,7 @@
       }
 
       function isRightMonitorShrimpLogoActive() {
-        return !!rightMonitorShrimpLogoOverlayEl && rightMonitorShrimpLogoOverlayEl.classList.contains('is-active');
+        return rightMonitorShrimpLogoOverlayEl?.classList.contains('is-active') === true;
       }
 
       async function transitionAquariumToDvdCornerScoreFromRightMonitor() {
@@ -4090,8 +4090,11 @@
                 void transitionAquariumToDvdCornerScoreFromRightMonitor();
                 return;
               }
-              if (isAquariumPlaybackSequenceActive() && replayAquariumPlaybackSequenceFromStatic()) {
-                return;
+              if (isAquariumPlaybackSequenceActive()) {
+                const didReplayAquariumSequence = replayAquariumPlaybackSequenceFromStatic();
+                if (didReplayAquariumSequence) {
+                  return;
+                }
               }
               if (!isRightMonitorInteractive()) {
                 return;
