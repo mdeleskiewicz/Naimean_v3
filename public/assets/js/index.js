@@ -3937,7 +3937,10 @@
               isDvdCornerCountEnabled = !isDvdCornerCountEnabled;
               syncDvdScreensaverState();
             };
-            bigTvDvdOverlayEl.addEventListener('pointerdown', (event) => event.stopPropagation());
+            bigTvDvdOverlayEl.addEventListener('pointerdown', (event) => {
+              event.preventDefault();
+              event.stopPropagation();
+            });
             bigTvDvdOverlayEl.addEventListener('click', (event) => {
               event.stopPropagation();
               toggleDvdCornerCount();
@@ -3945,8 +3948,7 @@
             bigTvDvdOverlayEl.addEventListener('keydown', (event) => {
               const isActivationKey =
                 event.key === 'Enter' ||
-                event.key === ' ' ||
-                event.key === 'Spacebar';
+                event.key === ' ';
               if (!isActivationKey) {
                 return;
               }
