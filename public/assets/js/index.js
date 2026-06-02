@@ -3943,11 +3943,16 @@
               toggleDvdCornerCount();
             });
             bigTvDvdOverlayEl.addEventListener('keydown', (event) => {
-              if (event.key === 'Enter' || event.key === ' ') {
-                event.preventDefault();
-                event.stopPropagation();
-                toggleDvdCornerCount();
+              const isActivationKey =
+                event.key === 'Enter' ||
+                event.key === ' ' ||
+                event.key === 'Spacebar';
+              if (!isActivationKey) {
+                return;
               }
+              event.preventDefault();
+              event.stopPropagation();
+              toggleDvdCornerCount();
             });
             bigTvDvdGifEl = document.createElement('img');
             bigTvDvdGifEl.className = 'big-tv-dvd-gif';
