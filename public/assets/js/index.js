@@ -1155,7 +1155,7 @@
 
         const isNearCornerX = dvdPositionX <= DVD_CORNER_SCORE_TOLERANCE_PX || dvdPositionX >= maxX - DVD_CORNER_SCORE_TOLERANCE_PX;
         const isNearCornerY = dvdPositionY <= DVD_CORNER_SCORE_TOLERANCE_PX || dvdPositionY >= maxY - DVD_CORNER_SCORE_TOLERANCE_PX;
-        const isCornerHit = (hitHorizontalEdge || hitVerticalEdge) && isNearCornerX && isNearCornerY;
+        const isCornerHit = (hitHorizontalEdge && isNearCornerY) || (hitVerticalEdge && isNearCornerX);
         if (isCornerHit) {
           const previousHighScore = cornerScoreHighScoreValue;
           const nextCornerScore = cornerScoreValue + 1;
