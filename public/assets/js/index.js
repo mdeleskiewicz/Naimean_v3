@@ -561,6 +561,7 @@
       let shouldAutoStartDiscordLoginOnNextLoginActivation = false;
       let rightMonitorFlickerTimeoutId = null;
       let leftMonitorFlickerTimeoutId = null;
+      let leftMonitorTransitionToken = 0;
       // Debug hotspot editing state
       let debugEditType = null; // 'move' | 'resize'
       let debugEditEl = null;
@@ -1802,6 +1803,12 @@
         hideLoginOverlay({ cancelSequence: false });
         hideCalendarBigTvOverlay();
 
+        // Pre-load the calendar month image during the static pass so it is
+        // ready to display the moment the static finishes.
+        if (calendarMonthImageEl) {
+          calendarMonthImageEl.src = getCalendarMonthImageUrl(new Date());
+        }
+
         await playBigTvStaticPass(sequenceToken, () => calendarBigTvSequenceToken);
         if (sequenceToken !== calendarBigTvSequenceToken) {
           hideAquariumStaticOverlay();
@@ -1810,6 +1817,16 @@
 
         hideAquariumStaticOverlay();
         showCalendarBigTvOverlay();
+      }
+
+      async function activateLeftMonitorQuadrant(nextState) {
+        leftMonitorTransitionToken += 1;
+        const sequenceToken = leftMonitorTransitionToken;
+        // Apply the state change immediately so big-TV activation and segment-
+        // button highlights update right on click, while the static overlay
+        // covers the left monitor during the brief transition.
+        setLeftMonitorState(nextState);
+        await playLeftMonitorStaticPass(sequenceToken);
       }
 
       async function activateLoginMode() {
@@ -2513,6 +2530,36 @@
         }
         const hasEnded = await waitForMediaPlaybackToEnd(aquariumStaticVideoEl);
         return hasEnded && sequenceToken === getSequenceToken();
+      }
+
+      async function playLeftMonitorStaticPass(sequenceToken) {
+        if (!leftMonitorStaticOverlayEl || !leftMonitorStaticVideoEl) {
+          return false;
+        }
+        clearMonitorFlickerTimeouts();
+        leftMonitorStaticVideoEl.pause();
+        leftMonitorStaticVideoEl.loop = false;
+        leftMonitorStaticVideoEl.currentTime = 0;
+        leftMonitorStaticOverlayEl.classList.add('is-active');
+        if (sequenceToken !== leftMonitorTransitionToken) {
+          leftMonitorStaticOverlayEl.classList.remove('is-active');
+          leftMonitorStaticVideoEl.loop = true;
+          return false;
+        }
+        try {
+          await leftMonitorStaticVideoEl.play();
+        } catch (error) {
+          if (error?.name !== 'AbortError') {
+            console.warn('Unable to play left monitor static.', error);
+          }
+          leftMonitorStaticOverlayEl.classList.remove('is-active');
+          leftMonitorStaticVideoEl.loop = true;
+          return false;
+        }
+        const hasEnded = await waitForMediaPlaybackToEnd(leftMonitorStaticVideoEl);
+        leftMonitorStaticOverlayEl.classList.remove('is-active');
+        leftMonitorStaticVideoEl.loop = true;
+        return hasEnded && sequenceToken === leftMonitorTransitionToken;
       }
 
       async function playBigTvVideoPass(sequenceToken, sourceUrl) {
@@ -3997,6 +4044,7 @@
         leftMonitorStaticOverlayEl = null;
         leftMonitorStaticVideoEl = null;
         leftMonitorContentImageEl = null;
+        leftMonitorTransitionToken += 1; // Cancel any in-progress transition.
         commodorePowerButtonEl = null;
         isCommodorePoweringOn = loadCommodorePowerState();
         commodoreShadowOverlayEl = null;
@@ -4444,7 +4492,7 @@
                   : state;
                 shouldAutoStartDiscordLoginOnNextLoginActivation =
                   nextState === 'login' && !discordAuthState?.authenticated;
-                setLeftMonitorState(nextState);
+                void activateLeftMonitorQuadrant(nextState);
               });
               leftMonitorSegmentButtonsByState.set(state, segment);
               selector.appendChild(segment);
