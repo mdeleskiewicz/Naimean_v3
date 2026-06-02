@@ -98,7 +98,7 @@
       const DVD_FRAME_DELTA_MAX_SECONDS = 0.05;
       const DVD_CORNER_GOAL_TOLERANCE_PX = 3;
       const DVD_CORNER_MISS_MIN_TOLERANCE_PX = 4;
-      const DVD_CORNER_MISS_MAX_TOLERANCE_PX = 6;
+      const DVD_CORNER_MISS_MAX_TOLERANCE_PX = 14;
       const DVD_MISS_INDICATOR_DURATION_MS = 650;
       const AQUARIUM_STATIC_VIDEO_URL = 'assets/video/static.v20260424.mp4';
       const AQUARIUM_LOCAL_SHRIMP_CLIPS = Object.freeze(
