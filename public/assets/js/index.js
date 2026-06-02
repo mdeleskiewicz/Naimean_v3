@@ -1503,7 +1503,7 @@
           (e) => e.name.trim().length > 0 || e.url.trim().length > 0
         );
         if (bigTvToolsHintEl) {
-          bigTvToolsHintEl.hidden = true;
+          bigTvToolsHintEl.hidden = hasVisibleEntries;
         }
         bigTvToolsListEl.replaceChildren();
 
