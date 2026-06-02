@@ -1107,6 +1107,12 @@
       visibility: visible;
     }
 
+    .big-tv-dvd-overlay.is-active {
+      pointer-events: auto;
+      cursor: pointer;
+      touch-action: manipulation;
+    }
+
     .big-tv-dvd-gif {
       position: absolute;
       top: 0;
