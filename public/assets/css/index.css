@@ -1124,6 +1124,7 @@
       transform: translate3d(0, 0, 0);
       will-change: transform, filter;
       filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.35));
+      mix-blend-mode: screen;
     }
 
     body.camera-motion-active .big-tv-dvd-logo {
