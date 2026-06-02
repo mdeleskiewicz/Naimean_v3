@@ -82,6 +82,16 @@
       const BIG_TV_RIGHT_MONITOR_OVERLAY_BLUE_IMAGE_URL = 'assets/images/join_disc_blue.png';
       const BIG_TV_RIGHT_MONITOR_OVERLAY_CORNER_SCORE_IMAGE_URL = 'assets/images/join_disc_green.png';
       const BIG_TV_SCREENSAVER_GIF_URL = 'assets/video/dvd.gif';
+      const CORNER_SCORE_API_URL = '/api/corner-score';
+      const DVD_COLOR_STEPS = Object.freeze([
+        { color: '#ff4d4d', hue: 0 },
+        { color: '#40d6ff', hue: 170 },
+        { color: '#7dff67', hue: 80 },
+        { color: '#ffe066', hue: 40 },
+        { color: '#ff78e2', hue: 300 }
+      ]);
+      const DVD_BOUNCE_SPEED_PX_PER_SECOND = 260;
+      const DVD_FRAME_DELTA_MAX_SECONDS = 0.05;
       const AQUARIUM_STATIC_VIDEO_URL = 'assets/video/static.v20260424.mp4';
       const AQUARIUM_LOCAL_SHRIMP_CLIPS = Object.freeze(
         Array.from({ length: 23 }, (_, index) => `assets/video/shrimp/sh${index + 1}.mp4`)
@@ -457,6 +467,21 @@
       let bigTvDvdOverlayEl = null;
       let bigTvDvdGifEl = null;
       let isBigTvDvdLoopInterrupted = false;
+      let dvdAnimationFrameId = null;
+      let dvdLastFrameTime = 0;
+      let dvdPositionX = 0;
+      let dvdPositionY = 0;
+      let dvdVelocityX = 1;
+      let dvdVelocityY = 1;
+      let hasDvdPosition = false;
+      let isDvdAnimationActive = false;
+      let dvdColorStepIndex = 0;
+      let cornerScoreValue = 0;
+      let isDvdCornerCountEnabled = false;
+      let rightMonitorCornerScoreOverlayEl = null;
+      let rightMonitorCornerScoreValueEl = null;
+      let rightMonitorScreenWindowEl = null;
+      let cornerScorePersistQueue = Promise.resolve();
       let aquariumSequenceToken = 0;
       let aquariumLoopOwnerToken = 0;
       let isRightMonitorAquariumSequenceRunning = false;
@@ -762,6 +787,215 @@
         );
       }
 
+      function getCurrentDvdColorStep() {
+        return DVD_COLOR_STEPS[dvdColorStepIndex % DVD_COLOR_STEPS.length];
+      }
+
+      function applyDvdColorStep() {
+        const { color, hue } = getCurrentDvdColorStep();
+        if (bigTvDvdOverlayEl) {
+          bigTvDvdOverlayEl.style.setProperty('--dvd-accent-color', color);
+          bigTvDvdOverlayEl.style.setProperty('--dvd-hue-deg', `${hue}deg`);
+        }
+        if (rightMonitorCornerScoreOverlayEl) {
+          rightMonitorCornerScoreOverlayEl.style.setProperty('--corner-score-color', color);
+        }
+      }
+
+      function renderCornerScore() {
+        if (rightMonitorCornerScoreValueEl) {
+          rightMonitorCornerScoreValueEl.textContent = String(cornerScoreValue);
+        }
+      }
+
+      function setCornerScore(nextScore) {
+        if (!Number.isFinite(nextScore)) {
+          return;
+        }
+        cornerScoreValue = Math.max(0, Math.floor(nextScore));
+        renderCornerScore();
+      }
+
+      async function loadCornerScoreFromServer() {
+        try {
+          const controller = new AbortController();
+          const timeoutId = window.setTimeout(() => controller.abort(), API_TIMEOUT_MS);
+          const response = await fetch(CORNER_SCORE_API_URL, {
+            method: 'GET',
+            signal: controller.signal
+          });
+          window.clearTimeout(timeoutId);
+          if (!response.ok) {
+            return;
+          }
+          const payload = await response.json();
+          setCornerScore(payload?.score);
+        } catch (_) {}
+      }
+
+      function queueCornerScoreIncrement() {
+        cornerScorePersistQueue = cornerScorePersistQueue
+          .then(async () => {
+            const controller = new AbortController();
+            const timeoutId = window.setTimeout(() => controller.abort(), API_TIMEOUT_MS);
+            const response = await fetch(CORNER_SCORE_API_URL, {
+              method: 'POST',
+              headers: { 'content-type': 'application/json' },
+              body: JSON.stringify({ incrementBy: 1 }),
+              signal: controller.signal
+            });
+            window.clearTimeout(timeoutId);
+            if (!response.ok) {
+              return;
+            }
+            const payload = await response.json();
+            setCornerScore(payload?.score);
+          })
+          .catch(() => {});
+      }
+
+      function stopBigTvDvdAnimation() {
+        isDvdAnimationActive = false;
+        dvdLastFrameTime = 0;
+        if (dvdAnimationFrameId !== null) {
+          window.cancelAnimationFrame(dvdAnimationFrameId);
+          dvdAnimationFrameId = null;
+        }
+      }
+
+      function getDvdLogoDimensions() {
+        if (!bigTvDvdOverlayEl || !bigTvDvdGifEl) {
+          return null;
+        }
+        const boundsWidth = bigTvDvdOverlayEl.clientWidth;
+        const boundsHeight = bigTvDvdOverlayEl.clientHeight;
+        const logoWidth = bigTvDvdGifEl.offsetWidth;
+        const logoHeight = bigTvDvdGifEl.offsetHeight;
+        if (!boundsWidth || !boundsHeight || !logoWidth || !logoHeight) {
+          return null;
+        }
+        return { boundsWidth, boundsHeight, logoWidth, logoHeight };
+      }
+
+      function tickBigTvDvdAnimation(timestamp) {
+        if (!isDvdAnimationActive || !bigTvDvdGifEl) {
+          stopBigTvDvdAnimation();
+          return;
+        }
+
+        const dimensions = getDvdLogoDimensions();
+        if (!dimensions) {
+          dvdAnimationFrameId = window.requestAnimationFrame(tickBigTvDvdAnimation);
+          return;
+        }
+
+        const { boundsWidth, boundsHeight, logoWidth, logoHeight } = dimensions;
+        const maxX = Math.max(0, boundsWidth - logoWidth);
+        const maxY = Math.max(0, boundsHeight - logoHeight);
+
+        if (!hasDvdPosition) {
+          dvdPositionX = maxX / 2;
+          dvdPositionY = maxY / 2;
+          hasDvdPosition = true;
+        } else {
+          dvdPositionX = clamp(dvdPositionX, 0, maxX);
+          dvdPositionY = clamp(dvdPositionY, 0, maxY);
+        }
+
+        if (!dvdLastFrameTime) {
+          dvdLastFrameTime = timestamp;
+          bigTvDvdGifEl.style.transform = `translate3d(${dvdPositionX}px, ${dvdPositionY}px, 0)`;
+          dvdAnimationFrameId = window.requestAnimationFrame(tickBigTvDvdAnimation);
+          return;
+        }
+
+        const deltaSeconds = Math.min(
+          DVD_FRAME_DELTA_MAX_SECONDS,
+          Math.max(0, (timestamp - dvdLastFrameTime) / 1000)
+        );
+        dvdLastFrameTime = timestamp;
+        dvdPositionX += dvdVelocityX * DVD_BOUNCE_SPEED_PX_PER_SECOND * deltaSeconds;
+        dvdPositionY += dvdVelocityY * DVD_BOUNCE_SPEED_PX_PER_SECOND * deltaSeconds;
+
+        let hitHorizontalEdge = false;
+        let hitVerticalEdge = false;
+        if (dvdPositionX <= 0) {
+          dvdPositionX = 0;
+          dvdVelocityX = 1;
+          hitHorizontalEdge = true;
+        } else if (dvdPositionX >= maxX) {
+          dvdPositionX = maxX;
+          dvdVelocityX = -1;
+          hitHorizontalEdge = true;
+        }
+
+        if (dvdPositionY <= 0) {
+          dvdPositionY = 0;
+          dvdVelocityY = 1;
+          hitVerticalEdge = true;
+        } else if (dvdPositionY >= maxY) {
+          dvdPositionY = maxY;
+          dvdVelocityY = -1;
+          hitVerticalEdge = true;
+        }
+
+        if (hitHorizontalEdge || hitVerticalEdge) {
+          dvdColorStepIndex = (dvdColorStepIndex + 1) % DVD_COLOR_STEPS.length;
+          applyDvdColorStep();
+        }
+
+        const isCornerHit = hitHorizontalEdge && hitVerticalEdge;
+        if (isCornerHit && isDvdCornerCountEnabled && isRightMonitorInteractive()) {
+          setCornerScore(cornerScoreValue + 1);
+          const zeldaAudio = getZeldaSecretAudioElement();
+          stopZeldaSecretAudioPlayback();
+          const playPromise = zeldaAudio.play();
+          if (playPromise && typeof playPromise.catch === 'function') {
+            playPromise.catch((error) => {
+              if (error?.name !== 'AbortError') {
+                console.warn('Unable to play Zelda secret audio.', error);
+              }
+            });
+          }
+          queueCornerScoreIncrement();
+        }
+
+        bigTvDvdGifEl.style.transform = `translate3d(${dvdPositionX}px, ${dvdPositionY}px, 0)`;
+        dvdAnimationFrameId = window.requestAnimationFrame(tickBigTvDvdAnimation);
+      }
+
+      function startBigTvDvdAnimation() {
+        if (isDvdAnimationActive || !bigTvDvdGifEl) {
+          return;
+        }
+        isDvdAnimationActive = true;
+        dvdLastFrameTime = 0;
+        dvdAnimationFrameId = window.requestAnimationFrame(tickBigTvDvdAnimation);
+      }
+
+      function syncDvdScreensaverState() {
+        const isScreensaverActive = isBigTvDefaultScreensaverActive();
+        const isCornerScoreActive = isScreensaverActive && isDvdCornerCountEnabled && isRightMonitorInteractive();
+        if (rightMonitorCornerScoreOverlayEl) {
+          rightMonitorCornerScoreOverlayEl.classList.toggle('is-active', isCornerScoreActive);
+          rightMonitorCornerScoreOverlayEl.setAttribute('aria-hidden', isCornerScoreActive ? 'false' : 'true');
+        }
+        if (rightMonitorScreenWindowEl) {
+          rightMonitorScreenWindowEl.classList.toggle('is-corner-score-active', isCornerScoreActive);
+        }
+        if (bigTvDvdOverlayEl) {
+          bigTvDvdOverlayEl.setAttribute(
+            'aria-label',
+            isDvdCornerCountEnabled ? 'Disable CornerCount on right monitor' : 'Enable CornerCount on right monitor'
+          );
+        }
+        if (isScreensaverActive) {
+          startBigTvDvdAnimation();
+          return;
+        }
+        stopBigTvDvdAnimation();
+      }
+
       function syncBigTvContentVisibility() {
         const shouldShowBigTvOverlay = hasActiveBigTvContentOverlay();
         if (shouldShowBigTvOverlay) {
@@ -789,6 +1023,7 @@
         ) {
           void enterBigTvFullscreen(discordOverlayEl);
         }
+        syncDvdScreensaverState();
       }
 
       function isBigTvFullscreenTarget(element) {
@@ -938,6 +1173,7 @@
           discordButtonImgEl.src = rightMonitorOverlayImageUrl;
         }
         syncLoginOverlayUi();
+        syncDvdScreensaverState();
       }
 
       function syncDiscordAuthBodyClass() {
@@ -1171,6 +1407,7 @@
           hideBigTvToolsOverlay();
           hideLoginOverlay();
         }
+        syncDvdScreensaverState();
       }
 
       function loadBigTvToolsEntries() {
@@ -1787,10 +2024,12 @@
           return;
         }
         isBigTvDvdLoopInterrupted = true;
+        stopBigTvDvdAnimation();
         if (bigTvDvdOverlayEl) {
           bigTvDvdOverlayEl.classList.remove('is-active');
           bigTvDvdOverlayEl.setAttribute('aria-hidden', 'true');
         }
+        syncDvdScreensaverState();
       }
 
       async function playAquariumStaticPass(sequenceToken) {
@@ -3128,6 +3367,7 @@
       }
 
       function resetMonitorsToOffState() {
+        isDvdCornerCountEnabled = false;
         stopAquariumPlaybackSequence();
         hideBigTvToolsOverlay();
         hideLoginOverlay();
@@ -3136,6 +3376,7 @@
         hideNedryGateOverlay();
         hideAquariumStaticOverlay();
         stopZeldaSecretAudioPlayback();
+        stopBigTvDvdAnimation();
         stopMonitorFlickerLoops();
         if (rightMonitorShrimpLogoOverlayEl) {
           rightMonitorShrimpLogoOverlayEl.classList.remove('is-active');
@@ -3175,6 +3416,7 @@
           ) {
             void activateCalendarMode();
           }
+          syncDvdScreensaverState();
         }, { once: true });
       }
 
@@ -3187,6 +3429,7 @@
         el.classList.add('tv-turning-off');
         el.addEventListener('animationend', () => {
           el.classList.remove('tv-turning-off');
+          syncDvdScreensaverState();
         }, { once: true });
       }
 
@@ -3653,6 +3896,13 @@
         bigTvDvdOverlayEl = null;
         bigTvDvdGifEl = null;
         isBigTvDvdLoopInterrupted = false;
+        stopBigTvDvdAnimation();
+        hasDvdPosition = false;
+        dvdColorStepIndex = 0;
+        isDvdCornerCountEnabled = false;
+        rightMonitorCornerScoreOverlayEl = null;
+        rightMonitorCornerScoreValueEl = null;
+        rightMonitorScreenWindowEl = null;
         rightMonitorOverlayImageUrl = BIG_TV_RIGHT_MONITOR_OVERLAY_BLUE_IMAGE_URL;
         bigTvPromptOverlayEl = null;
         bigTvPromptSecretBoxEl = null;
@@ -3713,8 +3963,34 @@
           if (overlay.id === DISCORD_OVERLAY_ID) {
             el.classList.add('discord-widget-overlay', 'big-tv-fullscreen-target');
             bigTvDvdOverlayEl = document.createElement('div');
-            bigTvDvdOverlayEl.className = 'discord-static-overlay is-active';
+            bigTvDvdOverlayEl.className = 'discord-static-overlay big-tv-dvd-overlay is-active';
             bigTvDvdOverlayEl.setAttribute('aria-hidden', 'false');
+            bigTvDvdOverlayEl.setAttribute('role', 'button');
+            bigTvDvdOverlayEl.setAttribute('aria-label', 'Enable CornerCount on right monitor');
+            bigTvDvdOverlayEl.tabIndex = 0;
+            const toggleDvdCornerCount = () => {
+              if (!isBigTvDefaultScreensaverActive() || !isRightMonitorInteractive()) {
+                return;
+              }
+              isDvdCornerCountEnabled = !isDvdCornerCountEnabled;
+              syncDvdScreensaverState();
+            };
+            bigTvDvdOverlayEl.addEventListener('click', (event) => {
+              event.preventDefault();
+              event.stopPropagation();
+              toggleDvdCornerCount();
+            });
+            bigTvDvdOverlayEl.addEventListener('keydown', (event) => {
+              const isActivationKey =
+                event.key === 'Enter' ||
+                event.code === 'Space';
+              if (!isActivationKey) {
+                return;
+              }
+              event.preventDefault();
+              event.stopPropagation();
+              toggleDvdCornerCount();
+            });
             bigTvDvdGifEl = document.createElement('img');
             bigTvDvdGifEl.className = 'big-tv-dvd-gif';
             bigTvDvdGifEl.alt = 'DVD logo animation';
@@ -3724,6 +4000,7 @@
             bigTvDvdGifEl.decoding = 'async';
             bigTvDvdOverlayEl.appendChild(bigTvDvdGifEl);
             el.appendChild(bigTvDvdOverlayEl);
+            applyDvdColorStep();
             if (DISCORD_WIDGET_URL) {
               const widgetFrame = document.createElement('iframe');
               widgetFrame.className = 'discord-widget-frame';
@@ -4179,6 +4456,7 @@
             monitorScreenWindowEl = document.createElement('div');
             monitorScreenWindowEl.className = 'monitor-screen-window right-monitor-screen-window';
             el.appendChild(monitorScreenWindowEl);
+            rightMonitorScreenWindowEl = monitorScreenWindowEl;
             const button = document.createElement('button');
             button.type = 'button';
             button.className = 'join-discord-button';
@@ -4209,6 +4487,20 @@
             discordButtonImgEl = img;
             button.appendChild(img);
             monitorScreenWindowEl.appendChild(button);
+
+            rightMonitorCornerScoreOverlayEl = document.createElement('div');
+            rightMonitorCornerScoreOverlayEl.className = 'right-monitor-corner-score-overlay';
+            rightMonitorCornerScoreOverlayEl.setAttribute('aria-hidden', 'true');
+            const cornerScoreLabelEl = document.createElement('p');
+            cornerScoreLabelEl.className = 'right-monitor-corner-score-label';
+            cornerScoreLabelEl.textContent = 'CornerScore';
+            const cornerScoreValueEl = document.createElement('p');
+            cornerScoreValueEl.className = 'right-monitor-corner-score-value';
+            rightMonitorCornerScoreValueEl = cornerScoreValueEl;
+            renderCornerScore();
+            rightMonitorCornerScoreOverlayEl.append(cornerScoreLabelEl, cornerScoreValueEl);
+            monitorScreenWindowEl.appendChild(rightMonitorCornerScoreOverlayEl);
+            applyDvdColorStep();
 
             rightMonitorStaticOverlayEl = document.createElement('div');
             rightMonitorStaticOverlayEl.className = 'overlay-static-layer';
@@ -4842,6 +5134,7 @@
 
       function cleanup() {
         hideBigTvPromptOverlay();
+        stopBigTvDvdAnimation();
         if (cameraAnimationFrameId !== null) {
           window.cancelAnimationFrame(cameraAnimationFrameId);
           cameraAnimationFrameId = null;
@@ -4871,6 +5164,7 @@
 
       function hydrateNonCriticalSceneData() {
         void loadAquariumShrimpClipCatalog();
+        void loadCornerScoreFromServer();
 
         void fetchDiscordAuthState().then(() => {
           syncDiscordAuthBodyClass();
