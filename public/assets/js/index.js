@@ -82,8 +82,7 @@
       const BIG_TV_RIGHT_MONITOR_OVERLAY_STATE_UNKNOWN = 'unknown';
       const BIG_TV_RIGHT_MONITOR_OVERLAY_BLUE_IMAGE_URL = 'assets/images/join_disc_blue.png';
       const BIG_TV_RIGHT_MONITOR_OVERLAY_CORNER_SCORE_IMAGE_URL = 'assets/images/join_disc_green.png';
-      const BIG_TV_SCREENSAVER_LOGO_URL =
-        "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 256'%3E%3Cg fill='none' stroke='%23ffffff' stroke-width='16' stroke-linejoin='round' stroke-linecap='round'%3E%3Cellipse cx='132' cy='122' rx='88' ry='56'/%3E%3Cellipse cx='242' cy='122' rx='88' ry='56'/%3E%3Cpath d='M268 66h108c48 0 84 34 84 78s-36 78-84 78H268'/%3E%3C/g%3E%3Ctext x='255' y='212' font-family='Arial,sans-serif' font-size='46' font-weight='700' text-anchor='middle' fill='%23ffffff' letter-spacing='12'%3EVIDEO%3C/text%3E%3C/svg%3E";
+      const BIG_TV_SCREENSAVER_LOGO_URL = 'assets/video/dvd.gif';
       const CORNER_SCORE_API_URL = '/api/corner-score';
       const DVD_COLOR_STEPS = Object.freeze([
         { color: '#ff4d4d', hue: 0 },
@@ -529,6 +528,7 @@
       let nedryGateVideoEl = null;
       let bigTvDebugWatermarkEl = null;
       let zeldaSecretAudioEl = null;
+      let cornerScoreCoinAudioContext = null;
       let flipClockRadioTuningAudioEl = null;
       const flipClockRadioTuningAudioElsByUrl = new Map();
       let flipClockRadioTuningAudioCycle = [];
@@ -757,16 +757,57 @@
       }
 
       function playRightMonitorScoringNoise() {
-        const scoringNoiseAudio = getZeldaSecretAudioElement();
-        stopZeldaSecretAudioPlayback();
-        const playPromise = scoringNoiseAudio.play();
-        if (playPromise && typeof playPromise.catch === 'function') {
-          playPromise.catch((error) => {
-            if (error?.name !== 'AbortError') {
-              console.warn('Unable to play right monitor scoring noise.', error);
-            }
-          });
+        const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+        if (!AudioContextClass) {
+          const scoringNoiseAudio = getZeldaSecretAudioElement();
+          stopZeldaSecretAudioPlayback();
+          const playPromise = scoringNoiseAudio.play();
+          if (playPromise && typeof playPromise.catch === 'function') {
+            playPromise.catch((error) => {
+              if (error?.name !== 'AbortError') {
+                console.warn('Unable to play right monitor scoring noise.', error);
+              }
+            });
+          }
+          return;
         }
+
+        if (!cornerScoreCoinAudioContext) {
+          cornerScoreCoinAudioContext = new AudioContextClass();
+        }
+
+        const audioContext = cornerScoreCoinAudioContext;
+        if (audioContext.state === 'suspended') {
+          void audioContext.resume().catch(() => {});
+        }
+        const startTime = audioContext.currentTime + 0.005;
+        const stopTime = startTime + 0.17;
+        const masterGain = audioContext.createGain();
+        masterGain.gain.setValueAtTime(0.0001, startTime);
+        masterGain.gain.exponentialRampToValueAtTime(0.24, startTime + 0.01);
+        masterGain.gain.exponentialRampToValueAtTime(0.0001, stopTime);
+        masterGain.connect(audioContext.destination);
+
+        const strikeOscillator = audioContext.createOscillator();
+        strikeOscillator.type = 'square';
+        strikeOscillator.frequency.setValueAtTime(987.77, startTime);
+        strikeOscillator.frequency.exponentialRampToValueAtTime(1318.51, startTime + 0.05);
+        strikeOscillator.connect(masterGain);
+        strikeOscillator.start(startTime);
+        strikeOscillator.stop(stopTime);
+
+        const sparkleOscillator = audioContext.createOscillator();
+        const sparkleGain = audioContext.createGain();
+        sparkleOscillator.type = 'triangle';
+        sparkleOscillator.frequency.setValueAtTime(1975.53, startTime + 0.03);
+        sparkleOscillator.frequency.exponentialRampToValueAtTime(2637.02, stopTime);
+        sparkleGain.gain.setValueAtTime(0.0001, startTime + 0.03);
+        sparkleGain.gain.exponentialRampToValueAtTime(0.08, startTime + 0.05);
+        sparkleGain.gain.exponentialRampToValueAtTime(0.0001, stopTime);
+        sparkleOscillator.connect(sparkleGain);
+        sparkleGain.connect(masterGain);
+        sparkleOscillator.start(startTime + 0.03);
+        sparkleOscillator.stop(stopTime);
       }
 
       function activateRightMonitorCornerScoreMode() {
@@ -953,16 +994,7 @@
         const isCornerHit = (hitHorizontalEdge && isNearCornerY) || (hitVerticalEdge && isNearCornerX);
         if (isCornerHit && isDvdCornerCountEnabled && isRightMonitorInteractive()) {
           setCornerScore(cornerScoreValue + 1);
-          const zeldaAudio = getZeldaSecretAudioElement();
-          stopZeldaSecretAudioPlayback();
-          const playPromise = zeldaAudio.play();
-          if (playPromise && typeof playPromise.catch === 'function') {
-            playPromise.catch((error) => {
-              if (error?.name !== 'AbortError') {
-                console.warn('Unable to play Zelda secret audio.', error);
-              }
-            });
-          }
+          playRightMonitorScoringNoise();
           queueCornerScoreIncrement();
         }
 

@@ -1123,10 +1123,7 @@
       object-fit: contain;
       transform: translate3d(0, 0, 0);
       will-change: transform, filter;
-      filter:
-        hue-rotate(var(--dvd-hue-deg, 0deg))
-        saturate(1.45)
-        drop-shadow(0 0 10px color-mix(in srgb, var(--dvd-accent-color, #40d6ff) 55%, transparent));
+      filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.35));
     }
 
     body.camera-motion-active .big-tv-dvd-logo {
