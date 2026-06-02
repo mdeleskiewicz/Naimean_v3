@@ -1098,6 +1098,7 @@
             const response = await fetch(CORNER_SCORE_API_URL, {
               method: 'POST',
               headers: { 'content-type': 'application/json' },
+              keepalive: true,
               body: JSON.stringify({
                 score: sanitizedScore,
                 ...(sanitizedInitials !== null ? { initials: sanitizedInitials } : {})
