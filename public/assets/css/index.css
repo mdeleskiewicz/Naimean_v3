@@ -800,6 +800,7 @@
     .right-monitor-corner-score-overlay {
       position: absolute;
       inset: 0;
+      container-type: inline-size;
       z-index: 2;
       opacity: 0;
       visibility: hidden;
@@ -838,6 +839,26 @@
       text-shadow:
         0 0 20px color-mix(in srgb, var(--corner-score-color, #40d6ff) 80%, transparent),
         0 0 44px color-mix(in srgb, var(--corner-score-color, #40d6ff) 55%, transparent);
+    }
+
+    @supports (font-size: 1cqw) {
+      .right-monitor-corner-score-label {
+        font-size: clamp(34.4px, 6.13cqw, 61.3px);
+      }
+
+      .right-monitor-corner-score-value {
+        font-size: clamp(130.2px, 28.73cqw, 325.6px);
+      }
+
+      @media (pointer: fine) and (min-width: 901px) {
+        .right-monitor-corner-score-label {
+          font-size: clamp(27.52px, 4.904cqw, 49.04px);
+        }
+
+        .right-monitor-corner-score-value {
+          font-size: clamp(104.16px, 22.984cqw, 260.48px);
+        }
+      }
     }
 
     .right-monitor-shrimp-logo-image {
