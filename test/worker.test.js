@@ -199,6 +199,38 @@ test('HotspotStore POST sanitizes and stores arcade URL overrides', async () => 
   });
 });
 
+test('HotspotStore GET returns corner score when storage is empty', async () => {
+  const { state, calls } = makeKeyedState({});
+  const store = new HotspotStore(state);
+
+  const response = await store.fetch(new Request('https://example.com/api/corner-score', { method: 'GET' }));
+  const body = await response.json();
+
+  assert.equal(response.status, 200);
+  assert.deepEqual(body, { score: 0 });
+  assert.deepEqual(calls.get, ['corner-score']);
+});
+
+test('HotspotStore POST increments and stores corner score', async () => {
+  const { state, calls, getStored } = makeKeyedState({ 'corner-score': 7 });
+  const store = new HotspotStore(state);
+
+  const response = await store.fetch(
+    new Request('https://example.com/api/corner-score', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ incrementBy: 3 })
+    })
+  );
+  const body = await response.json();
+
+  assert.equal(response.status, 200);
+  assert.deepEqual(body, { ok: true, score: 10 });
+  assert.equal(calls.put.length, 1);
+  assert.deepEqual(calls.put[0], { key: 'corner-score', value: 10 });
+  assert.equal(getStored('corner-score'), 10);
+});
+
 test('worker routes /api/hotspots through HOTSPOT_STORE durable object', async () => {
   const calls = { idFromName: [], get: [], stubFetch: 0, assetsFetch: 0 };
   const expectedResponse = new Response(JSON.stringify({ ok: true }), {
@@ -322,6 +354,47 @@ test('worker routes /api/arcade-url-overrides through HOTSPOT_STORE durable obje
   assert.equal(calls.assetsFetch, 0);
 });
 
+test('worker routes /api/corner-score through HOTSPOT_STORE durable object', async () => {
+  const calls = { idFromName: [], get: [], stubFetch: 0, assetsFetch: 0 };
+  const expectedResponse = new Response(JSON.stringify({ ok: true, score: 1 }), {
+    status: 200,
+    headers: { 'content-type': 'application/json' }
+  });
+
+  const env = {
+    HOTSPOT_STORE: {
+      idFromName(name) {
+        calls.idFromName.push(name);
+        return `id:${name}`;
+      },
+      get(id) {
+        calls.get.push(id);
+        return {
+          async fetch(request) {
+            calls.stubFetch += 1;
+            assert.equal(new URL(request.url).pathname, '/api/corner-score');
+            return expectedResponse;
+          }
+        };
+      }
+    },
+    ASSETS: {
+      async fetch() {
+        calls.assetsFetch += 1;
+        return new Response('assets');
+      }
+    }
+  };
+
+  const response = await router.fetch(new Request('https://example.com/api/corner-score', { method: 'GET' }), env);
+
+  assert.equal(response, expectedResponse);
+  assert.deepEqual(calls.idFromName, ['corner-score']);
+  assert.deepEqual(calls.get, ['id:corner-score']);
+  assert.equal(calls.stubFetch, 1);
+  assert.equal(calls.assetsFetch, 0);
+});
+
 test('worker returns 500 for /api/hotspots when HOTSPOT_STORE binding is missing', async () => {
   const env = {
     ASSETS: {
@@ -347,6 +420,21 @@ test('worker returns 500 for /api/arcade-url-overrides when HOTSPOT_STORE bindin
   };
 
   const response = await router.fetch(new Request('https://example.com/api/arcade-url-overrides', { method: 'POST' }), env);
+
+  assert.equal(response.status, 500);
+  assert.deepEqual(await response.json(), { error: 'HOTSPOT_STORE binding is missing.' });
+});
+
+test('worker returns 500 for /api/corner-score when HOTSPOT_STORE binding is missing', async () => {
+  const env = {
+    ASSETS: {
+      async fetch() {
+        return new Response('assets');
+      }
+    }
+  };
+
+  const response = await router.fetch(new Request('https://example.com/api/corner-score', { method: 'POST' }), env);
 
   assert.equal(response.status, 500);
   assert.deepEqual(await response.json(), { error: 'HOTSPOT_STORE binding is missing.' });

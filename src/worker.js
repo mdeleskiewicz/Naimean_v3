@@ -445,6 +445,20 @@ function sanitizeArcadeUrlOverrides(input) {
   return overrides;
 }
 
+function sanitizeCornerScore(input) {
+  const parsed = Number(input);
+  if (!Number.isFinite(parsed)) return 0;
+  const floored = Math.floor(parsed);
+  return Math.max(0, Math.min(Number.MAX_SAFE_INTEGER, floored));
+}
+
+function sanitizeCornerScoreIncrement(input) {
+  const parsed = Number(input);
+  if (!Number.isFinite(parsed)) return 0;
+  const floored = Math.floor(parsed);
+  return Math.max(0, Math.min(1000, floored));
+}
+
 const HOTSPOT_JSON_HEADERS = {
   'content-type': 'application/json; charset=UTF-8',
   'cache-control': 'no-store',
@@ -465,11 +479,14 @@ export class HotspotStore {
     const pathname = new URL(request.url).pathname;
     const isChapelConfig = pathname === '/api/chapel-hotspots';
     const isArcadeUrlOverrides = pathname === '/api/arcade-url-overrides';
+    const isCornerScore = pathname === '/api/corner-score';
     const storageKey = isChapelConfig
       ? 'chapel-hotspots'
       : isArcadeUrlOverrides
         ? 'arcade-url-overrides'
-        : 'hotspots';
+        : isCornerScore
+          ? 'corner-score'
+          : 'hotspots';
     if (request.method === 'OPTIONS') return new Response(null, { status: 204, headers: HOTSPOT_JSON_HEADERS });
     if (request.method === 'GET') {
       let saved;
@@ -484,6 +501,9 @@ export class HotspotStore {
       if (isArcadeUrlOverrides) {
         return hotspotJson({ overrides: sanitizeArcadeUrlOverrides(saved) });
       }
+      if (isCornerScore) {
+        return hotspotJson({ score: sanitizeCornerScore(saved) });
+      }
       return hotspotJson({ hotspots: sanitizeHotspots(saved) });
     }
     if (request.method === 'POST') {
@@ -497,7 +517,29 @@ export class HotspotStore {
         ? sanitizeChapelConfig(body)
         : isArcadeUrlOverrides
           ? { overrides: sanitizeArcadeUrlOverrides(body?.overrides) }
+          : isCornerScore
+            ? null
           : { hotspots: sanitizeHotspots(body?.hotspots) };
+      if (isCornerScore) {
+        let storedScore;
+        try {
+          storedScore = sanitizeCornerScore(await this.state.storage.get(storageKey));
+        } catch (err) {
+          return hotspotJson({ error: `Failed to load corner score: ${err?.message || 'Unknown error'}` }, 500);
+        }
+        const hasExplicitScore = body && Object.hasOwn(body, 'score');
+        const explicitScore = hasExplicitScore ? sanitizeCornerScore(body?.score) : null;
+        const incrementBy = sanitizeCornerScoreIncrement(body?.incrementBy);
+        const nextScore = explicitScore === null
+          ? storedScore + incrementBy
+          : explicitScore + incrementBy;
+        try {
+          await this.state.storage.put(storageKey, nextScore);
+        } catch (err) {
+          return hotspotJson({ error: `Failed to save corner score: ${err?.message || 'Unknown error'}` }, 500);
+        }
+        return hotspotJson({ ok: true, score: nextScore });
+      }
       try {
         await this.state.storage.put(
           storageKey,
@@ -577,6 +619,7 @@ export default {
     if (pathname === '/api/hotspots') return dispatchToHotspotStore(env, request, 'den-hotspots');
     if (pathname === '/api/chapel-hotspots') return dispatchToHotspotStore(env, request, 'chapel-hotspots');
     if (pathname === '/api/arcade-url-overrides') return dispatchToHotspotStore(env, request, 'arcade-url-overrides');
+    if (pathname === '/api/corner-score') return dispatchToHotspotStore(env, request, 'corner-score');
 
     // /api/aquarium/shrimp-clips
     if (pathname === '/api/aquarium/shrimp-clips') {
