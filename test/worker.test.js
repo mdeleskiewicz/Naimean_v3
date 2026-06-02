@@ -252,7 +252,7 @@ test('HotspotStore POST keeps existing corner high score when submitted score is
   assert.equal(getStored('corner-score'), 9);
 });
 
-test('HotspotStore POST stores corner score initials for the matching high score', async () => {
+test('HotspotStore POST stores corner score initials when submitted score equals server high score', async () => {
   const { state, calls, getStored } = makeKeyedState({ 'corner-score': { score: 11, initials: '' } });
   const store = new HotspotStore(state);
 
@@ -260,7 +260,7 @@ test('HotspotStore POST stores corner score initials for the matching high score
     new Request('https://example.com/api/corner-score', {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ score: 11, initials: 'ab3c' })
+      body: JSON.stringify({ score: 11, initials: 'ABC' })
     })
   );
   const body = await response.json();

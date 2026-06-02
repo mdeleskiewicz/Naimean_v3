@@ -617,20 +617,22 @@ export class HotspotStore {
         const candidateScore = sanitizeCornerScore(explicitScore + incrementBy);
         const nextScore = Math.max(storedRecord.score, candidateScore);
         const submittedInitials = sanitizeCornerScoreInitials(body?.initials);
-        const shouldUpdateScore = nextScore > storedRecord.score;
-        const shouldApplySubmittedInitials = Boolean(
+        const canApplySubmittedInitials = Boolean(
           submittedInitials &&
           hasExplicitScore &&
-          sanitizeCornerScore(body?.score) === nextScore
+          explicitScore >= storedRecord.score
         );
-        const shouldUpdateInitials = shouldApplySubmittedInitials && submittedInitials !== storedRecord.initials;
+        const shouldUpdateScore = nextScore > storedRecord.score;
+        let nextInitials = storedRecord.initials;
+        if (canApplySubmittedInitials) {
+          nextInitials = submittedInitials;
+        } else if (shouldUpdateScore) {
+          nextInitials = '';
+        }
+        const shouldUpdateInitials = nextInitials !== storedRecord.initials;
         const nextRecord = {
           score: nextScore,
-          initials: shouldApplySubmittedInitials
-            ? submittedInitials
-            : shouldUpdateScore
-              ? ''
-              : storedRecord.initials
+          initials: nextInitials
         };
         if (shouldUpdateScore || shouldUpdateInitials) {
           try {
