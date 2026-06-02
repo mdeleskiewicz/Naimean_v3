@@ -4078,7 +4078,7 @@
               return;
             }
             if (WHITEBOARD_HOTSPOT_IDS.has(spot.id)) {
-              window.location.assign(getHotspotEffectiveUrl(spot.id) || WHITEBOARD_HOTSPOT_URLS[spot.id] || WHITEBOARD_HOTSPOT_URLS.whiteboard);
+              window.open(getHotspotEffectiveUrl(spot.id) || WHITEBOARD_HOTSPOT_URLS[spot.id] || WHITEBOARD_HOTSPOT_URLS.whiteboard, '_blank', 'noopener,noreferrer');
               return;
             }
             if (AQUARIUM_HOTSPOT_IDS.has(spot.id)) {
