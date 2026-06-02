@@ -1316,6 +1316,7 @@
           if (cornerScoreDelta > 0) {
             if (nextCornerScore === previousHighScore) {
               showCornerScoreStatus('Tied for high-score!', nextCornerScore);
+              void queueCornerScoreUpdate(nextCornerScore, { force: true });
             } else if (nextCornerScore > previousHighScore) {
               setCornerScoreHighScore(nextCornerScore, '');
               showCornerScoreStatus('New high-score!', nextCornerScore);
