@@ -1826,6 +1826,9 @@
         // button highlights update right on click, while the static overlay
         // covers the left monitor during the brief transition.
         setLeftMonitorState(nextState);
+        // The return value of playLeftMonitorStaticPass is intentionally ignored:
+        // setLeftMonitorState has already committed the correct final state, so
+        // no revert is needed if the static is cancelled by a subsequent click.
         await playLeftMonitorStaticPass(sequenceToken);
       }
 
@@ -2536,16 +2539,18 @@
         if (!leftMonitorStaticOverlayEl || !leftMonitorStaticVideoEl) {
           return false;
         }
+        // Always clean up any ongoing flicker/playback before checking the token
+        // so we don't leave the video in a running state.
         clearMonitorFlickerTimeouts();
         leftMonitorStaticVideoEl.pause();
         leftMonitorStaticVideoEl.loop = false;
         leftMonitorStaticVideoEl.currentTime = 0;
-        leftMonitorStaticOverlayEl.classList.add('is-active');
+        // Bail before showing the overlay if this transition was already superseded.
         if (sequenceToken !== leftMonitorTransitionToken) {
-          leftMonitorStaticOverlayEl.classList.remove('is-active');
           leftMonitorStaticVideoEl.loop = true;
           return false;
         }
+        leftMonitorStaticOverlayEl.classList.add('is-active');
         try {
           await leftMonitorStaticVideoEl.play();
         } catch (error) {
