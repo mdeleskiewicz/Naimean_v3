@@ -1148,6 +1148,8 @@ test('worker serves shrimp clip catalog from local fallback when Drive config is
   assert.equal(body.source, 'local-fallback');
   assert.equal(body.clips.length, 23);
   assert.equal(body.clips[0], 'assets/video/shrimp/sh1.mp4');
+  assert.equal(response.headers.get('cache-control'), 'public, max-age=300, stale-while-revalidate=3600');
+  assert.equal(response.headers.get('x-content-type-options'), 'nosniff');
 });
 
 test('worker serves shrimp clip catalog from Google Drive when configured', async () => {
@@ -1183,6 +1185,8 @@ test('worker serves shrimp clip catalog from Google Drive when configured', asyn
       '/api/aquarium/shrimp-clip/abc1234567890',
       '/api/aquarium/shrimp-clip/def1234567890'
     ]);
+    assert.equal(response.headers.get('cache-control'), 'public, max-age=300, stale-while-revalidate=3600');
+    assert.equal(response.headers.get('x-content-type-options'), 'nosniff');
   } finally {
     globalThis.fetch = originalFetch;
   }
@@ -1774,6 +1778,8 @@ test('worker /api/discord/auth redirects to Discord OAuth with state cookie', as
   assert.ok(setCookie.includes('naimean_oauth_state='));
   assert.ok(setCookie.includes('HttpOnly'));
   assert.ok(setCookie.includes('SameSite=Lax'));
+  assert.ok(setCookie.includes('Secure'));
+  assert.equal(response.headers.get('x-content-type-options'), 'nosniff');
 });
 
 test('worker /api/discord/auth redirects to /?discord_error=configuration_error when DISCORD_CLIENT_ID is missing', async () => {
@@ -1903,9 +1909,11 @@ test('worker /api/discord/callback succeeds, sets session cookie and redirects t
     assert.ok(sessionCookie, 'session cookie should be set');
     assert.ok(sessionCookie.includes('HttpOnly'));
     assert.ok(sessionCookie.includes('SameSite=Lax'));
+    assert.ok(sessionCookie.includes('Secure'));
 
     const stateClearCookie = cookies.find((c) => c.startsWith('naimean_oauth_state=;'));
     assert.ok(stateClearCookie, 'state cookie should be cleared');
+    assert.ok(stateClearCookie.includes('Secure'));
 
     // Verify the session payload
     const tokenValue = sessionCookie.split(';')[0].split('=').slice(1).join('=');
@@ -2099,6 +2107,7 @@ test('worker /api/discord/logout clears session cookie', async () => {
   const setCookie = response.headers.get('Set-Cookie');
   assert.ok(setCookie.includes('naimean_session=;'));
   assert.ok(setCookie.includes('Max-Age=0'));
+  assert.ok(setCookie.includes('Secure'));
 });
 
 test('worker /api/discord/logout returns 405 for GET', async () => {
@@ -2122,6 +2131,8 @@ test('worker applies long-lived cache headers to versioned .png assets', async (
   );
   assert.equal(response.status, 200);
   assert.equal(response.headers.get('cache-control'), 'public, max-age=31536000, immutable');
+  assert.equal(response.headers.get('x-content-type-options'), 'nosniff');
+  assert.equal(response.headers.get('referrer-policy'), 'strict-origin-when-cross-origin');
 });
 
 test('worker applies long-lived cache headers to versioned .mp4 assets', async () => {
@@ -2139,6 +2150,8 @@ test('worker applies long-lived cache headers to versioned .mp4 assets', async (
   );
   assert.equal(response.status, 200);
   assert.equal(response.headers.get('cache-control'), 'public, max-age=31536000, immutable');
+  assert.equal(response.headers.get('x-content-type-options'), 'nosniff');
+  assert.equal(response.headers.get('referrer-policy'), 'strict-origin-when-cross-origin');
 });
 
 test('worker applies must-revalidate cache headers to non-versioned assets', async () => {
@@ -2156,4 +2169,6 @@ test('worker applies must-revalidate cache headers to non-versioned assets', asy
   );
   assert.equal(response.status, 200);
   assert.equal(response.headers.get('cache-control'), 'public, max-age=0, must-revalidate');
+  assert.equal(response.headers.get('x-content-type-options'), 'nosniff');
+  assert.equal(response.headers.get('referrer-policy'), 'strict-origin-when-cross-origin');
 });
