@@ -155,6 +155,7 @@ const DEFAULT_HOTSPOTS = [
   { id: 'noahs-arcade', x: 880, y: 320, w: 2050, h: 1280 },
   { id: 'aquarium', x: 2680, y: 445, w: 455, h: 729 },
   { id: 'rca-board', x: 738, y: 380, w: 470, h: 1060 },
+  { id: 'overlay-whiteboard-corner-score-control', x: 785, y: 456, w: 355, h: 260 },
   { id: 'chapel', x: 3840, y: 0, w: 3840, h: 2160 },
   { id: 'pencil-sharpener', x: 2562, y: 1220, w: 221, h: 245 },
   { id: 'overlay-big-tv-control', x: 1469, y: 330, w: 1000, h: 572 },
@@ -459,6 +460,12 @@ function sanitizeCornerScoreIncrement(input) {
   return Math.max(0, Math.min(1000, floored));
 }
 
+const CORNER_SCORE_BASELINE = 3;
+
+function getStoredCornerHighScore(input) {
+  return Math.max(CORNER_SCORE_BASELINE, sanitizeCornerScore(input));
+}
+
 const MAX_NOTES_BYTES = 512 * 1024;
 const NOTES_MAX_COUNT = 500;
 const NOTES_TITLE_MAX = 500;
@@ -544,7 +551,7 @@ export class HotspotStore {
         return hotspotJson({ overrides: sanitizeArcadeUrlOverrides(saved) });
       }
       if (isCornerScore) {
-        return hotspotJson({ score: sanitizeCornerScore(saved) });
+        return hotspotJson({ score: getStoredCornerHighScore(saved) });
       }
       if (isNotes) {
         return hotspotJson(saved ?? { notes: [], viewMode: 'list', version: 2 });
@@ -581,22 +588,23 @@ export class HotspotStore {
       if (isCornerScore) {
         let storedScore;
         try {
-          storedScore = sanitizeCornerScore(await this.state.storage.get(storageKey));
+          storedScore = getStoredCornerHighScore(await this.state.storage.get(storageKey));
         } catch (err) {
           return hotspotJson({ error: `Failed to load corner score: ${err?.message || 'Unknown error'}` }, 500);
         }
         const hasExplicitScore = body && Object.hasOwn(body, 'score');
-        const explicitScore = hasExplicitScore ? sanitizeCornerScore(body?.score) : null;
+        const explicitScore = hasExplicitScore ? sanitizeCornerScore(body?.score) : storedScore;
         const incrementBy = sanitizeCornerScoreIncrement(body?.incrementBy);
-        const nextScore = explicitScore === null
-          ? storedScore + incrementBy
-          : explicitScore + incrementBy;
-        try {
-          await this.state.storage.put(storageKey, nextScore);
-        } catch (err) {
-          return hotspotJson({ error: `Failed to save corner score: ${err?.message || 'Unknown error'}` }, 500);
+        const candidateScore = sanitizeCornerScore(explicitScore + incrementBy);
+        const nextScore = Math.max(storedScore, candidateScore);
+        if (nextScore > storedScore) {
+          try {
+            await this.state.storage.put(storageKey, nextScore);
+          } catch (err) {
+            return hotspotJson({ error: `Failed to save corner score: ${err?.message || 'Unknown error'}` }, 500);
+          }
         }
-        return hotspotJson({ ok: true, score: nextScore });
+        return hotspotJson({ ok: true, score: nextScore, updated: nextScore > storedScore });
       }
       try {
         await this.state.storage.put(
