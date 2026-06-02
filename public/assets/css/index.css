@@ -1129,6 +1129,10 @@
         drop-shadow(0 0 10px color-mix(in srgb, var(--dvd-accent-color, #40d6ff) 55%, transparent));
     }
 
+    body.camera-motion-active .big-tv-dvd-gif {
+      display: none;
+    }
+
     .big-tv-tools-overlay {
       position: absolute;
       inset: 0;
@@ -1785,6 +1789,11 @@
       pointer-events: none;
       overflow: visible;
       z-index: 2;
+      transition: opacity 120ms linear;
+    }
+
+    body.camera-motion-active .ashtray-smoke-effect {
+      opacity: 0.45;
     }
 
     .ashtray-smoke-wisp {
@@ -1802,6 +1811,11 @@
       will-change: transform, opacity;
       animation: ashtray-smoke-rise var(--smoke-duration, 10.6s) linear infinite;
       animation-delay: var(--smoke-delay, 0s);
+    }
+
+    body.camera-motion-active .ashtray-smoke-wisp,
+    body.camera-motion-active .ashtray-smoke-wisp::before {
+      animation-play-state: paused;
     }
 
     .ashtray-smoke-wisp::before {
