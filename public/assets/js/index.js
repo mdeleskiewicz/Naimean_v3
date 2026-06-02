@@ -900,12 +900,14 @@
         } catch (_) {}
       }
 
-      function queueCornerScoreIncrement(candidateScore = cornerScoreValue) {
+      function queueCornerScoreUpdate(candidateScore = cornerScoreValue) {
         if (!Number.isFinite(candidateScore) || candidateScore <= cornerScoreHighScoreValue) {
           return;
         }
         cornerScorePersistQueue = cornerScorePersistQueue
           .then(async () => {
+            // Re-check at execution time because the queued candidate can become stale
+            // once earlier queue entries update the shared high score.
             if (candidateScore <= cornerScoreHighScoreValue) {
               return;
             }
@@ -1026,7 +1028,7 @@
           const nextCornerScore = cornerScoreValue + 1;
           setCornerScore(nextCornerScore);
           playRightMonitorScoringNoise();
-          queueCornerScoreIncrement(nextCornerScore);
+          queueCornerScoreUpdate(nextCornerScore);
           if (!isRightMonitorInteractive() && !isRightMonitorCornerScoreWakeSequenceRunning) {
             void wakeRightMonitorForCornerScore();
           }
