@@ -453,6 +453,12 @@ function sanitizeCornerScore(input) {
   return Math.max(0, Math.min(Number.MAX_SAFE_INTEGER, floored));
 }
 
+function sanitizeCornerScoreInitials(input) {
+  if (typeof input !== 'string') return '';
+  const sanitized = input.toUpperCase().replace(/[^A-Z]/g, '').slice(0, 3);
+  return sanitized.length === 3 ? sanitized : '';
+}
+
 function sanitizeCornerScoreIncrement(input) {
   const parsed = Number(input);
   if (!Number.isFinite(parsed)) return 0;
@@ -462,8 +468,21 @@ function sanitizeCornerScoreIncrement(input) {
 
 const CORNER_SCORE_BASELINE = 3;
 
+function getStoredCornerScoreRecord(input) {
+  if (input && typeof input === 'object' && !Array.isArray(input)) {
+    return {
+      score: Math.max(CORNER_SCORE_BASELINE, sanitizeCornerScore(input.score)),
+      initials: sanitizeCornerScoreInitials(input.initials)
+    };
+  }
+  return {
+    score: Math.max(CORNER_SCORE_BASELINE, sanitizeCornerScore(input)),
+    initials: ''
+  };
+}
+
 function getStoredCornerHighScore(input) {
-  return Math.max(CORNER_SCORE_BASELINE, sanitizeCornerScore(input));
+  return getStoredCornerScoreRecord(input).score;
 }
 
 const MAX_NOTES_BYTES = 512 * 1024;
@@ -551,7 +570,7 @@ export class HotspotStore {
         return hotspotJson({ overrides: sanitizeArcadeUrlOverrides(saved) });
       }
       if (isCornerScore) {
-        return hotspotJson({ score: getStoredCornerHighScore(saved) });
+        return hotspotJson(getStoredCornerScoreRecord(saved));
       }
       if (isNotes) {
         return hotspotJson(saved ?? { notes: [], viewMode: 'list', version: 2 });
@@ -586,25 +605,42 @@ export class HotspotStore {
             ? null
           : { hotspots: sanitizeHotspots(body?.hotspots) };
       if (isCornerScore) {
-        let storedScore;
+        let storedRecord;
         try {
-          storedScore = getStoredCornerHighScore(await this.state.storage.get(storageKey));
+          storedRecord = getStoredCornerScoreRecord(await this.state.storage.get(storageKey));
         } catch (err) {
           return hotspotJson({ error: `Failed to load corner score: ${err?.message || 'Unknown error'}` }, 500);
         }
         const hasExplicitScore = body && Object.hasOwn(body, 'score');
-        const explicitScore = hasExplicitScore ? sanitizeCornerScore(body?.score) : storedScore;
+        const explicitScore = hasExplicitScore ? sanitizeCornerScore(body?.score) : storedRecord.score;
         const incrementBy = sanitizeCornerScoreIncrement(body?.incrementBy);
         const candidateScore = sanitizeCornerScore(explicitScore + incrementBy);
-        const nextScore = Math.max(storedScore, candidateScore);
-        if (nextScore > storedScore) {
+        const nextScore = Math.max(storedRecord.score, candidateScore);
+        const submittedInitials = sanitizeCornerScoreInitials(body?.initials);
+        const shouldUpdateScore = nextScore > storedRecord.score;
+        const shouldUpdateInitials = Boolean(
+          submittedInitials &&
+          hasExplicitScore &&
+          sanitizeCornerScore(body?.score) === nextScore &&
+          submittedInitials !== storedRecord.initials
+        );
+        const nextRecord = {
+          score: nextScore,
+          initials: shouldUpdateScore ? '' : shouldUpdateInitials ? submittedInitials : storedRecord.initials
+        };
+        if (shouldUpdateScore || shouldUpdateInitials) {
           try {
-            await this.state.storage.put(storageKey, nextScore);
+            await this.state.storage.put(storageKey, nextRecord);
           } catch (err) {
             return hotspotJson({ error: `Failed to save corner score: ${err?.message || 'Unknown error'}` }, 500);
           }
         }
-        return hotspotJson({ ok: true, score: nextScore, updated: nextScore > storedScore });
+        return hotspotJson({
+          ok: true,
+          score: nextRecord.score,
+          initials: nextRecord.initials,
+          updated: shouldUpdateScore || shouldUpdateInitials
+        });
       }
       try {
         await this.state.storage.put(
