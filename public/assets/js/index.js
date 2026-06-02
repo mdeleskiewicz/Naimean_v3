@@ -784,37 +784,6 @@
               if (error?.name !== 'AbortError') {
                 console.warn('Unable to play right monitor scoring noise.', error);
               }
-
-              function playWrongAudio() {
-                const wrongAudio = new Audio(WRONG_AUDIO_URL);
-                wrongAudio.play().catch((error) => {
-                  if (error?.name !== 'AbortError') {
-                    console.warn('Unable to play wrong audio.', error);
-                  }
-                });
-              }
-
-              function hideCornerScoreHonorOverlay() {
-                isCornerScoreHonorVisible = false;
-                if (!bigTvCornerHonorOverlayEl) {
-                  return;
-                }
-                bigTvCornerHonorOverlayEl.classList.remove('is-active');
-                bigTvCornerHonorOverlayEl.setAttribute('aria-hidden', 'true');
-              }
-
-              function showCornerScoreHonorOverlay() {
-                if (!bigTvCornerHonorOverlayEl) {
-                  return;
-                }
-                isCornerScoreHonorVisible = true;
-                cornerScoreGoalStreak = 0;
-                bigTvCornerHonorOverlayEl.classList.add('is-active');
-                bigTvCornerHonorOverlayEl.setAttribute('aria-hidden', 'false');
-                if (bigTvCornerHonorDismissButtonEl) {
-                  bigTvCornerHonorDismissButtonEl.focus({ preventScroll: true });
-                }
-              }
             });
           }
           return;
@@ -856,6 +825,37 @@
         sparkleGain.connect(masterGain);
         sparkleOscillator.start(startTime + 0.03);
         sparkleOscillator.stop(stopTime);
+      }
+
+      function playWrongAudio() {
+        const wrongAudio = new Audio(WRONG_AUDIO_URL);
+        wrongAudio.play().catch((error) => {
+          if (error?.name !== 'AbortError') {
+            console.warn('Unable to play wrong audio.', error);
+          }
+        });
+      }
+
+      function hideCornerScoreHonorOverlay() {
+        isCornerScoreHonorVisible = false;
+        if (!bigTvCornerHonorOverlayEl) {
+          return;
+        }
+        bigTvCornerHonorOverlayEl.classList.remove('is-active');
+        bigTvCornerHonorOverlayEl.setAttribute('aria-hidden', 'true');
+      }
+
+      function showCornerScoreHonorOverlay() {
+        if (!bigTvCornerHonorOverlayEl) {
+          return;
+        }
+        isCornerScoreHonorVisible = true;
+        cornerScoreGoalStreak = 0;
+        bigTvCornerHonorOverlayEl.classList.add('is-active');
+        bigTvCornerHonorOverlayEl.setAttribute('aria-hidden', 'false');
+        if (bigTvCornerHonorDismissButtonEl) {
+          bigTvCornerHonorDismissButtonEl.focus({ preventScroll: true });
+        }
       }
 
       function activateRightMonitorCornerScoreMode() {
@@ -1064,20 +1064,18 @@
         if (isCornerHit && isDvdCornerCountEnabled) {
           if (isCornerScoreHonorVisible) {
             playWrongAudio();
-            bigTvDvdLogoEl.style.transform = `translate3d(${dvdPositionX}px, ${dvdPositionY}px, 0)`;
-            dvdAnimationFrameId = window.requestAnimationFrame(tickBigTvDvdAnimation);
-            return;
-          }
-          const nextCornerScore = cornerScoreValue + 1;
-          setCornerScore(nextCornerScore);
-          playRightMonitorScoringNoise();
-          cornerScoreGoalStreak += 1;
-          if (cornerScoreGoalStreak >= CORNER_SCORE_HONOR_STREAK_GOALS) {
-            showCornerScoreHonorOverlay();
-          }
-          queueCornerScoreUpdate(nextCornerScore);
-          if (!isRightMonitorInteractive() && !isRightMonitorCornerScoreWakeSequenceRunning) {
-            void wakeRightMonitorForCornerScore();
+          } else {
+            const nextCornerScore = cornerScoreValue + 1;
+            setCornerScore(nextCornerScore);
+            playRightMonitorScoringNoise();
+            cornerScoreGoalStreak += 1;
+            if (cornerScoreGoalStreak >= CORNER_SCORE_HONOR_STREAK_GOALS) {
+              showCornerScoreHonorOverlay();
+            }
+            queueCornerScoreUpdate(nextCornerScore);
+            if (!isRightMonitorInteractive() && !isRightMonitorCornerScoreWakeSequenceRunning) {
+              void wakeRightMonitorForCornerScore();
+            }
           }
         }
 
