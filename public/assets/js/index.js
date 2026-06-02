@@ -535,6 +535,7 @@
       let rightMonitorStaticOverlayEl = null;
       let rightMonitorStaticVideoEl = null;
       let rightMonitorShrimpLogoOverlayEl = null;
+      let isRightMonitorCornerScoreWakeSequenceRunning = false;
       let leftMonitorStaticOverlayEl = null;
       let leftMonitorStaticVideoEl = null;
       let leftMonitorContentImageEl = null;
@@ -995,10 +996,13 @@
         const isNearCornerX = dvdPositionX <= DVD_CORNER_SCORE_TOLERANCE_PX || dvdPositionX >= maxX - DVD_CORNER_SCORE_TOLERANCE_PX;
         const isNearCornerY = dvdPositionY <= DVD_CORNER_SCORE_TOLERANCE_PX || dvdPositionY >= maxY - DVD_CORNER_SCORE_TOLERANCE_PX;
         const isCornerHit = (hitHorizontalEdge && isNearCornerY) || (hitVerticalEdge && isNearCornerX);
-        if (isCornerHit && isDvdCornerCountEnabled && isRightMonitorInteractive()) {
+        if (isCornerHit && isDvdCornerCountEnabled) {
           setCornerScore(cornerScoreValue + 1);
           playRightMonitorScoringNoise();
           queueCornerScoreIncrement();
+          if (!isRightMonitorInteractive()) {
+            void wakeRightMonitorForCornerScore();
+          }
         }
 
         bigTvDvdLogoEl.style.transform = `translate3d(${dvdPositionX}px, ${dvdPositionY}px, 0)`;
@@ -2090,6 +2094,28 @@
         });
       }
 
+      function waitForRightMonitorInteractive(timeoutMs = BIG_TV_MONITOR_INTERACTIVE_WAIT_TIMEOUT_MS) {
+        if (isRightMonitorInteractive()) {
+          return Promise.resolve(true);
+        }
+
+        return new Promise((resolve) => {
+          const deadline = Date.now() + timeoutMs;
+          const checkInteractiveState = () => {
+            if (isRightMonitorInteractive()) {
+              resolve(true);
+              return;
+            }
+            if (Date.now() >= deadline) {
+              resolve(false);
+              return;
+            }
+            window.setTimeout(checkInteractiveState, MONITOR_INTERACTIVE_POLL_INTERVAL_MS);
+          };
+          checkInteractiveState();
+        });
+      }
+
       function hideAquariumStaticOverlay({ resetPlayback = true } = {}) {
         if (aquariumStaticOverlayEl) {
           aquariumStaticOverlayEl.classList.remove('is-active');
@@ -2101,6 +2127,48 @@
           }
         }
         syncBigTvContentVisibility();
+      }
+
+      async function playRightMonitorStaticPass() {
+        if (!rightMonitorStaticOverlayEl || !rightMonitorStaticVideoEl) {
+          return false;
+        }
+        rightMonitorStaticVideoEl.pause();
+        rightMonitorStaticVideoEl.loop = false;
+        rightMonitorStaticVideoEl.currentTime = 0;
+        rightMonitorStaticOverlayEl.classList.add('is-active');
+        try {
+          await rightMonitorStaticVideoEl.play();
+        } catch (error) {
+          if (error?.name !== 'AbortError') {
+            console.warn('Unable to play right monitor static (corner score wake).', error);
+          }
+          rightMonitorStaticOverlayEl.classList.remove('is-active');
+          rightMonitorStaticVideoEl.loop = true;
+          return false;
+        }
+        const hasEnded = await waitForMediaPlaybackToEnd(rightMonitorStaticVideoEl);
+        rightMonitorStaticOverlayEl.classList.remove('is-active');
+        rightMonitorStaticVideoEl.loop = true;
+        return hasEnded;
+      }
+
+      async function wakeRightMonitorForCornerScore() {
+        if (isRightMonitorInteractive() || isRightMonitorCornerScoreWakeSequenceRunning) {
+          return;
+        }
+        isRightMonitorCornerScoreWakeSequenceRunning = true;
+        try {
+          animateMonitorShadowOn(rightMonitorShadowOverlayEl);
+          const isReady = await waitForRightMonitorInteractive();
+          if (!isReady) {
+            return;
+          }
+          await playRightMonitorStaticPass();
+          syncDvdScreensaverState();
+        } finally {
+          isRightMonitorCornerScoreWakeSequenceRunning = false;
+        }
       }
 
       function interruptBigTvDvdLoop() {
@@ -3483,7 +3551,6 @@
       }
 
       function resetMonitorsToOffState() {
-        isDvdCornerCountEnabled = false;
         stopAquariumPlaybackSequence();
         hideBigTvToolsOverlay();
         hideLoginOverlay();
@@ -4046,6 +4113,7 @@
         rightMonitorStaticOverlayEl = null;
         rightMonitorStaticVideoEl = null;
         rightMonitorShrimpLogoOverlayEl = null;
+        isRightMonitorCornerScoreWakeSequenceRunning = false;
         discordJoinButtonEl = null;
         discordButtonImgEl = null;
         leftMonitorStaticOverlayEl = null;
