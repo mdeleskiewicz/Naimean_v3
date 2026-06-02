@@ -936,7 +936,8 @@
 
     .whiteboard-corner-score-initials {
       margin: 0;
-      font-size: clamp(22px, min(7.4cqw, 10.2cqh), 54px);
+      font-size: clamp(28px, min(7.4cqw, 10.2cqh), 58px);
+      font-weight: 900;
       line-height: 1;
       letter-spacing: 0.16em;
       transform: rotate(1.6deg) translateX(1.8%);
