@@ -4136,7 +4136,7 @@
 
       function getDvdAccelerometerMultiplier(position) {
         const clampedPosition = clamp(position, 0, 1);
-        const normalized = (clampedPosition - DVD_ACCELEROMETER_NEUTRAL_POSITION) / DVD_ACCELEROMETER_NEUTRAL_POSITION;
+        const normalized = (clampedPosition - DVD_ACCELEROMETER_NEUTRAL_POSITION) * 2;
         return clamp(
           normalized * DVD_ACCELEROMETER_MULTIPLIER_MAX,
           DVD_ACCELEROMETER_MULTIPLIER_MIN,
