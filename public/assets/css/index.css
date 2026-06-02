@@ -1113,7 +1113,7 @@
       touch-action: manipulation;
     }
 
-    .big-tv-dvd-gif {
+    .big-tv-dvd-logo {
       position: absolute;
       top: 0;
       left: 0;
@@ -1129,7 +1129,7 @@
         drop-shadow(0 0 10px color-mix(in srgb, var(--dvd-accent-color, #40d6ff) 55%, transparent));
     }
 
-    body.camera-motion-active .big-tv-dvd-gif {
+    body.camera-motion-active .big-tv-dvd-logo {
       display: none;
     }
 

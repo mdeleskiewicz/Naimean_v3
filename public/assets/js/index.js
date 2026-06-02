@@ -82,7 +82,8 @@
       const BIG_TV_RIGHT_MONITOR_OVERLAY_STATE_UNKNOWN = 'unknown';
       const BIG_TV_RIGHT_MONITOR_OVERLAY_BLUE_IMAGE_URL = 'assets/images/join_disc_blue.png';
       const BIG_TV_RIGHT_MONITOR_OVERLAY_CORNER_SCORE_IMAGE_URL = 'assets/images/join_disc_green.png';
-      const BIG_TV_SCREENSAVER_GIF_URL = 'assets/video/dvd.gif';
+      const BIG_TV_SCREENSAVER_LOGO_URL =
+        "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 256'%3E%3Cg fill='none' stroke='%23ffffff' stroke-width='16' stroke-linejoin='round' stroke-linecap='round'%3E%3Cellipse cx='132' cy='122' rx='88' ry='56'/%3E%3Cellipse cx='242' cy='122' rx='88' ry='56'/%3E%3Cpath d='M268 66h108c48 0 84 34 84 78s-36 78-84 78H268'/%3E%3C/g%3E%3Ctext x='255' y='212' font-family='Arial,sans-serif' font-size='46' font-weight='700' text-anchor='middle' fill='%23ffffff' letter-spacing='12'%3EVIDEO%3C/text%3E%3C/svg%3E";
       const CORNER_SCORE_API_URL = '/api/corner-score';
       const DVD_COLOR_STEPS = Object.freeze([
         { color: '#ff4d4d', hue: 0 },
@@ -468,7 +469,7 @@
       let aquariumStaticOverlayEl = null;
       let aquariumStaticVideoEl = null;
       let bigTvDvdOverlayEl = null;
-      let bigTvDvdGifEl = null;
+      let bigTvDvdLogoEl = null;
       let isBigTvDvdLoopInterrupted = false;
       let dvdAnimationFrameId = null;
       let dvdLastFrameTime = 0;
@@ -867,13 +868,13 @@
       }
 
       function getDvdLogoDimensions() {
-        if (!bigTvDvdOverlayEl || !bigTvDvdGifEl) {
+        if (!bigTvDvdOverlayEl || !bigTvDvdLogoEl) {
           return null;
         }
         const boundsWidth = bigTvDvdOverlayEl.clientWidth;
         const boundsHeight = bigTvDvdOverlayEl.clientHeight;
-        const logoWidth = bigTvDvdGifEl.offsetWidth;
-        const logoHeight = bigTvDvdGifEl.offsetHeight;
+        const logoWidth = bigTvDvdLogoEl.offsetWidth;
+        const logoHeight = bigTvDvdLogoEl.offsetHeight;
         if (!boundsWidth || !boundsHeight || !logoWidth || !logoHeight) {
           return null;
         }
@@ -881,7 +882,7 @@
       }
 
       function tickBigTvDvdAnimation(timestamp) {
-        if (!isDvdAnimationActive || !bigTvDvdGifEl) {
+        if (!isDvdAnimationActive || !bigTvDvdLogoEl) {
           stopBigTvDvdAnimation();
           return;
         }
@@ -907,7 +908,7 @@
 
         if (!dvdLastFrameTime) {
           dvdLastFrameTime = timestamp;
-          bigTvDvdGifEl.style.transform = `translate3d(${dvdPositionX}px, ${dvdPositionY}px, 0)`;
+          bigTvDvdLogoEl.style.transform = `translate3d(${dvdPositionX}px, ${dvdPositionY}px, 0)`;
           dvdAnimationFrameId = window.requestAnimationFrame(tickBigTvDvdAnimation);
           return;
         }
@@ -965,12 +966,12 @@
           queueCornerScoreIncrement();
         }
 
-        bigTvDvdGifEl.style.transform = `translate3d(${dvdPositionX}px, ${dvdPositionY}px, 0)`;
+        bigTvDvdLogoEl.style.transform = `translate3d(${dvdPositionX}px, ${dvdPositionY}px, 0)`;
         dvdAnimationFrameId = window.requestAnimationFrame(tickBigTvDvdAnimation);
       }
 
       function startBigTvDvdAnimation() {
-        if (isDvdAnimationActive || !bigTvDvdGifEl) {
+        if (isDvdAnimationActive || !bigTvDvdLogoEl) {
           return;
         }
         isDvdAnimationActive = true;
@@ -3899,7 +3900,7 @@
         aquariumStaticOverlayEl = null;
         aquariumStaticVideoEl = null;
         bigTvDvdOverlayEl = null;
-        bigTvDvdGifEl = null;
+        bigTvDvdLogoEl = null;
         isBigTvDvdLoopInterrupted = false;
         stopBigTvDvdAnimation();
         hasDvdPosition = false;
@@ -3996,14 +3997,14 @@
               event.stopPropagation();
               toggleDvdCornerCount();
             });
-            bigTvDvdGifEl = document.createElement('img');
-            bigTvDvdGifEl.className = 'big-tv-dvd-gif';
-            bigTvDvdGifEl.alt = 'DVD logo animation';
-            bigTvDvdGifEl.src = BIG_TV_SCREENSAVER_GIF_URL;
-            bigTvDvdGifEl.draggable = false;
-            bigTvDvdGifEl.loading = 'eager';
-            bigTvDvdGifEl.decoding = 'async';
-            bigTvDvdOverlayEl.appendChild(bigTvDvdGifEl);
+            bigTvDvdLogoEl = document.createElement('img');
+            bigTvDvdLogoEl.className = 'big-tv-dvd-logo';
+            bigTvDvdLogoEl.alt = 'DVD logo animation';
+            bigTvDvdLogoEl.src = BIG_TV_SCREENSAVER_LOGO_URL;
+            bigTvDvdLogoEl.draggable = false;
+            bigTvDvdLogoEl.loading = 'eager';
+            bigTvDvdLogoEl.decoding = 'async';
+            bigTvDvdOverlayEl.appendChild(bigTvDvdLogoEl);
             el.appendChild(bigTvDvdOverlayEl);
             applyDvdColorStep();
             if (DISCORD_WIDGET_URL) {
