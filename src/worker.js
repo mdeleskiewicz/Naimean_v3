@@ -1,12 +1,21 @@
 // ─── Session token utilities ──────────────────────────────────────────────────
+const DEFAULT_SESSION_SECRET = 'fallback-dev-secret-key-string';
+const HMAC_KEY_CACHE = new Map();
+
 async function importHmacKey(secret) {
-  return crypto.subtle.importKey(
-    'raw',
-    new TextEncoder().encode(secret || 'fallback-dev-secret-key-string'),
-    { name: 'HMAC', hash: 'SHA-256' },
-    false,
-    ['sign', 'verify']
-  );
+  const normalizedSecret = secret || DEFAULT_SESSION_SECRET;
+  let keyPromise = HMAC_KEY_CACHE.get(normalizedSecret);
+  if (!keyPromise) {
+    keyPromise = crypto.subtle.importKey(
+      'raw',
+      new TextEncoder().encode(normalizedSecret),
+      { name: 'HMAC', hash: 'SHA-256' },
+      false,
+      ['sign', 'verify']
+    );
+    HMAC_KEY_CACHE.set(normalizedSecret, keyPromise);
+  }
+  return keyPromise;
 }
 
 function toBase64Url(input) {
@@ -93,10 +102,23 @@ const JSON_HEADERS = {
   'access-control-allow-origin': '*'
 };
 
+const SECURITY_HEADERS = {
+  'referrer-policy': 'strict-origin-when-cross-origin',
+  'x-content-type-options': 'nosniff'
+};
+
+function applySecurityHeaders(headers) {
+  Object.entries(SECURITY_HEADERS).forEach(([name, value]) => {
+    if (!headers.has(name)) headers.set(name, value);
+  });
+  return headers;
+}
+
 function jsonResponse(body, status = 200, extraHeaders = {}) {
+  const headers = applySecurityHeaders(new Headers({ ...JSON_HEADERS, ...extraHeaders }));
   return new Response(JSON.stringify(body), {
     status,
-    headers: { ...JSON_HEADERS, ...extraHeaders }
+    headers
   });
 }
 
@@ -143,6 +165,7 @@ async function serveAsset(request, env, pathname) {
   const upstream = await env.ASSETS.fetch(assetRequest);
   const headers = new Headers(upstream.headers);
   applyAssetCacheHeaders(pathname, headers);
+  applySecurityHeaders(headers);
   return new Response(upstream.body, {
     status: upstream.status,
     statusText: upstream.statusText,
@@ -245,9 +268,16 @@ async function handleDiscordAuth(request, env) {
   
   const headers = new Headers({
     'Location': `https://discord.com/oauth2/authorize?${params.toString()}`,
-    'Set-Cookie': serializeCookie(OAUTH_STATE_COOKIE, state, { httpOnly: true, sameSite: 'Lax', path: '/', maxAge: 300 }),
+    'Set-Cookie': serializeCookie(OAUTH_STATE_COOKIE, state, {
+      httpOnly: true,
+      sameSite: 'Lax',
+      path: '/',
+      maxAge: 300,
+      secure: url.protocol === 'https:'
+    }),
     'Access-Control-Allow-Origin': '*'
   });
+  applySecurityHeaders(headers);
   return new Response(null, { status: 302, headers });
 }
 
@@ -323,17 +353,30 @@ async function handleDiscordCallback(request, env) {
     exp
   });
   
-  const clearStateCookie = serializeCookie(OAUTH_STATE_COOKIE, '', { httpOnly: true, sameSite: 'Lax', path: '/', maxAge: 0 });
-  const sessionCookieStr = serializeCookie(SESSION_COOKIE, sessionToken, { httpOnly: true, sameSite: 'Lax', path: '/' });
+  const secure = url.protocol === 'https:';
+  const clearStateCookie = serializeCookie(OAUTH_STATE_COOKIE, '', {
+    httpOnly: true,
+    sameSite: 'Lax',
+    path: '/',
+    maxAge: 0,
+    secure
+  });
+  const sessionCookieStr = serializeCookie(SESSION_COOKIE, sessionToken, {
+    httpOnly: true,
+    sameSite: 'Lax',
+    path: '/',
+    secure
+  });
   
   const headers = new Headers({ Location: '/' });
   headers.append('Set-Cookie', sessionCookieStr);
   headers.append('Set-Cookie', clearStateCookie);
+  applySecurityHeaders(headers);
   return new Response(null, { status: 302, headers });
 }
 
 async function handleDiscordMe(request, env) {
-  const sessionSecret = env.SESSION_SECRET || "fallback-dev-secret-key-string";
+  const sessionSecret = env.SESSION_SECRET || DEFAULT_SESSION_SECRET;
   const cookies = parseCookies(request);
   const token = cookies[SESSION_COOKIE];
   if (!token) return jsonResponse({ authenticated: false });
@@ -361,10 +404,16 @@ async function handleDiscordMe(request, env) {
 
 async function handleDiscordLogout(request) {
   if (request.method !== 'POST') return new Response('Method Not Allowed', { status: 405 });
-  const clearCookie = serializeCookie(SESSION_COOKIE, '', { httpOnly: true, sameSite: 'Lax', path: '/', maxAge: 0 });
+  const clearCookie = serializeCookie(SESSION_COOKIE, '', {
+    httpOnly: true,
+    sameSite: 'Lax',
+    path: '/',
+    maxAge: 0,
+    secure: new URL(request.url).protocol === 'https:'
+  });
   return new Response(JSON.stringify({ ok: true }), {
     status: 200,
-    headers: { ...JSON_HEADERS, 'Set-Cookie': clearCookie }
+    headers: applySecurityHeaders(new Headers({ ...JSON_HEADERS, 'Set-Cookie': clearCookie }))
   });
 }
 
@@ -533,7 +582,10 @@ const HOTSPOT_JSON_HEADERS = {
 };
 
 function hotspotJson(body, status = 200) {
-  return new Response(JSON.stringify(body), { status, headers: HOTSPOT_JSON_HEADERS });
+  return new Response(JSON.stringify(body), {
+    status,
+    headers: applySecurityHeaders(new Headers(HOTSPOT_JSON_HEADERS))
+  });
 }
 
 export class HotspotStore {
@@ -672,12 +724,15 @@ export class HotspotStore {
 const DRIVE_API_BASE = 'https://www.googleapis.com/drive/v3';
 const CLIP_ID_RE = /^[A-Za-z0-9_-]{10,}$/;
 const SHRIMP_CLIP_CACHE_CONTROL = 'public, max-age=300';
+const SHRIMP_CLIP_CATALOG_CACHE_CONTROL = 'public, max-age=300, stale-while-revalidate=3600';
 
 function localShrimpClips(env) {
   const count = parseInt(env.AQUARIUM_LOCAL_CLIP_COUNT || '23', 10);
   const clips = [];
   for (let i = 1; i <= count; i++) clips.push(`assets/video/shrimp/sh${i}.mp4`);
-  return jsonResponse({ source: 'local-fallback', clips });
+  return jsonResponse({ source: 'local-fallback', clips }, 200, {
+    'cache-control': SHRIMP_CLIP_CATALOG_CACHE_CONTROL
+  });
 }
 
 async function googleDriveShrimpClips(env) {
@@ -691,7 +746,9 @@ async function googleDriveShrimpClips(env) {
   const clips = (data.files || [])
     .filter((f) => f.mimeType && f.mimeType.startsWith('video/'))
     .map((f) => `/api/aquarium/shrimp-clip/${f.id}`);
-  return jsonResponse({ source: 'google-drive', clips });
+  return jsonResponse({ source: 'google-drive', clips }, 200, {
+    'cache-control': SHRIMP_CLIP_CATALOG_CACHE_CONTROL
+  });
 }
 
 async function proxyShrimpClip(env, fileId) {
@@ -718,7 +775,7 @@ async function dispatchToHotspotStore(env, request, instanceName) {
 }
 
 async function handleNotes(request, env) {
-  const sessionSecret = env.SESSION_SECRET || 'fallback-dev-secret-key-string';
+  const sessionSecret = env.SESSION_SECRET || DEFAULT_SESSION_SECRET;
   const cookies = parseCookies(request);
   const token = cookies[SESSION_COOKIE];
   const session = token ? await verifySessionToken(sessionSecret, token) : null;
