@@ -1156,7 +1156,7 @@
         return cornerScorePersistQueue;
       }
 
-      async function submitCornerScoreInitials() {
+      function submitCornerScoreInitials() {
         if (!bigTvCornerScoreInitialsInputEl || cornerScoreInitialsTargetScore === null) {
           return;
         }
@@ -1165,20 +1165,18 @@
           syncCornerScoreInitialsSubmitState();
           return;
         }
-        if (bigTvCornerScoreInitialsSubmitButtonEl) {
-          bigTvCornerScoreInitialsSubmitButtonEl.disabled = true;
-        }
         const targetScore = cornerScoreInitialsTargetScore;
         const highestKnownScore = Math.max(targetScore, cornerScoreValue, cornerScoreHighScoreValue);
-        await queueCornerScoreUpdate(highestKnownScore, {
+        // Optimistically apply the submitted initials and hide the prompt immediately
+        // so the UI responds instantly regardless of API success or failure.
+        setCornerScoreHighScore(highestKnownScore, submittedInitials);
+        hideCornerScoreInitialsPrompt();
+        // Persist to server in the background; a successful response will reconcile
+        // any server-authoritative score/initials via setCornerScoreHighScore.
+        void queueCornerScoreUpdate(highestKnownScore, {
           force: true,
           initials: submittedInitials
         });
-        if (cornerScoreHighScoreValue >= highestKnownScore && cornerScoreHighScoreInitials === submittedInitials) {
-          hideCornerScoreInitialsPrompt();
-          return;
-        }
-        syncCornerScoreInitialsSubmitState();
       }
 
       function stopBigTvDvdAnimation() {
