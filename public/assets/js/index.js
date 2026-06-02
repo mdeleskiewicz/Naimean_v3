@@ -77,8 +77,10 @@
         'right-monitor'
       ]);
       const DEFAULT_BIG_TV_RIGHT_MONITOR_OVERLAY_STATE = 'blue_discord';
+      const BIG_TV_RIGHT_MONITOR_OVERLAY_CORNER_SCORE_STATE = 'corner_score';
       const BIG_TV_RIGHT_MONITOR_OVERLAY_STATE_UNKNOWN = 'unknown';
       const BIG_TV_RIGHT_MONITOR_OVERLAY_BLUE_IMAGE_URL = 'assets/images/join_disc_blue.png';
+      const BIG_TV_RIGHT_MONITOR_OVERLAY_CORNER_SCORE_IMAGE_URL = 'assets/images/join_disc_green.png';
       const BIG_TV_SCREENSAVER_GIF_URL = 'assets/video/dvd.gif';
       const CORNER_SCORE_API_URL = '/api/corner-score';
       const DVD_COLOR_STEPS = Object.freeze([
@@ -535,6 +537,7 @@
       let leftMonitorSelectedState = DEFAULT_LEFT_MONITOR_STATE;
       let discordJoinButtonEl = null;
       let discordButtonImgEl = null;
+      let rightMonitorOverlayImageUrl = BIG_TV_RIGHT_MONITOR_OVERLAY_BLUE_IMAGE_URL;
       let discordAuthState = null;
       let aquariumShrimpClips = [...AQUARIUM_LOCAL_SHRIMP_CLIPS];
       let aquariumShrimpClipSet = new Set(aquariumShrimpClips);
@@ -730,11 +733,41 @@
       }
 
       function getCurrentRightMonitorOverlayState() {
-        const rightMonitorOverlayImageUrl = discordButtonImgEl?.getAttribute('src') || DISCORD_BUTTON_IMAGE_URL;
-        if (rightMonitorOverlayImageUrl.includes(BIG_TV_RIGHT_MONITOR_OVERLAY_BLUE_IMAGE_URL)) {
+        const currentImageUrl =
+          discordButtonImgEl?.getAttribute('src') ||
+          rightMonitorOverlayImageUrl;
+        if (currentImageUrl.includes(BIG_TV_RIGHT_MONITOR_OVERLAY_BLUE_IMAGE_URL)) {
           return DEFAULT_BIG_TV_RIGHT_MONITOR_OVERLAY_STATE;
         }
+        if (currentImageUrl.includes(BIG_TV_RIGHT_MONITOR_OVERLAY_CORNER_SCORE_IMAGE_URL)) {
+          return BIG_TV_RIGHT_MONITOR_OVERLAY_CORNER_SCORE_STATE;
+        }
         return BIG_TV_RIGHT_MONITOR_OVERLAY_STATE_UNKNOWN;
+      }
+
+      function setRightMonitorOverlayImageUrl(nextImageUrl) {
+        rightMonitorOverlayImageUrl = nextImageUrl || BIG_TV_RIGHT_MONITOR_OVERLAY_BLUE_IMAGE_URL;
+        if (discordButtonImgEl) {
+          discordButtonImgEl.src = rightMonitorOverlayImageUrl;
+        }
+      }
+
+      function playRightMonitorScoringNoise() {
+        const scoringNoiseAudio = getZeldaSecretAudioElement();
+        stopZeldaSecretAudioPlayback();
+        const playPromise = scoringNoiseAudio.play();
+        if (playPromise && typeof playPromise.catch === 'function') {
+          playPromise.catch((error) => {
+            if (error?.name !== 'AbortError') {
+              console.warn('Unable to play right monitor scoring noise.', error);
+            }
+          });
+        }
+      }
+
+      function activateRightMonitorCornerScoreMode() {
+        setRightMonitorOverlayImageUrl(BIG_TV_RIGHT_MONITOR_OVERLAY_CORNER_SCORE_IMAGE_URL);
+        playRightMonitorScoringNoise();
       }
 
       function hasDefaultMonitorOverlays() {
@@ -1137,7 +1170,7 @@
           discordJoinButtonEl.title = 'Sign in with Discord';
         }
         if (discordButtonImgEl) {
-          discordButtonImgEl.src = DISCORD_BUTTON_IMAGE_URL;
+          discordButtonImgEl.src = rightMonitorOverlayImageUrl;
         }
         syncLoginOverlayUi();
         syncDvdScreensaverState();
@@ -3812,7 +3845,11 @@
               if (!isBigTvMonitorInteractive()) {
                 return;
               }
+              const wasDvdScreensaverActive = bigTvDvdOverlayEl?.classList.contains('is-active');
               interruptBigTvDvdLoop();
+              if (wasDvdScreensaverActive) {
+                activateRightMonitorCornerScoreMode();
+              }
               setLeftMonitorState(DEFAULT_LEFT_MONITOR_STATE);
               void enterBigTvFullscreen();
               return;
@@ -3866,6 +3903,7 @@
         rightMonitorCornerScoreOverlayEl = null;
         rightMonitorCornerScoreValueEl = null;
         rightMonitorScreenWindowEl = null;
+        rightMonitorOverlayImageUrl = BIG_TV_RIGHT_MONITOR_OVERLAY_BLUE_IMAGE_URL;
         bigTvPromptOverlayEl = null;
         bigTvPromptSecretBoxEl = null;
         bigTvPromptSecretEl = null;
@@ -4442,7 +4480,7 @@
 
             const img = document.createElement('img');
             img.className = 'join-discord-button-image';
-            img.src = DISCORD_BUTTON_IMAGE_URL;
+            img.src = rightMonitorOverlayImageUrl;
             img.alt = '';
             img.loading = 'lazy';
             img.decoding = 'async';
