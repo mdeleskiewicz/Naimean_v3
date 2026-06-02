@@ -2639,6 +2639,7 @@
       gap: calc(6px * var(--fc-scale));
       margin-top: calc(3px * var(--fc-scale));
       padding-right: calc(10px * var(--fc-scale));
+      touch-action: none;
     }
 
     .rc-scale-row {
@@ -2721,6 +2722,12 @@
       cursor: ew-resize;
       touch-action: none;
       z-index: 5;
+    }
+
+    @media (pointer: coarse) {
+      .rc-selector-dot {
+        width: calc(16px * var(--fc-scale));
+      }
     }
 
     .rc-selector-label {

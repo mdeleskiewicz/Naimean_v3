@@ -100,8 +100,8 @@
       const DVD_SPEED_MULTIPLIER_MIN = -5;
       const DVD_SPEED_MULTIPLIER_MAX = 5;
       const DVD_ACCELEROMETER_MULTIPLIER_MIN = -3;
-      const DVD_ACCELEROMETER_MULTIPLIER_MAX = 3;
-      const DVD_ACCELEROMETER_NEUTRAL_POSITION = 0.5;
+      const DVD_ACCELEROMETER_MULTIPLIER_MAX = 1;
+      const DVD_ACCELEROMETER_DEFAULT_POSITION = 1;
       const DVD_FRAME_DELTA_MAX_SECONDS = 0.05;
       const DVD_CORNER_GOAL_TOLERANCE_PX = 3;
       const DVD_CORNER_MISS_MIN_TOLERANCE_PX = 4;
@@ -229,8 +229,6 @@
       const FLIP_CLOCK_OVERLAY_ID = 'overlay-flip-clock';
       const CLOCK_URL_WINDOWS = 'ms-clock://';
       const CLOCK_URL_IOS = 'clock-alarm://';
-      const CALENDAR_URL_DESKTOP = 'outlookcal://';
-      const CALENDAR_URL_MOBILE = 'msteams://l/meetings';
       const WORLD_WIDTH_SEGMENTS = 3;
       const SCENE_TILE_IMAGE_URLS = [
         {
@@ -3883,11 +3881,6 @@
         }
       }
 
-      function openCalendarApp() {
-        const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-        window.location.href = isMobile ? CALENDAR_URL_MOBILE : CALENDAR_URL_DESKTOP;
-      }
-
       function loadCommodorePowerState() {
         try {
           return sessionStorage.getItem(COMMODORE_POWER_STATE_STORAGE_KEY) === 'true';
@@ -4134,15 +4127,12 @@
 
       function getDvdAccelerometerMultiplier(position) {
         const clampedPosition = clamp(position, 0, 1);
-        const normalized = (clampedPosition - DVD_ACCELEROMETER_NEUTRAL_POSITION) * 2;
-        return normalized * DVD_ACCELEROMETER_MULTIPLIER_MAX;
+        return DVD_ACCELEROMETER_MULTIPLIER_MIN
+          + (clampedPosition * (DVD_ACCELEROMETER_MULTIPLIER_MAX - DVD_ACCELEROMETER_MULTIPLIER_MIN));
       }
 
       function formatDvdAccelerometerPercent(multiplier) {
         const percent = Math.round(multiplier * 100);
-        if (percent > 0) {
-          return `+${percent}%`;
-        }
         return `${percent}%`;
       }
 
@@ -5302,7 +5292,8 @@
             clockDigits.append(h1, h2, timeGap, m1, m2);
             clockZone.append(clockDigits);
 
-            const radioZone = makeZone('rc-radio-zone', 'Open Calendar App', openCalendarApp);
+            const radioZone = document.createElement('div');
+            radioZone.className = 'rc-radio-zone';
 
             const model = document.createElement('div');
             model.className = 'rc-model';
@@ -5319,7 +5310,7 @@
             const selectorLine = document.createElement('div');
             selectorLine.className = 'rc-selector-line';
             selectorLine.setAttribute('aria-hidden', 'true');
-            let tuningPosition = applyRadioTuningPosition(scaleBlock, DVD_ACCELEROMETER_NEUTRAL_POSITION);
+            let tuningPosition = applyRadioTuningPosition(scaleBlock, DVD_ACCELEROMETER_DEFAULT_POSITION);
             let tuningAudio = flipClockRadioTuningAudioEl || getRadioTuningAudioElement(getNextRadioTuningAudioUrl());
             flipClockRadioTuningAudioEl = tuningAudio;
             resetRadioTuningPlayback(tuningAudio);
@@ -5335,8 +5326,8 @@
             selectorDot.setAttribute('role', 'slider');
             selectorDot.setAttribute('tabindex', '0');
             selectorDot.setAttribute('aria-label', 'Adjust DVD screensaver acceleration');
-            selectorDot.setAttribute('aria-valuemin', '-300');
-            selectorDot.setAttribute('aria-valuemax', '300');
+            selectorDot.setAttribute('aria-valuemin', String(Math.round(DVD_ACCELEROMETER_MULTIPLIER_MIN * 100)));
+            selectorDot.setAttribute('aria-valuemax', String(Math.round(DVD_ACCELEROMETER_MULTIPLIER_MAX * 100)));
             syncDvdAccelerometerFromTuningPosition(tuningPosition, selectorDot);
 
             function updateTuningFromClientX(clientX, { playAudio = true, timestampMs } = {}) {
@@ -5357,8 +5348,8 @@
               if (activeTunePointerId !== pointerId) return;
               activeTunePointerId = null;
               stopRadioTuningLoopPlayback(tuningAudio);
-              if (selectorDot.hasPointerCapture(pointerId)) {
-                selectorDot.releasePointerCapture(pointerId);
+              if (scaleBlock.hasPointerCapture(pointerId)) {
+                scaleBlock.releasePointerCapture(pointerId);
               }
             }
 
@@ -5372,21 +5363,25 @@
               resetRadioTuningPlayback(tuningAudio);
             }
 
-            selectorDot.addEventListener('pointerdown', (event) => {
+            function beginTuneDrag(event) {
+              if (typeof event.button === 'number' && event.button !== 0) return;
               event.preventDefault();
               event.stopPropagation();
               activeTunePointerId = event.pointerId;
               lastPointerClientX = event.clientX;
-              selectorDot.setPointerCapture(event.pointerId);
+              scaleBlock.setPointerCapture(event.pointerId);
               selectNextTuningAudio();
               const didUpdateTuning = updateTuningFromClientX(event.clientX, { playAudio: true, timestampMs: event.timeStamp });
               if (!didUpdateTuning) {
                 resetRadioTuningPlayback(tuningAudio);
                 ensureRadioTuningLoopPlayback(tuningAudio);
               }
-            });
+            }
 
-            selectorDot.addEventListener('pointermove', (event) => {
+            scaleBlock.addEventListener('pointerdown', beginTuneDrag);
+            selectorDot.addEventListener('pointerdown', beginTuneDrag);
+
+            scaleBlock.addEventListener('pointermove', (event) => {
               if (event.pointerId !== activeTunePointerId) return;
               event.preventDefault();
               event.stopPropagation();
@@ -5397,17 +5392,17 @@
               lastPointerClientX = event.clientX;
             });
 
-            selectorDot.addEventListener('pointerup', (event) => {
+            scaleBlock.addEventListener('pointerup', (event) => {
               event.preventDefault();
               event.stopPropagation();
               endTuneDrag(event.pointerId);
             });
-            selectorDot.addEventListener('pointercancel', (event) => {
+            scaleBlock.addEventListener('pointercancel', (event) => {
               event.preventDefault();
               event.stopPropagation();
               endTuneDrag(event.pointerId);
             });
-            selectorDot.addEventListener('lostpointercapture', () => {
+            scaleBlock.addEventListener('lostpointercapture', () => {
               activeTunePointerId = null;
               stopRadioTuningLoopPlayback(tuningAudio);
             });
