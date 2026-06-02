@@ -1000,7 +1000,7 @@
           setCornerScore(cornerScoreValue + 1);
           playRightMonitorScoringNoise();
           queueCornerScoreIncrement();
-          if (!isRightMonitorInteractive()) {
+          if (!isRightMonitorInteractive() && !isRightMonitorCornerScoreWakeSequenceRunning) {
             void wakeRightMonitorForCornerScore();
           }
         }
@@ -2162,6 +2162,7 @@
           animateMonitorShadowOn(rightMonitorShadowOverlayEl);
           const isReady = await waitForRightMonitorInteractive();
           if (!isReady) {
+            console.warn('Right monitor did not become interactive for corner score wake.');
             animateMonitorShadowOff(rightMonitorShadowOverlayEl);
             return;
           }
