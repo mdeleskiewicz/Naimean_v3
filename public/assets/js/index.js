@@ -4137,11 +4137,7 @@
       function getDvdAccelerometerMultiplier(position) {
         const clampedPosition = clamp(position, 0, 1);
         const normalized = (clampedPosition - DVD_ACCELEROMETER_NEUTRAL_POSITION) * 2;
-        return clamp(
-          normalized * DVD_ACCELEROMETER_MULTIPLIER_MAX,
-          DVD_ACCELEROMETER_MULTIPLIER_MIN,
-          DVD_ACCELEROMETER_MULTIPLIER_MAX
-        );
+        return normalized * DVD_ACCELEROMETER_MULTIPLIER_MAX;
       }
 
       function formatDvdAccelerometerPercent(multiplier) {
@@ -4154,7 +4150,6 @@
 
       function syncDvdAccelerometerFromTuningPosition(position, sliderEl) {
         dvdSpeedMultiplier = getDvdAccelerometerMultiplier(position);
-        if (!sliderEl) return;
         const percentText = formatDvdAccelerometerPercent(dvdSpeedMultiplier);
         sliderEl.setAttribute('aria-valuenow', String(Math.round(dvdSpeedMultiplier * 100)));
         sliderEl.setAttribute('aria-valuetext', `DVD accelerometer ${percentText}`);
@@ -5341,7 +5336,7 @@
             selectorDot.className = 'rc-selector-dot';
             selectorDot.setAttribute('role', 'slider');
             selectorDot.setAttribute('tabindex', '0');
-            selectorDot.setAttribute('aria-label', 'DVD screensaver accelerometer');
+            selectorDot.setAttribute('aria-label', 'Adjust DVD screensaver acceleration');
             selectorDot.setAttribute('aria-valuemin', '-300');
             selectorDot.setAttribute('aria-valuemax', '300');
             syncDvdAccelerometerFromTuningPosition(tuningPosition, selectorDot);
