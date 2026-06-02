@@ -93,6 +93,7 @@
       ]);
       const DVD_BOUNCE_SPEED_PX_PER_SECOND = 260;
       const DVD_FRAME_DELTA_MAX_SECONDS = 0.05;
+      const DVD_CORNER_SCORE_TOLERANCE_PX = 2;
       const AQUARIUM_STATIC_VIDEO_URL = 'assets/video/static.v20260424.mp4';
       const AQUARIUM_LOCAL_SHRIMP_CLIPS = Object.freeze(
         Array.from({ length: 23 }, (_, index) => `assets/video/shrimp/sh${index + 1}.mp4`)
@@ -946,7 +947,9 @@
           applyDvdColorStep();
         }
 
-        const isCornerHit = hitHorizontalEdge && hitVerticalEdge;
+        const isNearCornerX = dvdPositionX <= DVD_CORNER_SCORE_TOLERANCE_PX || dvdPositionX >= maxX - DVD_CORNER_SCORE_TOLERANCE_PX;
+        const isNearCornerY = dvdPositionY <= DVD_CORNER_SCORE_TOLERANCE_PX || dvdPositionY >= maxY - DVD_CORNER_SCORE_TOLERANCE_PX;
+        const isCornerHit = (hitHorizontalEdge && isNearCornerY) || (hitVerticalEdge && isNearCornerX);
         if (isCornerHit && isDvdCornerCountEnabled && isRightMonitorInteractive()) {
           setCornerScore(cornerScoreValue + 1);
           const zeldaAudio = getZeldaSecretAudioElement();
