@@ -96,6 +96,9 @@
         { color: '#ff78e2', hue: 300 }
       ]);
       const DVD_BOUNCE_SPEED_PX_PER_SECOND = 208;
+      const DVD_SPEED_ADJUSTMENT_STEP = 0.1;
+      const DVD_SPEED_MULTIPLIER_MIN = -5;
+      const DVD_SPEED_MULTIPLIER_MAX = 5;
       const DVD_FRAME_DELTA_MAX_SECONDS = 0.05;
       const DVD_CORNER_GOAL_TOLERANCE_PX = 3;
       const DVD_CORNER_MISS_MIN_TOLERANCE_PX = 4;
@@ -497,6 +500,7 @@
       let dvdPositionY = 0;
       let dvdVelocityX = 1;
       let dvdVelocityY = 1;
+      let dvdSpeedMultiplier = 1;
       let hasDvdPosition = false;
       let isDvdAnimationActive = false;
       let dvdColorStepIndex = 0;
@@ -1075,7 +1079,7 @@
         if (!Number.isFinite(nextScore)) {
           return;
         }
-        const normalizedScore = Math.max(0, Math.floor(nextScore));
+        const normalizedScore = Math.floor(nextScore);
         if (cornerScoreValue !== normalizedScore) {
           hideCornerScoreStatus();
         }
@@ -1201,6 +1205,22 @@
         return { boundsWidth, boundsHeight, logoWidth, logoHeight };
       }
 
+      function adjustDvdSpeed(direction) {
+        const delta = direction * DVD_SPEED_ADJUSTMENT_STEP;
+        dvdSpeedMultiplier = clamp(
+          dvdSpeedMultiplier + delta,
+          DVD_SPEED_MULTIPLIER_MIN,
+          DVD_SPEED_MULTIPLIER_MAX
+        );
+      }
+
+      function isTextEntryTarget(target) {
+        if (!(target instanceof Element)) {
+          return false;
+        }
+        return Boolean(target.closest('input, textarea, [contenteditable]'));
+      }
+
       function tickBigTvDvdAnimation(timestamp) {
         if (!isDvdAnimationActive || !bigTvDvdLogoEl) {
           stopBigTvDvdAnimation();
@@ -1240,8 +1260,14 @@
           Math.max(0, (timestamp - dvdLastFrameTime) / 1000)
         );
         dvdLastFrameTime = timestamp;
-        dvdPositionX += dvdVelocityX * DVD_BOUNCE_SPEED_PX_PER_SECOND * deltaSeconds;
-        dvdPositionY += dvdVelocityY * DVD_BOUNCE_SPEED_PX_PER_SECOND * deltaSeconds;
+        const effectiveDvdSpeed = DVD_BOUNCE_SPEED_PX_PER_SECOND * dvdSpeedMultiplier;
+        if (Math.abs(effectiveDvdSpeed) <= Number.EPSILON) {
+          bigTvDvdLogoEl.style.transform = `translate3d(${dvdPositionX}px, ${dvdPositionY}px, 0)`;
+          dvdAnimationFrameId = window.requestAnimationFrame(tickBigTvDvdAnimation);
+          return;
+        }
+        dvdPositionX += dvdVelocityX * effectiveDvdSpeed * deltaSeconds;
+        dvdPositionY += dvdVelocityY * effectiveDvdSpeed * deltaSeconds;
 
         let hitHorizontalEdge = false;
         let hitVerticalEdge = false;
@@ -1282,17 +1308,20 @@
         });
         if (goalCorner) {
           const previousHighScore = cornerScoreHighScoreValue;
-          const nextCornerScore = cornerScoreValue + 1;
+          const cornerScoreDelta = dvdSpeedMultiplier < 0 ? -1 : 1;
+          const nextCornerScore = cornerScoreValue + cornerScoreDelta;
           setCornerScore(nextCornerScore);
           playRightMonitorScoringNoise();
           isDvdCornerCountEnabled = true;
-          if (nextCornerScore === previousHighScore) {
-            showCornerScoreStatus('Tied for high-score!', nextCornerScore);
-          } else if (nextCornerScore > previousHighScore) {
-            setCornerScoreHighScore(nextCornerScore, '');
-            showCornerScoreStatus('New high-score!', nextCornerScore);
-            showCornerScoreInitialsPrompt(nextCornerScore);
-            void queueCornerScoreUpdate(nextCornerScore, { force: true });
+          if (cornerScoreDelta > 0) {
+            if (nextCornerScore === previousHighScore) {
+              showCornerScoreStatus('Tied for high-score!', nextCornerScore);
+            } else if (nextCornerScore > previousHighScore) {
+              setCornerScoreHighScore(nextCornerScore, '');
+              showCornerScoreStatus('New high-score!', nextCornerScore);
+              showCornerScoreInitialsPrompt(nextCornerScore);
+              void queueCornerScoreUpdate(nextCornerScore, { force: true });
+            }
           }
           syncDvdScreensaverState();
           if (!isRightMonitorInteractive() && !isRightMonitorCornerScoreWakeSequenceRunning) {
@@ -5726,6 +5755,19 @@
 
         if (event.code === 'Backquote' || debugComboPressed) {
           toggleDebugMode();
+        }
+
+        const isIncreaseDvdSpeedKey = event.key === '+' || event.code === 'NumpadAdd';
+        const isDecreaseDvdSpeedKey = event.key === '-' || event.code === 'NumpadSubtract';
+        if (
+          (isIncreaseDvdSpeedKey || isDecreaseDvdSpeedKey) &&
+          !event.ctrlKey &&
+          !event.metaKey &&
+          !event.altKey &&
+          !isTextEntryTarget(event.target)
+        ) {
+          event.preventDefault();
+          adjustDvdSpeed(isIncreaseDvdSpeedKey ? 1 : -1);
         }
 
         if (document.fullscreenElement === aquariumOverlayEl && !isBigTvToolsActive) {
