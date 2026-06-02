@@ -4605,6 +4605,28 @@
             aquariumStaticOverlayEl.appendChild(aquariumStaticVideoEl);
             el.appendChild(aquariumStaticOverlayEl);
 
+            nedryGateOverlayEl = document.createElement('div');
+            nedryGateOverlayEl.className = 'nedry-gate-overlay';
+            nedryGateOverlayEl.setAttribute('aria-hidden', 'true');
+
+            nedryGateVideoEl = document.createElement('video');
+            nedryGateVideoEl.className = 'nedry-gate-video';
+            nedryGateVideoEl.src = NEDRY_GATE_VIDEO_URL;
+            nedryGateVideoEl.preload = 'metadata';
+            nedryGateVideoEl.playsInline = true;
+            nedryGateVideoEl.setAttribute('playsinline', '');
+            nedryGateVideoEl.setAttribute('webkit-playsinline', '');
+            nedryGateVideoEl.addEventListener('ended', () => hideNedryGateOverlay());
+            nedryGateVideoEl.addEventListener('error', () => hideNedryGateOverlay());
+            nedryGateVideoEl.addEventListener('loadedmetadata', () => updateBigTvDebugWatermarkPlacement());
+            nedryGateOverlayEl.appendChild(nedryGateVideoEl);
+            bigTvDebugWatermarkEl = document.createElement('div');
+            bigTvDebugWatermarkEl.className = 'big-tv-debug-watermark';
+            bigTvDebugWatermarkEl.setAttribute('aria-hidden', 'true');
+            syncBigTvDebugWatermark();
+            nedryGateOverlayEl.appendChild(bigTvDebugWatermarkEl);
+            el.appendChild(nedryGateOverlayEl);
+
             bigTvPromptOverlayEl = document.createElement('div');
             bigTvPromptOverlayEl.className = 'big-tv-prompt-overlay';
             bigTvPromptOverlayEl.setAttribute('aria-hidden', 'true');
@@ -4876,29 +4898,6 @@
             calendarMonthImageEl.setAttribute('aria-hidden', 'true');
             calendarBigTvOverlayEl.appendChild(calendarMonthImageEl);
             el.appendChild(calendarBigTvOverlayEl);
-
-
-            nedryGateOverlayEl = document.createElement('div');
-            nedryGateOverlayEl.className = 'nedry-gate-overlay';
-            nedryGateOverlayEl.setAttribute('aria-hidden', 'true');
-
-            nedryGateVideoEl = document.createElement('video');
-            nedryGateVideoEl.className = 'nedry-gate-video';
-            nedryGateVideoEl.src = NEDRY_GATE_VIDEO_URL;
-            nedryGateVideoEl.preload = 'metadata';
-            nedryGateVideoEl.playsInline = true;
-            nedryGateVideoEl.setAttribute('playsinline', '');
-            nedryGateVideoEl.setAttribute('webkit-playsinline', '');
-            nedryGateVideoEl.addEventListener('ended', () => hideNedryGateOverlay());
-            nedryGateVideoEl.addEventListener('error', () => hideNedryGateOverlay());
-            nedryGateVideoEl.addEventListener('loadedmetadata', () => updateBigTvDebugWatermarkPlacement());
-            nedryGateOverlayEl.appendChild(nedryGateVideoEl);
-            bigTvDebugWatermarkEl = document.createElement('div');
-            bigTvDebugWatermarkEl.className = 'big-tv-debug-watermark';
-            bigTvDebugWatermarkEl.setAttribute('aria-hidden', 'true');
-            syncBigTvDebugWatermark();
-            nedryGateOverlayEl.appendChild(bigTvDebugWatermarkEl);
-            el.appendChild(nedryGateOverlayEl);
           }
 
           if (BIG_TV_FULLSCREEN_OVERLAY_IDS.has(overlay.id)) {
