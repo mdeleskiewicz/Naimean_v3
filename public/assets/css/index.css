@@ -2073,10 +2073,7 @@
         inset 0 calc(1px * var(--fc-scale)) 0 rgba(240, 216, 191, 0.2),
         inset 0 calc(-3px * var(--fc-scale)) 0 rgba(47, 28, 17, 0.62);
       transform-origin: left center;
-      transform:
-        perspective(calc(500px * var(--fc-scale)))
-        rotateY(-7deg)
-        rotateX(-6deg);
+      transform: none;
       transform-style: preserve-3d;
       pointer-events: auto;
       overflow: hidden;
