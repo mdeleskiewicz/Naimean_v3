@@ -85,6 +85,8 @@
       const BIG_TV_SCREENSAVER_LOGO_URL = 'assets/images/dvd-logo.svg';
       const CORNER_SCORE_API_URL = '/api/corner-score';
       const CORNER_SCORE_SERVER_BASELINE = 3;
+      const CORNER_SCORE_HONOR_STREAK_GOALS = 3;
+      const WRONG_AUDIO_URL = 'assets/audio/wrong.v20260424.mp3';
       const DVD_COLOR_STEPS = Object.freeze([
         { color: '#ff4d4d', hue: 0 },
         { color: '#40d6ff', hue: 170 },
@@ -476,6 +478,8 @@
       let aquariumStaticVideoEl = null;
       let bigTvDvdOverlayEl = null;
       let bigTvDvdLogoEl = null;
+      let bigTvCornerHonorOverlayEl = null;
+      let bigTvCornerHonorDismissButtonEl = null;
       let isBigTvDvdLoopInterrupted = false;
       let dvdAnimationFrameId = null;
       let dvdLastFrameTime = 0;
@@ -494,6 +498,8 @@
       let whiteboardCornerScoreValueEl = null;
       let rightMonitorScreenWindowEl = null;
       let cornerScorePersistQueue = Promise.resolve();
+      let cornerScoreGoalStreak = 0;
+      let isCornerScoreHonorVisible = false;
       let aquariumSequenceToken = 0;
       let aquariumLoopOwnerToken = 0;
       let isRightMonitorAquariumSequenceRunning = false;
@@ -778,6 +784,37 @@
               if (error?.name !== 'AbortError') {
                 console.warn('Unable to play right monitor scoring noise.', error);
               }
+
+              function playWrongAudio() {
+                const wrongAudio = new Audio(WRONG_AUDIO_URL);
+                wrongAudio.play().catch((error) => {
+                  if (error?.name !== 'AbortError') {
+                    console.warn('Unable to play wrong audio.', error);
+                  }
+                });
+              }
+
+              function hideCornerScoreHonorOverlay() {
+                isCornerScoreHonorVisible = false;
+                if (!bigTvCornerHonorOverlayEl) {
+                  return;
+                }
+                bigTvCornerHonorOverlayEl.classList.remove('is-active');
+                bigTvCornerHonorOverlayEl.setAttribute('aria-hidden', 'true');
+              }
+
+              function showCornerScoreHonorOverlay() {
+                if (!bigTvCornerHonorOverlayEl) {
+                  return;
+                }
+                isCornerScoreHonorVisible = true;
+                cornerScoreGoalStreak = 0;
+                bigTvCornerHonorOverlayEl.classList.add('is-active');
+                bigTvCornerHonorOverlayEl.setAttribute('aria-hidden', 'false');
+                if (bigTvCornerHonorDismissButtonEl) {
+                  bigTvCornerHonorDismissButtonEl.focus({ preventScroll: true });
+                }
+              }
             });
           }
           return;
@@ -1025,9 +1062,19 @@
         const isNearCornerY = dvdPositionY <= DVD_CORNER_SCORE_TOLERANCE_PX || dvdPositionY >= maxY - DVD_CORNER_SCORE_TOLERANCE_PX;
         const isCornerHit = (hitHorizontalEdge && isNearCornerY) || (hitVerticalEdge && isNearCornerX);
         if (isCornerHit && isDvdCornerCountEnabled) {
+          if (isCornerScoreHonorVisible) {
+            playWrongAudio();
+            bigTvDvdLogoEl.style.transform = `translate3d(${dvdPositionX}px, ${dvdPositionY}px, 0)`;
+            dvdAnimationFrameId = window.requestAnimationFrame(tickBigTvDvdAnimation);
+            return;
+          }
           const nextCornerScore = cornerScoreValue + 1;
           setCornerScore(nextCornerScore);
           playRightMonitorScoringNoise();
+          cornerScoreGoalStreak += 1;
+          if (cornerScoreGoalStreak >= CORNER_SCORE_HONOR_STREAK_GOALS) {
+            showCornerScoreHonorOverlay();
+          }
           queueCornerScoreUpdate(nextCornerScore);
           if (!isRightMonitorInteractive() && !isRightMonitorCornerScoreWakeSequenceRunning) {
             void wakeRightMonitorForCornerScore();
@@ -4183,11 +4230,15 @@
         aquariumStaticVideoEl = null;
         bigTvDvdOverlayEl = null;
         bigTvDvdLogoEl = null;
+        bigTvCornerHonorOverlayEl = null;
+        bigTvCornerHonorDismissButtonEl = null;
         isBigTvDvdLoopInterrupted = false;
         stopBigTvDvdAnimation();
         hasDvdPosition = false;
         dvdColorStepIndex = 0;
         isDvdCornerCountEnabled = false;
+        isCornerScoreHonorVisible = false;
+        cornerScoreGoalStreak = 0;
         rightMonitorCornerScoreOverlayEl = null;
         rightMonitorCornerScoreValueEl = null;
         whiteboardCornerScoreValueEl = null;
@@ -4264,6 +4315,10 @@
                 return;
               }
               isDvdCornerCountEnabled = !isDvdCornerCountEnabled;
+              if (!isDvdCornerCountEnabled) {
+                hideCornerScoreHonorOverlay();
+                cornerScoreGoalStreak = 0;
+              }
               syncDvdScreensaverState();
             };
             bigTvDvdOverlayEl.addEventListener('click', (event) => {
@@ -4290,6 +4345,29 @@
             bigTvDvdLogoEl.loading = 'eager';
             bigTvDvdLogoEl.decoding = 'async';
             bigTvDvdOverlayEl.appendChild(bigTvDvdLogoEl);
+
+            bigTvCornerHonorOverlayEl = document.createElement('div');
+            bigTvCornerHonorOverlayEl.className = 'big-tv-corner-honor-overlay';
+            bigTvCornerHonorOverlayEl.setAttribute('aria-hidden', 'true');
+            bigTvCornerHonorOverlayEl.addEventListener('pointerdown', (event) => event.stopPropagation());
+            bigTvCornerHonorOverlayEl.addEventListener('click', (event) => event.stopPropagation());
+            const cornerHonorLabelEl = document.createElement('p');
+            cornerHonorLabelEl.className = 'big-tv-corner-honor-label';
+            cornerHonorLabelEl.textContent = 'Honor Thy Interventions';
+            bigTvCornerHonorDismissButtonEl = document.createElement('button');
+            bigTvCornerHonorDismissButtonEl.type = 'button';
+            bigTvCornerHonorDismissButtonEl.className = 'big-tv-corner-honor-button';
+            bigTvCornerHonorDismissButtonEl.textContent = 'Mmmhmm';
+            bigTvCornerHonorDismissButtonEl.addEventListener('pointerdown', (event) => event.stopPropagation());
+            bigTvCornerHonorDismissButtonEl.addEventListener('click', (event) => {
+              event.preventDefault();
+              event.stopPropagation();
+              hideCornerScoreHonorOverlay();
+            });
+            bigTvCornerHonorDismissButtonEl.addEventListener('keydown', (event) => event.stopPropagation());
+            bigTvCornerHonorOverlayEl.append(cornerHonorLabelEl, bigTvCornerHonorDismissButtonEl);
+            bigTvDvdOverlayEl.appendChild(bigTvCornerHonorOverlayEl);
+
             el.appendChild(bigTvDvdOverlayEl);
             applyDvdColorStep();
             if (DISCORD_WIDGET_URL) {
@@ -5413,8 +5491,6 @@
         setDebugMode(!document.body.classList.contains('debug'));
       }
 
-      const WRONG_AUDIO_URL = 'assets/audio/wrong.v20260424.mp3';
-
       function onDebugButtonClick() {
         if (document.body.classList.contains('debug')) {
           setDebugMode(false);
@@ -5428,12 +5504,7 @@
         const isValid = hasMatchingDebugSaveCipher(encodeDebugSavePassword(attempt.trim()));
         if (!isValid) {
           if (debugStatus) debugStatus.textContent = 'Incorrect password.';
-          const wrongAudio = new Audio(WRONG_AUDIO_URL);
-          wrongAudio.play().catch((error) => {
-            if (error?.name !== 'AbortError') {
-              console.warn('Unable to play wrong audio.', error);
-            }
-          });
+          playWrongAudio();
           return;
         }
         hasDebugSaveAccess = true;

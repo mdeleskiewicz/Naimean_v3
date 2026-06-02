@@ -1195,6 +1195,67 @@
       mix-blend-mode: screen;
     }
 
+    .big-tv-corner-honor-overlay {
+      position: absolute;
+      inset: 0;
+      z-index: 3;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: clamp(16px, 4%, 32px);
+      padding: clamp(16px, 4%, 32px);
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+      background:
+        radial-gradient(120% 95% at 50% 50%, rgba(7, 7, 7, 0.62) 0%, rgba(2, 2, 2, 0.9) 100%),
+        rgba(0, 0, 0, 0.78);
+      text-align: center;
+      transition: opacity 140ms ease;
+    }
+
+    .big-tv-corner-honor-overlay.is-active {
+      opacity: 1;
+      visibility: visible;
+      pointer-events: auto;
+    }
+
+    .big-tv-corner-honor-label {
+      margin: 0;
+      color: #fff8d2;
+      font-size: clamp(24px, 5.2vw, 64px);
+      line-height: 1.14;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      text-shadow: 0 0 18px rgba(255, 226, 143, 0.48);
+    }
+
+    .big-tv-corner-honor-button {
+      border: 0;
+      border-radius: 999px;
+      padding: clamp(10px, 1.8vw, 20px) clamp(24px, 4.1vw, 48px);
+      color: #1f1606;
+      background: linear-gradient(180deg, #ffe49f 0%, #f5b85f 100%);
+      font: 700 clamp(18px, 2.3vw, 30px) / 1.1 "Trebuchet MS", "Arial Black", sans-serif;
+      letter-spacing: 0.05em;
+      cursor: pointer;
+      box-shadow:
+        0 0 0 1px rgba(255, 236, 173, 0.78),
+        0 12px 26px rgba(0, 0, 0, 0.46),
+        0 0 28px rgba(255, 213, 124, 0.38);
+    }
+
+    .big-tv-corner-honor-button:hover {
+      filter: brightness(1.04);
+    }
+
+    .big-tv-corner-honor-button:focus-visible {
+      outline: 2px solid #fff4cb;
+      outline-offset: 3px;
+    }
+
     body.camera-motion-active .big-tv-dvd-logo {
       display: none;
     }
