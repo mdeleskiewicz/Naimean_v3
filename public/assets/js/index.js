@@ -2162,6 +2162,7 @@
           animateMonitorShadowOn(rightMonitorShadowOverlayEl);
           const isReady = await waitForRightMonitorInteractive();
           if (!isReady) {
+            animateMonitorShadowOff(rightMonitorShadowOverlayEl);
             return;
           }
           await playRightMonitorStaticPass();
