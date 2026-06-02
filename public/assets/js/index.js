@@ -84,6 +84,7 @@
       const BIG_TV_RIGHT_MONITOR_OVERLAY_CORNER_SCORE_IMAGE_URL = 'assets/images/join_disc_green.png';
       const BIG_TV_SCREENSAVER_LOGO_URL = 'assets/images/dvd-logo.svg';
       const CORNER_SCORE_API_URL = '/api/corner-score';
+      const CORNER_SCORE_SERVER_BASELINE = 3;
       const DVD_COLOR_STEPS = Object.freeze([
         { color: '#ff4d4d', hue: 0 },
         { color: '#40d6ff', hue: 170 },
@@ -260,6 +261,8 @@
       const LEFT_MONITOR_SIDE_FRAME_CONTROL_ID = 'overlay-left-monitor-side-frame-control';
       const RIGHT_MONITOR_SIDE_FRAME_OVERLAY_ID = 'overlay-right-monitor-side-frame';
       const RIGHT_MONITOR_SIDE_FRAME_CONTROL_ID = 'overlay-right-monitor-side-frame-control';
+      const WHITEBOARD_CORNER_SCORE_OVERLAY_ID = 'overlay-whiteboard-corner-score';
+      const WHITEBOARD_CORNER_SCORE_CONTROL_ID = 'overlay-whiteboard-corner-score-control';
       const FLIP_CLOCK_OVERLAY_CONTROL_ID = 'overlay-flip-clock-control';
       const ASHTRAY_SMOKE_EFFECT_ID = 'ashtray-smoke-effect';
       const ASHTRAY_SMOKE_CONTROL_ID = 'ashtray-smoke-effect-control';
@@ -292,6 +295,7 @@
       HOTSPOT_READABLE_LABELS.set(RIGHT_MONITOR_OVERLAY_CONTROL_ID, 'Right Monitor Overlay');
       HOTSPOT_READABLE_LABELS.set(RIGHT_MONITOR_SHADOW_LAYER_CONTROL_ID, 'Right Monitor Shadow Layer');
       HOTSPOT_READABLE_LABELS.set(RIGHT_MONITOR_SIDE_FRAME_CONTROL_ID, 'Right Monitor Side Frame');
+      HOTSPOT_READABLE_LABELS.set(WHITEBOARD_CORNER_SCORE_CONTROL_ID, 'Whiteboard CornerScore High Score');
       HOTSPOT_READABLE_LABELS.set(ASHTRAY_SMOKE_CONTROL_ID, 'Ashtray Smoke Effect');
       HOTSPOT_READABLE_LABELS.set(ASHTRAY_CIGARETTE_CONTROL_ID, 'Ashtray Cigarette Effect');
       const LOCKED_DEBUG_HOTSPOT_IDS = new Set([
@@ -310,6 +314,7 @@
         { controlId: RIGHT_MONITOR_OVERLAY_CONTROL_ID, overlayId: 'overlay-right-monitor' },
         { controlId: RIGHT_MONITOR_SHADOW_LAYER_CONTROL_ID, overlayId: RIGHT_MONITOR_SHADOW_LAYER_ID },
         { controlId: RIGHT_MONITOR_SIDE_FRAME_CONTROL_ID, overlayId: RIGHT_MONITOR_SIDE_FRAME_OVERLAY_ID },
+        { controlId: WHITEBOARD_CORNER_SCORE_CONTROL_ID, overlayId: WHITEBOARD_CORNER_SCORE_OVERLAY_ID },
         { controlId: FLIP_CLOCK_OVERLAY_CONTROL_ID, overlayId: FLIP_CLOCK_OVERLAY_ID },
         { controlId: ASHTRAY_SMOKE_CONTROL_ID, overlayId: ASHTRAY_SMOKE_EFFECT_ID },
         { controlId: ASHTRAY_CIGARETTE_CONTROL_ID, overlayId: ASHTRAY_CIGARETTE_EFFECT_ID }
@@ -343,6 +348,7 @@
         { id: NOAHS_ARCADE_HOTSPOT_ID, x: 880, y: 320, w: 2050, h: 1280 },
         { id: 'aquarium', x: 2680, y: 445, w: 455, h: 729 },
         { id: 'rca-board', x: 738, y: 380, w: 470, h: 1060 },
+        { id: WHITEBOARD_CORNER_SCORE_CONTROL_ID, x: 785, y: 456, w: 355, h: 260 },
         { id: 'chapel', x: 3840, y: 0, w: 3840, h: 2160 },
         ...WHITEBOARD_TASK_HOTSPOTS.map(({ id, x, y, w, h }) => ({ id, x, y, w, h })),
         { id: 'pencil-sharpener', x: 2562, y: 1220, w: 221, h: 245 },
@@ -388,6 +394,7 @@
         { id: 'overlay-right-monitor', ...RIGHT_MONITOR_FRAME_BOUNDS },
         { id: RIGHT_MONITOR_SHADOW_LAYER_ID, ...RIGHT_MONITOR_FRAME_BOUNDS },
         { id: RIGHT_MONITOR_SIDE_FRAME_OVERLAY_ID, ...RIGHT_MONITOR_FRAME_BOUNDS },
+        { id: WHITEBOARD_CORNER_SCORE_OVERLAY_ID, x: 785, y: 456, w: 355, h: 260 },
         { id: FLIP_CLOCK_OVERLAY_ID, x: 990, y: 1740, w: 360, h: 156 }
       ].map((overlay) => {
         const adjustedOverlay = { ...overlay, x: overlay.x + SCENE_OFFSET_X };
@@ -480,9 +487,11 @@
       let isDvdAnimationActive = false;
       let dvdColorStepIndex = 0;
       let cornerScoreValue = 0;
+      let cornerScoreHighScoreValue = CORNER_SCORE_SERVER_BASELINE;
       let isDvdCornerCountEnabled = false;
       let rightMonitorCornerScoreOverlayEl = null;
       let rightMonitorCornerScoreValueEl = null;
+      let whiteboardCornerScoreValueEl = null;
       let rightMonitorScreenWindowEl = null;
       let cornerScorePersistQueue = Promise.resolve();
       let aquariumSequenceToken = 0;
@@ -853,6 +862,9 @@
         if (rightMonitorCornerScoreValueEl) {
           rightMonitorCornerScoreValueEl.textContent = String(cornerScoreValue);
         }
+        if (whiteboardCornerScoreValueEl) {
+          whiteboardCornerScoreValueEl.textContent = String(cornerScoreHighScoreValue);
+        }
       }
 
       function setCornerScore(nextScore) {
@@ -860,6 +872,14 @@
           return;
         }
         cornerScoreValue = Math.max(0, Math.floor(nextScore));
+        renderCornerScore();
+      }
+
+      function setCornerScoreHighScore(nextScore) {
+        if (!Number.isFinite(nextScore)) {
+          return;
+        }
+        cornerScoreHighScoreValue = Math.max(CORNER_SCORE_SERVER_BASELINE, Math.floor(nextScore));
         renderCornerScore();
       }
 
@@ -876,19 +896,25 @@
             return;
           }
           const payload = await response.json();
-          setCornerScore(payload?.score);
+          setCornerScoreHighScore(payload?.score);
         } catch (_) {}
       }
 
-      function queueCornerScoreIncrement() {
+      function queueCornerScoreIncrement(candidateScore = cornerScoreValue) {
+        if (!Number.isFinite(candidateScore) || candidateScore <= cornerScoreHighScoreValue) {
+          return;
+        }
         cornerScorePersistQueue = cornerScorePersistQueue
           .then(async () => {
+            if (candidateScore <= cornerScoreHighScoreValue) {
+              return;
+            }
             const controller = new AbortController();
             const timeoutId = window.setTimeout(() => controller.abort(), API_TIMEOUT_MS);
             const response = await fetch(CORNER_SCORE_API_URL, {
               method: 'POST',
               headers: { 'content-type': 'application/json' },
-              body: JSON.stringify({ incrementBy: 1 }),
+              body: JSON.stringify({ score: candidateScore }),
               signal: controller.signal
             });
             window.clearTimeout(timeoutId);
@@ -896,7 +922,7 @@
               return;
             }
             const payload = await response.json();
-            setCornerScore(payload?.score);
+            setCornerScoreHighScore(payload?.score);
           })
           .catch(() => {});
       }
@@ -997,9 +1023,10 @@
         const isNearCornerY = dvdPositionY <= DVD_CORNER_SCORE_TOLERANCE_PX || dvdPositionY >= maxY - DVD_CORNER_SCORE_TOLERANCE_PX;
         const isCornerHit = (hitHorizontalEdge && isNearCornerY) || (hitVerticalEdge && isNearCornerX);
         if (isCornerHit && isDvdCornerCountEnabled) {
-          setCornerScore(cornerScoreValue + 1);
+          const nextCornerScore = cornerScoreValue + 1;
+          setCornerScore(nextCornerScore);
           playRightMonitorScoringNoise();
-          queueCornerScoreIncrement();
+          queueCornerScoreIncrement(nextCornerScore);
           if (!isRightMonitorInteractive() && !isRightMonitorCornerScoreWakeSequenceRunning) {
             void wakeRightMonitorForCornerScore();
           }
@@ -4135,6 +4162,7 @@
         isDvdCornerCountEnabled = false;
         rightMonitorCornerScoreOverlayEl = null;
         rightMonitorCornerScoreValueEl = null;
+        whiteboardCornerScoreValueEl = null;
         rightMonitorScreenWindowEl = null;
         rightMonitorOverlayImageUrl = BIG_TV_RIGHT_MONITOR_OVERLAY_BLUE_IMAGE_URL;
         bigTvPromptOverlayEl = null;
@@ -4782,6 +4810,24 @@
             img.loading = 'lazy';
             img.decoding = 'async';
             el.appendChild(img);
+          }
+
+          if (overlay.id === WHITEBOARD_CORNER_SCORE_OVERLAY_ID) {
+            el.classList.add('whiteboard-corner-score-overlay');
+            const stackEl = document.createElement('div');
+            stackEl.className = 'whiteboard-corner-score-stack';
+            const titleEl = document.createElement('p');
+            titleEl.className = 'whiteboard-corner-score-line';
+            titleEl.textContent = 'CornerScore';
+            const subtitleEl = document.createElement('p');
+            subtitleEl.className = 'whiteboard-corner-score-line';
+            subtitleEl.textContent = 'High-Score';
+            const valueEl = document.createElement('p');
+            valueEl.className = 'whiteboard-corner-score-value';
+            whiteboardCornerScoreValueEl = valueEl;
+            renderCornerScore();
+            stackEl.append(titleEl, subtitleEl, valueEl);
+            el.appendChild(stackEl);
           }
 
           if (overlay.id === FLIP_CLOCK_OVERLAY_ID) {
