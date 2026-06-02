@@ -611,7 +611,7 @@ export class HotspotStore {
         } catch (err) {
           return hotspotJson({ error: `Failed to load corner score: ${err?.message || 'Unknown error'}` }, 500);
         }
-        const hasExplicitScore = body && Object.hasOwn(body, 'score');
+        const hasExplicitScore = Boolean(body) && Object.prototype.hasOwnProperty.call(body, 'score');
         const explicitScore = hasExplicitScore ? sanitizeCornerScore(body?.score) : storedRecord.score;
         const incrementBy = sanitizeCornerScoreIncrement(body?.incrementBy);
         const candidateScore = sanitizeCornerScore(explicitScore + incrementBy);
@@ -619,10 +619,13 @@ export class HotspotStore {
         const submittedInitials = sanitizeCornerScoreInitials(body?.initials);
         const canApplySubmittedInitials = Boolean(
           submittedInitials &&
-          hasExplicitScore &&
           (
-            explicitScore >= storedRecord.score ||
-            (storedRecord.initials === '' && nextScore === storedRecord.score)
+            (hasExplicitScore && explicitScore >= storedRecord.score) ||
+            (
+              storedRecord.initials === '' &&
+              nextScore === storedRecord.score &&
+              (hasExplicitScore || incrementBy === 0)
+            )
           )
         );
         const shouldUpdateScore = nextScore > storedRecord.score;
