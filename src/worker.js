@@ -459,6 +459,41 @@ function sanitizeCornerScoreIncrement(input) {
   return Math.max(0, Math.min(1000, floored));
 }
 
+const MAX_NOTES_BYTES = 512 * 1024;
+const NOTES_MAX_COUNT = 500;
+const NOTES_TITLE_MAX = 500;
+const NOTES_BODY_MAX = 50000;
+const NOTES_TEXT_MAX = 10000;
+const NOTES_ID_MAX = 64;
+const NOTES_COLOR_MAX = 64;
+const NOTES_TAG_MAX = 64;
+const NOTES_TAGS_MAX = 20;
+const VALID_VIEW_MODES = new Set(['list', 'grid']);
+
+function sanitizeNotesState(body) {
+  if (!body || typeof body !== 'object' || Array.isArray(body)) return null;
+  if (body.version !== 2) return null;
+  const viewMode = VALID_VIEW_MODES.has(body.viewMode) ? body.viewMode : 'list';
+  const rawNotes = Array.isArray(body.notes) ? body.notes : [];
+  const notes = rawNotes.slice(0, NOTES_MAX_COUNT).map((n) => {
+    if (!n || typeof n !== 'object' || Array.isArray(n)) return null;
+    return {
+      id: typeof n.id === 'string' ? n.id.slice(0, NOTES_ID_MAX) : '',
+      title: typeof n.title === 'string' ? n.title.slice(0, NOTES_TITLE_MAX) : '',
+      body: typeof n.body === 'string' ? n.body.slice(0, NOTES_BODY_MAX) : '',
+      text: typeof n.text === 'string' ? n.text.slice(0, NOTES_TEXT_MAX) : '',
+      color: typeof n.color === 'string' ? n.color.slice(0, NOTES_COLOR_MAX) : '',
+      tags: Array.isArray(n.tags)
+        ? n.tags.slice(0, NOTES_TAGS_MAX).map((t) => (typeof t === 'string' ? t.slice(0, NOTES_TAG_MAX) : '')).filter(Boolean)
+        : [],
+      created: typeof n.created === 'number' && Number.isFinite(n.created) ? n.created : 0,
+      pinned: Boolean(n.pinned),
+      completedAt: typeof n.completedAt === 'number' && Number.isFinite(n.completedAt) ? n.completedAt : null
+    };
+  }).filter(Boolean);
+  return { notes, viewMode, version: 2 };
+}
+
 const HOTSPOT_JSON_HEADERS = {
   'content-type': 'application/json; charset=UTF-8',
   'cache-control': 'no-store',
@@ -480,13 +515,16 @@ export class HotspotStore {
     const isChapelConfig = pathname === '/api/chapel-hotspots';
     const isArcadeUrlOverrides = pathname === '/api/arcade-url-overrides';
     const isCornerScore = pathname === '/api/corner-score';
+    const isNotes = pathname === '/api/notes';
     const storageKey = isChapelConfig
       ? 'chapel-hotspots'
       : isArcadeUrlOverrides
         ? 'arcade-url-overrides'
         : isCornerScore
           ? 'corner-score'
-          : 'hotspots';
+          : isNotes
+            ? 'notes'
+            : 'hotspots';
     if (request.method === 'OPTIONS') return new Response(null, { status: 204, headers: HOTSPOT_JSON_HEADERS });
     if (request.method === 'GET') {
       let saved;
@@ -504,6 +542,9 @@ export class HotspotStore {
       if (isCornerScore) {
         return hotspotJson({ score: sanitizeCornerScore(saved) });
       }
+      if (isNotes) {
+        return hotspotJson(saved ?? { notes: [], viewMode: 'list', version: 2 });
+      }
       return hotspotJson({ hotspots: sanitizeHotspots(saved) });
     }
     if (request.method === 'POST') {
@@ -512,6 +553,19 @@ export class HotspotStore {
         body = await request.json();
       } catch {
         return hotspotJson({ error: 'Invalid JSON body.' }, 400);
+      }
+      if (isNotes) {
+        const notesPayload = sanitizeNotesState(body);
+        if (!notesPayload) return hotspotJson({ error: 'Invalid notes payload.' }, 400);
+        if (JSON.stringify(notesPayload).length > MAX_NOTES_BYTES) {
+          return hotspotJson({ error: 'Notes payload too large.' }, 413);
+        }
+        try {
+          await this.state.storage.put(storageKey, notesPayload);
+        } catch (err) {
+          return hotspotJson({ error: `Failed to save notes: ${err?.message || 'Unknown error'}` }, 500);
+        }
+        return hotspotJson({ ok: true });
       }
       const payload = isChapelConfig
         ? sanitizeChapelConfig(body)
@@ -603,6 +657,15 @@ async function dispatchToHotspotStore(env, request, instanceName) {
   }
 }
 
+async function handleNotes(request, env) {
+  const sessionSecret = env.SESSION_SECRET || 'fallback-dev-secret-key-string';
+  const cookies = parseCookies(request);
+  const token = cookies[SESSION_COOKIE];
+  const session = token ? await verifySessionToken(sessionSecret, token) : null;
+  if (!session?.userId) return jsonResponse({ error: 'Unauthorized' }, 401);
+  return dispatchToHotspotStore(env, request, `notes-${session.userId}`);
+}
+
 // ─── Main worker entry router ──────────────────────────────────────────────────
 export default {
   async fetch(request, env) {
@@ -620,6 +683,9 @@ export default {
     if (pathname === '/api/chapel-hotspots') return dispatchToHotspotStore(env, request, 'chapel-hotspots');
     if (pathname === '/api/arcade-url-overrides') return dispatchToHotspotStore(env, request, 'arcade-url-overrides');
     if (pathname === '/api/corner-score') return dispatchToHotspotStore(env, request, 'corner-score');
+
+    // Per-user notes store
+    if (pathname === '/api/notes') return handleNotes(request, env);
 
     // /api/aquarium/shrimp-clips
     if (pathname === '/api/aquarium/shrimp-clips') {
