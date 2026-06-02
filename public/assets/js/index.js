@@ -508,6 +508,7 @@
       let rightMonitorCornerScoreOverlayEl = null;
       let rightMonitorCornerScoreValueEl = null;
       let whiteboardCornerScoreValueEl = null;
+      let whiteboardCornerScoreInitialsGroupEl = null;
       let whiteboardCornerScoreInitialsEl = null;
       let rightMonitorScreenWindowEl = null;
       let cornerScorePersistQueue = Promise.resolve();
@@ -1063,7 +1064,9 @@
         }
         if (whiteboardCornerScoreInitialsEl) {
           whiteboardCornerScoreInitialsEl.textContent = cornerScoreHighScoreInitials;
-          whiteboardCornerScoreInitialsEl.hidden = !cornerScoreHighScoreInitials;
+        }
+        if (whiteboardCornerScoreInitialsGroupEl) {
+          whiteboardCornerScoreInitialsGroupEl.hidden = !cornerScoreHighScoreInitials;
         }
       }
 
@@ -1116,7 +1119,7 @@
         const shouldAttemptInitialsUpdate =
           sanitizedInitials !== null &&
           sanitizedInitials.length === CORNER_SCORE_INITIALS_LENGTH &&
-          sanitizedScore === cornerScoreHighScoreValue;
+          sanitizedScore >= cornerScoreHighScoreValue;
         if (!force && !shouldAttemptInitialsUpdate && sanitizedScore <= cornerScoreHighScoreValue) {
           return cornerScorePersistQueue;
         }
@@ -4475,6 +4478,7 @@
         rightMonitorCornerScoreOverlayEl = null;
         rightMonitorCornerScoreValueEl = null;
         whiteboardCornerScoreValueEl = null;
+        whiteboardCornerScoreInitialsGroupEl = null;
         whiteboardCornerScoreInitialsEl = null;
         rightMonitorScreenWindowEl = null;
         rightMonitorOverlayImageUrl = BIG_TV_RIGHT_MONITOR_OVERLAY_BLUE_IMAGE_URL;
@@ -5167,12 +5171,19 @@
             const valueEl = document.createElement('p');
             valueEl.className = 'whiteboard-corner-score-value';
             whiteboardCornerScoreValueEl = valueEl;
+            const initialsGroupEl = document.createElement('div');
+            initialsGroupEl.className = 'whiteboard-corner-score-initials-group';
+            initialsGroupEl.hidden = true;
+            const initialsTitleEl = document.createElement('p');
+            initialsTitleEl.className = 'whiteboard-corner-score-line whiteboard-corner-score-initials-title';
+            initialsTitleEl.textContent = 'Initials';
             const initialsEl = document.createElement('p');
             initialsEl.className = 'whiteboard-corner-score-initials';
-            initialsEl.hidden = true;
             whiteboardCornerScoreInitialsEl = initialsEl;
+            whiteboardCornerScoreInitialsGroupEl = initialsGroupEl;
             renderCornerScore();
-            stackEl.append(titleEl, subtitleEl, valueEl, initialsEl);
+            initialsGroupEl.append(initialsTitleEl, initialsEl);
+            stackEl.append(titleEl, subtitleEl, valueEl, initialsGroupEl);
             el.appendChild(stackEl);
           }
 
