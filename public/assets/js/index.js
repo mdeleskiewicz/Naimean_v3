@@ -155,6 +155,7 @@
       const BIG_TV_PROMPT_PREFIX = 'Z:>';
       const BIG_TV_PROMPT_SECRET_TEXT = 'You didn\'t say the MAGIC WORD';
       const BIG_TV_PROMPT_ACCEPTED_VALUE = 'please';
+      const BIG_TV_PROMPT_MIN_LOCAL_SCORE = 10;
       const BIG_TV_TOOLS_STORAGE_KEY = 'naimean.bigTvTools.entries';
       const DEN_URL_OVERRIDES_STORAGE_KEY = 'naimean.den.urlOverrides';
       const BIG_TV_TOOLS_LOGO_URL = 'assets/images/tools_logo.png';
@@ -2690,6 +2691,9 @@
 
       function activateBigTvPromptMode() {
         if (!nedryGateOverlayEl || !nedryGateVideoEl) {
+          return;
+        }
+        if (cornerScoreValue < BIG_TV_PROMPT_MIN_LOCAL_SCORE) {
           return;
         }
 
