@@ -98,7 +98,6 @@
       const DVD_SPEED_ADJUSTMENT_STEP = 0.1;
       const DVD_SPEED_MULTIPLIER_MIN = -5;
       const DVD_SPEED_MULTIPLIER_MAX = 5;
-      const DVD_SPEED_ZERO_THRESHOLD = DVD_SPEED_ADJUSTMENT_STEP / 2;
       const DVD_FRAME_DELTA_MAX_SECONDS = 0.05;
       const DVD_CORNER_GOAL_TOLERANCE_PX = 3;
       const DVD_CORNER_MISS_MIN_TOLERANCE_PX = 4;
@@ -1207,16 +1206,11 @@
 
       function adjustDvdSpeed(direction) {
         const delta = direction * DVD_SPEED_ADJUSTMENT_STEP;
-        const nextSpeed = clamp(
+        dvdSpeedMultiplier = clamp(
           dvdSpeedMultiplier + delta,
           DVD_SPEED_MULTIPLIER_MIN,
           DVD_SPEED_MULTIPLIER_MAX
         );
-        if (Math.abs(nextSpeed) <= DVD_SPEED_ZERO_THRESHOLD) {
-          dvdSpeedMultiplier = direction > 0 ? DVD_SPEED_ADJUSTMENT_STEP : -DVD_SPEED_ADJUSTMENT_STEP;
-          return;
-        }
-        dvdSpeedMultiplier = nextSpeed;
       }
 
       function isTextEntryTarget(target) {
@@ -1266,6 +1260,11 @@
         );
         dvdLastFrameTime = timestamp;
         const effectiveDvdSpeed = DVD_BOUNCE_SPEED_PX_PER_SECOND * dvdSpeedMultiplier;
+        if (Math.abs(effectiveDvdSpeed) <= Number.EPSILON) {
+          bigTvDvdLogoEl.style.transform = `translate3d(${dvdPositionX}px, ${dvdPositionY}px, 0)`;
+          dvdAnimationFrameId = window.requestAnimationFrame(tickBigTvDvdAnimation);
+          return;
+        }
         dvdPositionX += dvdVelocityX * effectiveDvdSpeed * deltaSeconds;
         dvdPositionY += dvdVelocityY * effectiveDvdSpeed * deltaSeconds;
 
