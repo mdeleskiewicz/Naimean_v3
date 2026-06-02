@@ -82,7 +82,7 @@
       const BIG_TV_RIGHT_MONITOR_OVERLAY_STATE_UNKNOWN = 'unknown';
       const BIG_TV_RIGHT_MONITOR_OVERLAY_BLUE_IMAGE_URL = 'assets/images/join_disc_blue.png';
       const BIG_TV_RIGHT_MONITOR_OVERLAY_CORNER_SCORE_IMAGE_URL = 'assets/images/join_disc_green.png';
-      const BIG_TV_SCREENSAVER_LOGO_URL = 'assets/video/dvd.gif';
+      const BIG_TV_SCREENSAVER_LOGO_URL = 'assets/images/dvd-logo.svg';
       const CORNER_SCORE_API_URL = '/api/corner-score';
       const DVD_COLOR_STEPS = Object.freeze([
         { color: '#ff4d4d', hue: 0 },
@@ -4031,7 +4031,7 @@
             });
             bigTvDvdLogoEl = document.createElement('img');
             bigTvDvdLogoEl.className = 'big-tv-dvd-logo';
-            bigTvDvdLogoEl.alt = 'DVD logo animation';
+            bigTvDvdLogoEl.alt = 'DVD logo';
             bigTvDvdLogoEl.src = BIG_TV_SCREENSAVER_LOGO_URL;
             bigTvDvdLogoEl.draggable = false;
             bigTvDvdLogoEl.loading = 'eager';
