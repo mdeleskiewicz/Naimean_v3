@@ -231,6 +231,55 @@ test('HotspotStore POST increments and stores corner score', async () => {
   assert.equal(getStored('corner-score'), 10);
 });
 
+test('HotspotStore GET returns default notes payload when storage is empty', async () => {
+  const { state, calls } = makeKeyedState({});
+  const store = new HotspotStore(state);
+
+  const response = await store.fetch(new Request('https://example.com/api/notes', { method: 'GET' }));
+  const body = await response.json();
+
+  assert.equal(response.status, 200);
+  assert.deepEqual(body, { notes: [], viewMode: 'list', version: 2 });
+  assert.deepEqual(calls.get, ['notes']);
+});
+
+test('HotspotStore POST preserves null note color sentinel', async () => {
+  const { state, calls, getStored } = makeKeyedState({});
+  const store = new HotspotStore(state);
+
+  const response = await store.fetch(
+    new Request('https://example.com/api/notes', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({
+        notes: [
+          {
+            id: 'note-1',
+            title: 'Title',
+            body: '<p>Body</p>',
+            text: 'Body',
+            color: null,
+            tags: ['one'],
+            created: 123,
+            pinned: false,
+            completedAt: null
+          }
+        ],
+        viewMode: 'list',
+        version: 2
+      })
+    })
+  );
+  const body = await response.json();
+
+  assert.equal(response.status, 200);
+  assert.deepEqual(body, { ok: true });
+  assert.equal(calls.put.length, 1);
+  assert.equal(calls.put[0].key, 'notes');
+  assert.equal(calls.put[0].value.notes[0].color, null);
+  assert.deepEqual(getStored('notes'), calls.put[0].value);
+});
+
 test('worker routes /api/hotspots through HOTSPOT_STORE durable object', async () => {
   const calls = { idFromName: [], get: [], stubFetch: 0, assetsFetch: 0 };
   const expectedResponse = new Response(JSON.stringify({ ok: true }), {
@@ -393,6 +442,85 @@ test('worker routes /api/corner-score through HOTSPOT_STORE durable object', asy
   assert.deepEqual(calls.get, ['id:corner-score']);
   assert.equal(calls.stubFetch, 1);
   assert.equal(calls.assetsFetch, 0);
+});
+
+test('worker routes authenticated /api/notes through user-specific HOTSPOT_STORE durable object', async () => {
+  const calls = { idFromName: [], get: [], stubFetch: 0, assetsFetch: 0 };
+  const expectedResponse = new Response(JSON.stringify({ notes: [], viewMode: 'list', version: 2 }), {
+    status: 200,
+    headers: { 'content-type': 'application/json' }
+  });
+  const sessionSecret = 'test-session-secret';
+  const token = await createSessionToken(sessionSecret, {
+    userId: 'user-42',
+    username: 'test',
+    avatar: null,
+    isMember: true,
+    hasRole: true
+  });
+
+  const env = {
+    SESSION_SECRET: sessionSecret,
+    HOTSPOT_STORE: {
+      idFromName(name) {
+        calls.idFromName.push(name);
+        return `id:${name}`;
+      },
+      get(id) {
+        calls.get.push(id);
+        return {
+          async fetch(request) {
+            calls.stubFetch += 1;
+            assert.equal(new URL(request.url).pathname, '/api/notes');
+            return expectedResponse;
+          }
+        };
+      }
+    },
+    ASSETS: {
+      async fetch() {
+        calls.assetsFetch += 1;
+        return new Response('assets');
+      }
+    }
+  };
+
+  const response = await router.fetch(
+    new Request('https://example.com/api/notes', {
+      method: 'GET',
+      headers: { cookie: `naimean_session=${token}` }
+    }),
+    env
+  );
+
+  assert.equal(response, expectedResponse);
+  assert.deepEqual(calls.idFromName, ['notes-user-42']);
+  assert.deepEqual(calls.get, ['id:notes-user-42']);
+  assert.equal(calls.stubFetch, 1);
+  assert.equal(calls.assetsFetch, 0);
+});
+
+test('worker rejects unauthenticated /api/notes requests', async () => {
+  const env = {
+    HOTSPOT_STORE: {
+      idFromName() {
+        throw new Error('should not resolve durable object for unauthenticated requests');
+      },
+      get() {
+        throw new Error('should not resolve durable object for unauthenticated requests');
+      }
+    },
+    ASSETS: {
+      async fetch() {
+        throw new Error('should not hit assets for /api/notes');
+      }
+    }
+  };
+
+  const response = await router.fetch(new Request('https://example.com/api/notes', { method: 'GET' }), env);
+
+  assert.equal(response.status, 401);
+  assert.deepEqual(await response.json(), { error: 'Unauthorized' });
 });
 
 test('worker returns 500 for /api/hotspots when HOTSPOT_STORE binding is missing', async () => {

@@ -482,7 +482,11 @@ function sanitizeNotesState(body) {
       title: typeof n.title === 'string' ? n.title.slice(0, NOTES_TITLE_MAX) : '',
       body: typeof n.body === 'string' ? n.body.slice(0, NOTES_BODY_MAX) : '',
       text: typeof n.text === 'string' ? n.text.slice(0, NOTES_TEXT_MAX) : '',
-      color: typeof n.color === 'string' ? n.color.slice(0, NOTES_COLOR_MAX) : '',
+      color: n.color === null
+        ? null
+        : typeof n.color === 'string'
+          ? n.color.slice(0, NOTES_COLOR_MAX)
+          : null,
       tags: Array.isArray(n.tags)
         ? n.tags.slice(0, NOTES_TAGS_MAX).map((t) => (typeof t === 'string' ? t.slice(0, NOTES_TAG_MAX) : '')).filter(Boolean)
         : [],
