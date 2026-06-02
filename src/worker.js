@@ -623,11 +623,12 @@ export class HotspotStore {
           explicitScore >= storedRecord.score
         );
         const shouldUpdateScore = nextScore > storedRecord.score;
-        const nextInitials = canApplySubmittedInitials
-          ? submittedInitials
-          : shouldUpdateScore
-            ? ''
-            : storedRecord.initials;
+        let nextInitials = storedRecord.initials;
+        if (canApplySubmittedInitials) {
+          nextInitials = submittedInitials;
+        } else if (shouldUpdateScore) {
+          nextInitials = '';
+        }
         const shouldUpdateInitials = nextInitials !== storedRecord.initials;
         const nextRecord = {
           score: nextScore,
