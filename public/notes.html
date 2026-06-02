@@ -1041,21 +1041,59 @@
         };
       }
 
+      function sanitizeLoadedNote(note, isArchived) {
+        var migrated = migrateNote(note, isArchived);
+        if (migrated.color === '') migrated.color = null;
+        return migrated;
+      }
+
+      function noteRecency(note) {
+        if (!note || typeof note !== 'object') return 0;
+        var created = Number(note.created);
+        var completedAt = Number(note.completedAt);
+        var updatedAt = Number(note.updatedAt);
+        var timestamps = [created, completedAt, updatedAt].filter(Number.isFinite);
+        return timestamps.length ? Math.max.apply(Math, timestamps) : 0;
+      }
+
+      function mergeNotesById(existingNotes, incomingNotes) {
+        var byId = Object.create(null);
+        var orderedIds = [];
+
+        function upsert(note) {
+          var normalized = sanitizeLoadedNote(note, false);
+          var noteId = typeof normalized.id === 'string' ? normalized.id : '';
+          if (!noteId) return;
+          if (!(noteId in byId)) {
+            byId[noteId] = normalized;
+            orderedIds.push(noteId);
+            return;
+          }
+          var current = byId[noteId];
+          byId[noteId] = noteRecency(normalized) >= noteRecency(current) ? normalized : current;
+        }
+
+        (existingNotes || []).forEach(upsert);
+        (incomingNotes || []).forEach(upsert);
+
+        return orderedIds.map(function (id) { return byId[id]; });
+      }
+
       function mergeServerState(raw) {
         if (!raw) return;
+        var incomingNotes = [];
         // Old format: { active: [...], completed: [...] }
         if (Array.isArray(raw.active)) {
-          _notes = [];
-          (raw.active || []).forEach(function (n) { _notes.push(migrateNote(n, false)); });
-          (raw.completed || []).forEach(function (n) { _notes.push(migrateNote(n, true)); });
-          if (raw.viewMode) _viewMode = raw.viewMode;
+          raw.active.forEach(function (n) { incomingNotes.push(sanitizeLoadedNote(n, false)); });
+          (Array.isArray(raw.completed) ? raw.completed : []).forEach(function (n) { incomingNotes.push(sanitizeLoadedNote(n, true)); });
+        } else if (Array.isArray(raw.notes)) {
+          // New format: { notes: [...] }
+          raw.notes.forEach(function (n) { incomingNotes.push(sanitizeLoadedNote(n, false)); });
+        } else {
           return;
         }
-        // New format: { notes: [...] }
-        if (Array.isArray(raw.notes)) {
-          _notes = raw.notes;
-          if (raw.viewMode) _viewMode = raw.viewMode;
-        }
+        _notes = mergeNotesById(_notes, incomingNotes);
+        if (raw.viewMode === 'grid' || raw.viewMode === 'list') _viewMode = raw.viewMode;
       }
 
       function loadLocalState() {
@@ -1920,6 +1958,7 @@
                   try { localStorage.setItem(STORAGE_KEY, JSON.stringify(serializeState())); } catch (_) {}
                   renderTagNav();
                   renderNoteList();
+                  NaimeanAPI.saveNotes(serializeState()).catch(function () {});
                 });
             })
             .catch(function () {});
@@ -1930,5 +1969,3 @@
   </script>
 </body>
 </html>
-
-
