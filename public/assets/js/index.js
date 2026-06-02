@@ -475,6 +475,7 @@
       let isDvdAnimationActive = false;
       let dvdColorStepIndex = 0;
       let cornerScoreValue = 0;
+      let isDvdCornerCountEnabled = false;
       let rightMonitorCornerScoreOverlayEl = null;
       let rightMonitorCornerScoreValueEl = null;
       let rightMonitorScreenWindowEl = null;
@@ -749,9 +750,7 @@
           !!bigTvDvdOverlayEl &&
           bigTvDvdOverlayEl.classList.contains('is-active') &&
           !hasActiveBigTvContentOverlay() &&
-          hasDefaultMonitorOverlays() &&
-          isBigTvMonitorInteractive() &&
-          isRightMonitorInteractive()
+          hasDefaultMonitorOverlays()
         );
       }
 
@@ -913,7 +912,7 @@
         }
 
         const isCornerHit = hitHorizontalEdge && hitVerticalEdge;
-        if (isCornerHit) {
+        if (isCornerHit && isDvdCornerCountEnabled && isRightMonitorInteractive()) {
           setCornerScore(cornerScoreValue + 1);
           const zeldaAudio = getZeldaSecretAudioElement();
           stopZeldaSecretAudioPlayback();
@@ -943,12 +942,19 @@
 
       function syncDvdScreensaverState() {
         const isScreensaverActive = isBigTvDefaultScreensaverActive();
+        const isCornerScoreActive = isScreensaverActive && isDvdCornerCountEnabled && isRightMonitorInteractive();
         if (rightMonitorCornerScoreOverlayEl) {
-          rightMonitorCornerScoreOverlayEl.classList.toggle('is-active', isScreensaverActive);
-          rightMonitorCornerScoreOverlayEl.setAttribute('aria-hidden', isScreensaverActive ? 'false' : 'true');
+          rightMonitorCornerScoreOverlayEl.classList.toggle('is-active', isCornerScoreActive);
+          rightMonitorCornerScoreOverlayEl.setAttribute('aria-hidden', isCornerScoreActive ? 'false' : 'true');
         }
         if (rightMonitorScreenWindowEl) {
-          rightMonitorScreenWindowEl.classList.toggle('is-corner-score-active', isScreensaverActive);
+          rightMonitorScreenWindowEl.classList.toggle('is-corner-score-active', isCornerScoreActive);
+        }
+        if (bigTvDvdOverlayEl) {
+          bigTvDvdOverlayEl.setAttribute(
+            'aria-label',
+            isDvdCornerCountEnabled ? 'Disable CornerCount on right monitor' : 'Enable CornerCount on right monitor'
+          );
         }
         if (isScreensaverActive) {
           startBigTvDvdAnimation();
@@ -3328,6 +3334,7 @@
       }
 
       function resetMonitorsToOffState() {
+        isDvdCornerCountEnabled = false;
         stopAquariumPlaybackSequence();
         hideBigTvToolsOverlay();
         hideLoginOverlay();
@@ -3855,6 +3862,7 @@
         stopBigTvDvdAnimation();
         hasDvdPosition = false;
         dvdColorStepIndex = 0;
+        isDvdCornerCountEnabled = false;
         rightMonitorCornerScoreOverlayEl = null;
         rightMonitorCornerScoreValueEl = null;
         rightMonitorScreenWindowEl = null;
@@ -3917,8 +3925,29 @@
           if (overlay.id === DISCORD_OVERLAY_ID) {
             el.classList.add('discord-widget-overlay', 'big-tv-fullscreen-target');
             bigTvDvdOverlayEl = document.createElement('div');
-            bigTvDvdOverlayEl.className = 'discord-static-overlay is-active';
+            bigTvDvdOverlayEl.className = 'discord-static-overlay big-tv-dvd-overlay is-active';
             bigTvDvdOverlayEl.setAttribute('aria-hidden', 'false');
+            bigTvDvdOverlayEl.setAttribute('role', 'button');
+            bigTvDvdOverlayEl.tabIndex = 0;
+            const toggleDvdCornerCount = () => {
+              if (!isBigTvDefaultScreensaverActive() || !isRightMonitorInteractive()) {
+                return;
+              }
+              isDvdCornerCountEnabled = !isDvdCornerCountEnabled;
+              syncDvdScreensaverState();
+            };
+            bigTvDvdOverlayEl.addEventListener('pointerdown', (event) => event.stopPropagation());
+            bigTvDvdOverlayEl.addEventListener('click', (event) => {
+              event.stopPropagation();
+              toggleDvdCornerCount();
+            });
+            bigTvDvdOverlayEl.addEventListener('keydown', (event) => {
+              if (event.key === 'Enter' || event.key === ' ') {
+                event.preventDefault();
+                event.stopPropagation();
+                toggleDvdCornerCount();
+              }
+            });
             bigTvDvdGifEl = document.createElement('img');
             bigTvDvdGifEl.className = 'big-tv-dvd-gif';
             bigTvDvdGifEl.alt = 'DVD logo animation';
