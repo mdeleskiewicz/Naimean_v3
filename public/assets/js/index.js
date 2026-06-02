@@ -1506,6 +1506,30 @@
           bigTvToolsHintEl.hidden = hasVisibleEntries;
         }
         bigTvToolsListEl.replaceChildren();
+
+        // ── Built-in: Notes ──────────────────────────────────────────────
+        const notesRow = document.createElement('div');
+        notesRow.className = 'big-tv-tools-menu-item';
+        notesRow.addEventListener('pointerdown', (event) => event.stopPropagation());
+        const notesLaunchBtn = document.createElement('button');
+        notesLaunchBtn.type = 'button';
+        notesLaunchBtn.className = 'big-tv-tools-menu-item-launch';
+        notesLaunchBtn.setAttribute('aria-label', 'Notes — opens in new tab');
+        notesLaunchBtn.addEventListener('click', (event) => {
+          event.stopPropagation();
+          window.open(NOTES_URL, '_blank', 'noopener,noreferrer');
+        });
+        const notesName = document.createElement('span');
+        notesName.className = 'big-tv-tools-menu-item-name';
+        notesName.textContent = 'Notes';
+        const notesUrl = document.createElement('span');
+        notesUrl.className = 'big-tv-tools-menu-item-url';
+        notesUrl.textContent = NOTES_URL;
+        notesLaunchBtn.append(notesName, notesUrl);
+        notesRow.appendChild(notesLaunchBtn);
+        bigTvToolsListEl.appendChild(notesRow);
+        // ────────────────────────────────────────────────────────────────
+
         bigTvToolsEntries.forEach((entry, index) => {
           const trimmedName = entry.name.trim();
           const trimmedUrl = entry.url.trim();
