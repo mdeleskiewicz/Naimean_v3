@@ -867,6 +867,7 @@
       display: flex;
       align-items: center;
       justify-content: center;
+      container-type: size;
       color: #8d4dd6;
       text-shadow:
         0.7px 0.7px 0 rgba(109, 53, 170, 0.65),
@@ -879,7 +880,7 @@
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      gap: clamp(3px, 2%, 10px);
+      gap: clamp(3px, min(1.1cqw, 1.5cqh), 10px);
       width: 100%;
       height: 100%;
       text-align: center;
@@ -894,12 +895,12 @@
     .whiteboard-corner-score-line {
       margin: 0;
       line-height: 1.08;
-      font-size: clamp(22px, 11%, 50px);
+      font-size: clamp(22px, min(6.2cqw, 8.4cqh), 50px);
     }
 
     .whiteboard-corner-score-value {
       margin: 0;
-      font-size: clamp(46px, 31%, 120px);
+      font-size: clamp(46px, min(17.5cqw, 23.8cqh), 120px);
       line-height: 0.94;
       font-weight: 800;
       font-variant-numeric: tabular-nums lining-nums;
