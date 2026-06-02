@@ -868,10 +868,10 @@
       align-items: center;
       justify-content: center;
       container-type: size;
-      color: #8d4dd6;
+      color: #4d2a74;
       text-shadow:
-        0.7px 0.7px 0 rgba(109, 53, 170, 0.65),
-        0 0 8px rgba(141, 77, 214, 0.32);
+        0.7px 0.7px 0 rgba(58, 28, 92, 0.6),
+        0 0 4px rgba(77, 42, 116, 0.2);
       transform: rotate(-2.2deg);
     }
 
@@ -885,9 +885,10 @@
       height: 100%;
       text-align: center;
       text-transform: uppercase;
-      letter-spacing: 0.04em;
-      font-family: "Comic Sans MS", "Marker Felt", "Bradley Hand", "Segoe Print", cursive;
-      font-weight: 700;
+      letter-spacing: 0.015em;
+      font-family: "Bradley Hand", "Segoe Print", "Marker Felt", "Comic Sans MS", "Chalkboard SE", cursive;
+      font-weight: 800;
+      font-style: italic;
       user-select: none;
       -webkit-user-select: none;
     }
@@ -898,12 +899,21 @@
       font-size: clamp(22px, min(6.2cqw, 8.4cqh), 50px);
     }
 
+    .whiteboard-corner-score-line:first-child {
+      transform: rotate(-3.2deg) translateX(-1.4%);
+    }
+
+    .whiteboard-corner-score-line:nth-child(2) {
+      transform: rotate(2.4deg) translateX(1.3%);
+    }
+
     .whiteboard-corner-score-value {
       margin: 0;
       font-size: clamp(46px, min(17.5cqw, 23.8cqh), 120px);
       line-height: 0.94;
       font-weight: 800;
       font-variant-numeric: tabular-nums lining-nums;
+      transform: rotate(-1.6deg) skewX(-2deg);
     }
 
     .right-monitor-shrimp-logo-image {
