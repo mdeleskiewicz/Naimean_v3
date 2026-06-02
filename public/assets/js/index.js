@@ -4664,8 +4664,10 @@
             overlay.id === RIGHT_MONITOR_SHADOW_LAYER_ID
           ) {
             el.classList.add('monitor-shadow-overlay');
-            if (overlay.id === BIG_TV_SHADOW_LAYER_ID) bigTvShadowOverlayEl = el;
-            else if (overlay.id === LEFT_MONITOR_SHADOW_LAYER_ID) leftMonitorShadowOverlayEl = el;
+            if (overlay.id === BIG_TV_SHADOW_LAYER_ID) {
+              bigTvShadowOverlayEl = el;
+              el.classList.add('is-monitor-on'); // Big TV is always visually on (CSS opacity: 0); mark as always interactive.
+            } else if (overlay.id === LEFT_MONITOR_SHADOW_LAYER_ID) leftMonitorShadowOverlayEl = el;
             else rightMonitorShadowOverlayEl = el;
           }
 
