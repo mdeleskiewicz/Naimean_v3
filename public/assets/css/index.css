@@ -821,6 +821,10 @@
       visibility: visible;
     }
 
+    .right-monitor-corner-score-overlay.has-initials-prompt {
+      pointer-events: auto;
+    }
+
     .right-monitor-corner-score-label {
       margin: 0;
       font-size: clamp(34.4px, 6.13vw, 61.3px);
@@ -1306,6 +1310,16 @@
       visibility: hidden;
       transform: translateX(-50%);
       transition: opacity 140ms ease;
+    }
+
+    .right-monitor-corner-score-overlay > .big-tv-corner-score-initials-prompt {
+      position: static;
+      left: auto;
+      bottom: auto;
+      transform: none;
+      margin-top: clamp(10px, 2.4vw, 22px);
+      max-width: min(94%, 480px);
+      pointer-events: auto;
     }
 
     .big-tv-corner-score-initials-prompt.is-active {

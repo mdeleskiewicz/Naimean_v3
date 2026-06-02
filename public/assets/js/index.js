@@ -1003,6 +1003,9 @@
         }
         bigTvCornerScoreInitialsPromptEl.classList.remove('is-active');
         bigTvCornerScoreInitialsPromptEl.setAttribute('aria-hidden', 'true');
+        if (rightMonitorCornerScoreOverlayEl) {
+          rightMonitorCornerScoreOverlayEl.classList.remove('has-initials-prompt');
+        }
         if (bigTvCornerScoreInitialsInputEl) {
           if (clearInput) {
             bigTvCornerScoreInitialsInputEl.value = '';
@@ -1016,12 +1019,39 @@
         if (!bigTvCornerScoreInitialsPromptEl || !bigTvCornerScoreInitialsInputEl) {
           return;
         }
+        const isAlreadyActive =
+          bigTvCornerScoreInitialsPromptEl.classList.contains('is-active') &&
+          cornerScoreInitialsTargetScore === scoreValue;
         cornerScoreInitialsTargetScore = scoreValue;
         bigTvCornerScoreInitialsPromptEl.classList.add('is-active');
         bigTvCornerScoreInitialsPromptEl.setAttribute('aria-hidden', 'false');
-        bigTvCornerScoreInitialsInputEl.value = '';
+        if (rightMonitorCornerScoreOverlayEl) {
+          rightMonitorCornerScoreOverlayEl.classList.add('has-initials-prompt');
+        }
+        if (!isAlreadyActive) {
+          bigTvCornerScoreInitialsInputEl.value = '';
+        }
         syncCornerScoreInitialsSubmitState();
         bigTvCornerScoreInitialsInputEl.focus({ preventScroll: true });
+      }
+
+      function syncCornerScoreInitialsPromptVisibility() {
+        if (!bigTvCornerScoreInitialsPromptEl) {
+          return;
+        }
+        const shouldShowPrompt = cornerScoreValue >= cornerScoreHighScoreValue && !cornerScoreHighScoreInitials;
+        if (shouldShowPrompt) {
+          if (
+            !bigTvCornerScoreInitialsPromptEl.classList.contains('is-active') ||
+            cornerScoreInitialsTargetScore !== cornerScoreHighScoreValue
+          ) {
+            showCornerScoreInitialsPrompt(cornerScoreHighScoreValue);
+          }
+          return;
+        }
+        if (bigTvCornerScoreInitialsPromptEl.classList.contains('is-active') || cornerScoreInitialsTargetScore !== null) {
+          hideCornerScoreInitialsPrompt({ clearInput: false });
+        }
       }
 
       function renderCornerScore() {
@@ -1047,6 +1077,7 @@
         }
         cornerScoreValue = normalizedScore;
         renderCornerScore();
+        syncCornerScoreInitialsPromptVisibility();
       }
 
       function setCornerScoreHighScore(nextScore, initials = cornerScoreHighScoreInitials) {
@@ -1056,6 +1087,7 @@
         cornerScoreHighScoreValue = Math.max(CORNER_SCORE_SERVER_BASELINE, Math.floor(nextScore));
         cornerScoreHighScoreInitials = sanitizeCornerScoreInitialsInput(initials);
         renderCornerScore();
+        syncCornerScoreInitialsPromptVisibility();
       }
 
       async function loadCornerScoreFromServer() {
@@ -4536,41 +4568,6 @@
             bigTvCornerScoreStatusEl.appendChild(bigTvCornerScoreStatusLabelEl);
             bigTvDvdOverlayEl.appendChild(bigTvCornerScoreStatusEl);
 
-            bigTvCornerScoreInitialsPromptEl = document.createElement('form');
-            bigTvCornerScoreInitialsPromptEl.className = 'big-tv-corner-score-initials-prompt';
-            bigTvCornerScoreInitialsPromptEl.setAttribute('aria-hidden', 'true');
-            bigTvCornerScoreInitialsPromptEl.addEventListener('pointerdown', (event) => event.stopPropagation());
-            bigTvCornerScoreInitialsPromptEl.addEventListener('submit', (event) => {
-              event.preventDefault();
-              event.stopPropagation();
-              void submitCornerScoreInitials();
-            });
-            const initialsLabelEl = document.createElement('label');
-            initialsLabelEl.className = 'big-tv-corner-score-initials-label';
-            initialsLabelEl.textContent = 'Initials';
-            bigTvCornerScoreInitialsInputEl = document.createElement('input');
-            bigTvCornerScoreInitialsInputEl.type = 'text';
-            bigTvCornerScoreInitialsInputEl.className = 'big-tv-corner-score-initials-input';
-            bigTvCornerScoreInitialsInputEl.maxLength = CORNER_SCORE_INITIALS_LENGTH;
-            bigTvCornerScoreInitialsInputEl.autocomplete = 'off';
-            bigTvCornerScoreInitialsInputEl.autocapitalize = 'characters';
-            bigTvCornerScoreInitialsInputEl.spellcheck = false;
-            bigTvCornerScoreInitialsInputEl.addEventListener('input', () => {
-              bigTvCornerScoreInitialsInputEl.value = sanitizeCornerScoreInitialsInput(bigTvCornerScoreInitialsInputEl.value);
-              syncCornerScoreInitialsSubmitState();
-            });
-            bigTvCornerScoreInitialsInputEl.addEventListener('keydown', (event) => {
-              event.stopPropagation();
-            });
-            initialsLabelEl.appendChild(bigTvCornerScoreInitialsInputEl);
-            bigTvCornerScoreInitialsSubmitButtonEl = document.createElement('button');
-            bigTvCornerScoreInitialsSubmitButtonEl.type = 'submit';
-            bigTvCornerScoreInitialsSubmitButtonEl.className = 'big-tv-corner-score-initials-submit';
-            bigTvCornerScoreInitialsSubmitButtonEl.textContent = 'Submit';
-            bigTvCornerScoreInitialsPromptEl.append(initialsLabelEl, bigTvCornerScoreInitialsSubmitButtonEl);
-            bigTvDvdOverlayEl.appendChild(bigTvCornerScoreInitialsPromptEl);
-            syncCornerScoreInitialsSubmitState();
-
             el.appendChild(bigTvDvdOverlayEl);
             applyDvdColorStep();
             if (DISCORD_WIDGET_URL) {
@@ -5076,6 +5073,41 @@
             rightMonitorCornerScoreValueEl = cornerScoreValueEl;
             renderCornerScore();
             rightMonitorCornerScoreOverlayEl.append(cornerScoreLabelEl, cornerScoreValueEl);
+            bigTvCornerScoreInitialsPromptEl = document.createElement('form');
+            bigTvCornerScoreInitialsPromptEl.className = 'big-tv-corner-score-initials-prompt';
+            bigTvCornerScoreInitialsPromptEl.setAttribute('aria-hidden', 'true');
+            bigTvCornerScoreInitialsPromptEl.addEventListener('pointerdown', (event) => event.stopPropagation());
+            bigTvCornerScoreInitialsPromptEl.addEventListener('submit', (event) => {
+              event.preventDefault();
+              event.stopPropagation();
+              void submitCornerScoreInitials();
+            });
+            const initialsLabelEl = document.createElement('label');
+            initialsLabelEl.className = 'big-tv-corner-score-initials-label';
+            initialsLabelEl.textContent = 'Initials';
+            bigTvCornerScoreInitialsInputEl = document.createElement('input');
+            bigTvCornerScoreInitialsInputEl.type = 'text';
+            bigTvCornerScoreInitialsInputEl.className = 'big-tv-corner-score-initials-input';
+            bigTvCornerScoreInitialsInputEl.maxLength = CORNER_SCORE_INITIALS_LENGTH;
+            bigTvCornerScoreInitialsInputEl.autocomplete = 'off';
+            bigTvCornerScoreInitialsInputEl.autocapitalize = 'characters';
+            bigTvCornerScoreInitialsInputEl.spellcheck = false;
+            bigTvCornerScoreInitialsInputEl.addEventListener('input', () => {
+              bigTvCornerScoreInitialsInputEl.value = sanitizeCornerScoreInitialsInput(bigTvCornerScoreInitialsInputEl.value);
+              syncCornerScoreInitialsSubmitState();
+            });
+            bigTvCornerScoreInitialsInputEl.addEventListener('keydown', (event) => {
+              event.stopPropagation();
+            });
+            initialsLabelEl.appendChild(bigTvCornerScoreInitialsInputEl);
+            bigTvCornerScoreInitialsSubmitButtonEl = document.createElement('button');
+            bigTvCornerScoreInitialsSubmitButtonEl.type = 'submit';
+            bigTvCornerScoreInitialsSubmitButtonEl.className = 'big-tv-corner-score-initials-submit';
+            bigTvCornerScoreInitialsSubmitButtonEl.textContent = 'Submit';
+            bigTvCornerScoreInitialsPromptEl.append(initialsLabelEl, bigTvCornerScoreInitialsSubmitButtonEl);
+            rightMonitorCornerScoreOverlayEl.appendChild(bigTvCornerScoreInitialsPromptEl);
+            syncCornerScoreInitialsSubmitState();
+            syncCornerScoreInitialsPromptVisibility();
             monitorScreenWindowEl.appendChild(rightMonitorCornerScoreOverlayEl);
             applyDvdColorStep();
 
