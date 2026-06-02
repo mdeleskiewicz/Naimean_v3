@@ -822,7 +822,7 @@
 
     .right-monitor-corner-score-label {
       margin: 0;
-      font-size: clamp(28.7px, 5.11vw, 51.1px);
+      font-size: clamp(34.4px, 6.13vw, 61.3px);
       line-height: 1;
       letter-spacing: 0.08em;
       text-transform: uppercase;
@@ -831,7 +831,7 @@
 
     .right-monitor-corner-score-value {
       margin: 0;
-      font-size: clamp(108.5px, 23.94vw, 271.3px);
+      font-size: clamp(130.2px, 28.73vw, 325.6px);
       line-height: 0.92;
       font-weight: 800;
       font-variant-numeric: tabular-nums lining-nums;
