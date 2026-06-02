@@ -5098,10 +5098,6 @@
             });
             bigTvCornerScoreInitialsInputEl.addEventListener('keydown', (event) => {
               event.stopPropagation();
-              if (event.key === 'Enter') {
-                event.preventDefault();
-                void submitCornerScoreInitials();
-              }
             });
             initialsLabelEl.appendChild(bigTvCornerScoreInitialsInputEl);
             bigTvCornerScoreInitialsSubmitButtonEl = document.createElement('button');
