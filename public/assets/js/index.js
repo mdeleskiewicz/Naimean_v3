@@ -3566,6 +3566,7 @@
 
       function syncStoredCommodorePowerState() {
         isCommodorePoweringOn = loadCommodorePowerState();
+        reconcileCommodorePowerStateOnLoad();
         commodorePowerButtonEl?.classList.toggle('on', isCommodorePoweringOn);
       }
 
@@ -3588,6 +3589,31 @@
 
       function isRightMonitorInteractive() {
         return isMonitorPoweredOn(rightMonitorShadowOverlayEl);
+      }
+
+      function hasActiveMonitorPowerState() {
+        return [commodoreShadowOverlayEl, bigTvShadowOverlayEl, leftMonitorShadowOverlayEl, rightMonitorShadowOverlayEl]
+          .some((el) =>
+            !!el &&
+            (
+              el.classList.contains('is-monitor-on') ||
+              el.classList.contains('tv-turning-on') ||
+              el.classList.contains('tv-turning-off')
+            )
+          );
+      }
+
+      function reconcileCommodorePowerStateOnLoad() {
+        if (hasActiveMonitorPowerState()) {
+          return;
+        }
+        if (!isCommodorePoweringOn) {
+          return;
+        }
+        isCommodorePoweringOn = false;
+        saveCommodorePowerState();
+        cancelMonitorPowerTimeouts();
+        resetMonitorsToOffState();
       }
 
       function resetMonitorsToOffState() {
@@ -5464,6 +5490,7 @@
         // Queue the LCP scene imagery before heavier overlay construction work.
         measureSyncSection('naimean-create-scene-tiles', createSceneTiles);
         measureSyncSection('naimean-create-overlays', createOverlays);
+        syncStoredCommodorePowerState();
         syncDiscordAuthBodyClass();
         syncDiscordButtonUi();
         syncLoginOverlayUi();
