@@ -1320,7 +1320,6 @@
               setCornerScoreHighScore(nextCornerScore, '');
               showCornerScoreStatus('New high-score!', nextCornerScore);
               showCornerScoreInitialsPrompt(nextCornerScore);
-              void queueCornerScoreUpdate(nextCornerScore, { force: true });
             }
           }
           syncDvdScreensaverState();
