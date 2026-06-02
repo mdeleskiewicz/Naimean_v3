@@ -1041,8 +1041,8 @@
         };
       }
 
-      function sanitizeLoadedNote(note, archivedFallback) {
-        var migrated = migrateNote(note, archivedFallback);
+      function sanitizeLoadedNote(note, isArchived) {
+        var migrated = migrateNote(note, isArchived);
         if (migrated.color === '') migrated.color = null;
         return migrated;
       }
@@ -1052,11 +1052,8 @@
         var created = Number(note.created);
         var completedAt = Number(note.completedAt);
         var updatedAt = Number(note.updatedAt);
-        var latest = 0;
-        if (Number.isFinite(created)) latest = Math.max(latest, created);
-        if (Number.isFinite(completedAt)) latest = Math.max(latest, completedAt);
-        if (Number.isFinite(updatedAt)) latest = Math.max(latest, updatedAt);
-        return latest;
+        var timestamps = [created, completedAt, updatedAt].filter(Number.isFinite);
+        return timestamps.length ? Math.max.apply(Math, timestamps) : 0;
       }
 
       function mergeNotesById(existingNotes, incomingNotes) {
@@ -1067,7 +1064,7 @@
           var normalized = sanitizeLoadedNote(note, false);
           var noteId = typeof normalized.id === 'string' ? normalized.id : '';
           if (!noteId) return;
-          if (!Object.prototype.hasOwnProperty.call(byId, noteId)) {
+          if (!(noteId in byId)) {
             byId[noteId] = normalized;
             orderedIds.push(noteId);
             return;
@@ -1087,11 +1084,11 @@
         var incomingNotes = [];
         // Old format: { active: [...], completed: [...] }
         if (Array.isArray(raw.active)) {
-          (raw.active || []).forEach(function (n) { incomingNotes.push(sanitizeLoadedNote(n, false)); });
-          (raw.completed || []).forEach(function (n) { incomingNotes.push(sanitizeLoadedNote(n, true)); });
+          raw.active.forEach(function (n) { incomingNotes.push(sanitizeLoadedNote(n, false)); });
+          (Array.isArray(raw.completed) ? raw.completed : []).forEach(function (n) { incomingNotes.push(sanitizeLoadedNote(n, true)); });
         } else if (Array.isArray(raw.notes)) {
           // New format: { notes: [...] }
-          (raw.notes || []).forEach(function (n) { incomingNotes.push(sanitizeLoadedNote(n, false)); });
+          raw.notes.forEach(function (n) { incomingNotes.push(sanitizeLoadedNote(n, false)); });
         } else {
           return;
         }
