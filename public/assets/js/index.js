@@ -3910,6 +3910,11 @@
         commodorePowerButtonEl?.classList.toggle('on', isCommodorePoweringOn);
       }
 
+      function handlePageShow() {
+        syncStoredCommodorePowerState();
+        syncDvdScreensaverState();
+      }
+
       function cancelMonitorPowerTimeouts() {
         monitorPowerTimeoutIds.forEach((id) => window.clearTimeout(id));
         monitorPowerTimeoutIds = [];
@@ -5976,7 +5981,7 @@
 
       window.addEventListener('keydown', onKeyDown);
       window.addEventListener('keydown', handleBigTvPromptTyping);
-      window.addEventListener('pageshow', syncStoredCommodorePowerState);
+      window.addEventListener('pageshow', handlePageShow);
       document.addEventListener('fullscreenchange', syncBigTvFullscreenUi);
       window.addEventListener('resize', resize);
       window.addEventListener('beforeunload', cleanup, { once: true });
