@@ -99,6 +99,9 @@
       const DVD_SPEED_ADJUSTMENT_STEP = 0.1;
       const DVD_SPEED_MULTIPLIER_MIN = -5;
       const DVD_SPEED_MULTIPLIER_MAX = 5;
+      const DVD_ACCELEROMETER_MULTIPLIER_MIN = -3;
+      const DVD_ACCELEROMETER_MULTIPLIER_MAX = 3;
+      const DVD_ACCELEROMETER_NEUTRAL_POSITION = 0.5;
       const DVD_FRAME_DELTA_MAX_SECONDS = 0.05;
       const DVD_CORNER_GOAL_TOLERANCE_PX = 3;
       const DVD_CORNER_MISS_MIN_TOLERANCE_PX = 4;
@@ -4131,6 +4134,32 @@
         return clamped;
       }
 
+      function getDvdAccelerometerMultiplier(position) {
+        const clampedPosition = clamp(position, 0, 1);
+        const normalized = (clampedPosition - DVD_ACCELEROMETER_NEUTRAL_POSITION) / DVD_ACCELEROMETER_NEUTRAL_POSITION;
+        return clamp(
+          normalized * DVD_ACCELEROMETER_MULTIPLIER_MAX,
+          DVD_ACCELEROMETER_MULTIPLIER_MIN,
+          DVD_ACCELEROMETER_MULTIPLIER_MAX
+        );
+      }
+
+      function formatDvdAccelerometerPercent(multiplier) {
+        const percent = Math.round(multiplier * 100);
+        if (percent > 0) {
+          return `+${percent}%`;
+        }
+        return `${percent}%`;
+      }
+
+      function syncDvdAccelerometerFromTuningPosition(position, sliderEl) {
+        dvdSpeedMultiplier = getDvdAccelerometerMultiplier(position);
+        if (!sliderEl) return;
+        const percentText = formatDvdAccelerometerPercent(dvdSpeedMultiplier);
+        sliderEl.setAttribute('aria-valuenow', String(Math.round(dvdSpeedMultiplier * 100)));
+        sliderEl.setAttribute('aria-valuetext', `DVD accelerometer ${percentText}`);
+      }
+
       function getRadioStationStrength(position) {
         const clampedPosition = clamp(position, 0, 1);
         const strongestStationDistance = RADIO_TUNING_STATION_POSITIONS.reduce(
@@ -5297,7 +5326,7 @@
             const selectorLine = document.createElement('div');
             selectorLine.className = 'rc-selector-line';
             selectorLine.setAttribute('aria-hidden', 'true');
-            let tuningPosition = applyRadioTuningPosition(scaleBlock, 0.84);
+            let tuningPosition = applyRadioTuningPosition(scaleBlock, DVD_ACCELEROMETER_NEUTRAL_POSITION);
             let tuningAudio = flipClockRadioTuningAudioEl || getRadioTuningAudioElement(getNextRadioTuningAudioUrl());
             flipClockRadioTuningAudioEl = tuningAudio;
             resetRadioTuningPlayback(tuningAudio);
@@ -5312,10 +5341,10 @@
             selectorDot.className = 'rc-selector-dot';
             selectorDot.setAttribute('role', 'slider');
             selectorDot.setAttribute('tabindex', '0');
-            selectorDot.setAttribute('aria-label', 'Tune radio frequency');
-            selectorDot.setAttribute('aria-valuemin', '0');
-            selectorDot.setAttribute('aria-valuemax', '100');
-            selectorDot.setAttribute('aria-valuenow', String(Math.round(tuningPosition * 100)));
+            selectorDot.setAttribute('aria-label', 'DVD screensaver accelerometer');
+            selectorDot.setAttribute('aria-valuemin', '-300');
+            selectorDot.setAttribute('aria-valuemax', '300');
+            syncDvdAccelerometerFromTuningPosition(tuningPosition, selectorDot);
 
             function updateTuningFromClientX(clientX, { playAudio = true, timestampMs } = {}) {
               const rect = scaleBlock.getBoundingClientRect();
@@ -5323,7 +5352,7 @@
               const nextPosition = clamp((clientX - rect.left) / rect.width, 0, 1);
               if (Math.abs(nextPosition - tuningPosition) < 0.001) return false;
               tuningPosition = applyRadioTuningPosition(scaleBlock, nextPosition);
-              selectorDot.setAttribute('aria-valuenow', String(Math.round(tuningPosition * 100)));
+              syncDvdAccelerometerFromTuningPosition(tuningPosition, selectorDot);
               resetRadioTuningPlayback(tuningAudio);
               if (playAudio) {
                 ensureRadioTuningLoopPlayback(tuningAudio);
@@ -5399,7 +5428,7 @@
               event.stopPropagation();
               const step = event.key === 'ArrowRight' ? KEYBOARD_TUNING_STEP : -KEYBOARD_TUNING_STEP;
               tuningPosition = applyRadioTuningPosition(scaleBlock, tuningPosition + step);
-              selectorDot.setAttribute('aria-valuenow', String(Math.round(tuningPosition * 100)));
+              syncDvdAccelerometerFromTuningPosition(tuningPosition, selectorDot);
               resetRadioTuningPlayback(tuningAudio);
               ensureRadioTuningLoopPlayback(tuningAudio);
               if (stopTuneAudioTimeoutId !== null) {
