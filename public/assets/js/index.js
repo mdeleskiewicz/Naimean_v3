@@ -91,7 +91,7 @@
         { color: '#ffe066', hue: 40 },
         { color: '#ff78e2', hue: 300 }
       ]);
-      const DVD_BOUNCE_SPEED_PX_PER_SECOND = 260;
+      const DVD_BOUNCE_SPEED_PX_PER_SECOND = 208;
       const DVD_FRAME_DELTA_MAX_SECONDS = 0.05;
       const DVD_CORNER_SCORE_TOLERANCE_PX = 2;
       const AQUARIUM_STATIC_VIDEO_URL = 'assets/video/static.v20260424.mp4';
@@ -940,8 +940,10 @@
         const maxY = Math.max(0, boundsHeight - logoHeight);
 
         if (!hasDvdPosition) {
-          dvdPositionX = maxX / 2;
-          dvdPositionY = maxY / 2;
+          dvdPositionX = Math.random() * maxX;
+          dvdPositionY = Math.random() * maxY;
+          dvdVelocityX = Math.random() < 0.5 ? 1 : -1;
+          dvdVelocityY = Math.random() < 0.5 ? 1 : -1;
           hasDvdPosition = true;
         } else {
           dvdPositionX = clamp(dvdPositionX, 0, maxX);
