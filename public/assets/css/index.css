@@ -827,10 +827,11 @@
 
     .right-monitor-corner-score-label {
       margin: 0;
-      font-size: clamp(34.4px, 6.13vw, 61.3px);
+      font-size: calc(clamp(34.4px, 6.13vw, 61.3px) + 2px);
       line-height: 1;
       letter-spacing: 0.08em;
       text-transform: uppercase;
+      transform: translateY(20px);
       text-shadow: 0 0 16px color-mix(in srgb, var(--corner-score-color, #40d6ff) 70%, transparent);
     }
 
@@ -847,7 +848,7 @@
 
     @supports (font-size: 1cqw) {
       .right-monitor-corner-score-label {
-        font-size: clamp(34.4px, 6.13cqw, 61.3px);
+        font-size: calc(clamp(34.4px, 6.13cqw, 61.3px) + 2px);
       }
 
       .right-monitor-corner-score-value {
@@ -856,7 +857,7 @@
 
       @media (pointer: fine) and (min-width: 901px) {
         .right-monitor-corner-score-label {
-          font-size: clamp(27.52px, 4.904cqw, 49.04px);
+          font-size: calc(clamp(27.52px, 4.904cqw, 49.04px) + 2px);
         }
 
         .right-monitor-corner-score-value {
