@@ -620,7 +620,10 @@ export class HotspotStore {
         const canApplySubmittedInitials = Boolean(
           submittedInitials &&
           hasExplicitScore &&
-          explicitScore >= storedRecord.score
+          (
+            explicitScore >= storedRecord.score ||
+            (storedRecord.initials === '' && nextScore === storedRecord.score)
+          )
         );
         const shouldUpdateScore = nextScore > storedRecord.score;
         let nextInitials = storedRecord.initials;
