@@ -272,6 +272,26 @@ test('HotspotStore POST stores corner score initials for the matching high score
   assert.deepEqual(getStored('corner-score'), { score: 11, initials: 'ABC' });
 });
 
+test('HotspotStore POST stores corner score initials when submitted score is above server high score', async () => {
+  const { state, calls, getStored } = makeKeyedState({ 'corner-score': { score: 11, initials: '' } });
+  const store = new HotspotStore(state);
+
+  const response = await store.fetch(
+    new Request('https://example.com/api/corner-score', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ score: 13, initials: 'xy4z' })
+    })
+  );
+  const body = await response.json();
+
+  assert.equal(response.status, 200);
+  assert.deepEqual(body, { ok: true, score: 13, initials: 'XYZ', updated: true });
+  assert.equal(calls.put.length, 1);
+  assert.deepEqual(calls.put[0], { key: 'corner-score', value: { score: 13, initials: 'XYZ' } });
+  assert.deepEqual(getStored('corner-score'), { score: 13, initials: 'XYZ' });
+});
+
 test('HotspotStore GET returns default notes payload when storage is empty', async () => {
   const { state, calls } = makeKeyedState({});
   const store = new HotspotStore(state);
