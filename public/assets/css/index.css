@@ -1220,7 +1220,7 @@
       position: absolute;
       top: 0;
       left: 0;
-      z-index: 4;
+      z-index: 5;
       width: clamp(132px, 26.4%, 286px);
       height: auto;
       display: block;
@@ -1234,7 +1234,7 @@
         saturate(1.5)
         hue-rotate(var(--dvd-hue-deg, 0deg))
         drop-shadow(0 0 10px color-mix(in srgb, var(--dvd-accent-color, #ff4d4d) 75%, white 25%));
-      mix-blend-mode: screen;
+      mix-blend-mode: normal;
     }
 
     .big-tv-dvd-miss-indicator {
@@ -1281,7 +1281,7 @@
       position: absolute;
       top: clamp(18px, 4%, 42px);
       left: 50%;
-      z-index: 3;
+      z-index: 2;
       transform: translateX(-50%);
       max-width: min(92%, 860px);
       opacity: 0;
