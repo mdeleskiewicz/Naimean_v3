@@ -209,7 +209,7 @@ test('HotspotStore GET returns corner score when storage is empty', async () => 
   const body = await response.json();
 
   assert.equal(response.status, 200);
-  assert.deepEqual(body, { score: 3 });
+  assert.deepEqual(body, { score: 3, initials: '' });
   assert.deepEqual(calls.get, ['corner-score']);
 });
 
@@ -227,10 +227,10 @@ test('HotspotStore POST increments and stores corner score', async () => {
   const body = await response.json();
 
   assert.equal(response.status, 200);
-  assert.deepEqual(body, { ok: true, score: 10, updated: true });
+  assert.deepEqual(body, { ok: true, score: 10, initials: '', updated: true });
   assert.equal(calls.put.length, 1);
-  assert.deepEqual(calls.put[0], { key: 'corner-score', value: 10 });
-  assert.equal(getStored('corner-score'), 10);
+  assert.deepEqual(calls.put[0], { key: 'corner-score', value: { score: 10, initials: '' } });
+  assert.deepEqual(getStored('corner-score'), { score: 10, initials: '' });
 });
 
 test('HotspotStore POST keeps existing corner high score when submitted score is lower', async () => {
@@ -247,9 +247,29 @@ test('HotspotStore POST keeps existing corner high score when submitted score is
   const body = await response.json();
 
   assert.equal(response.status, 200);
-  assert.deepEqual(body, { ok: true, score: 9, updated: false });
+  assert.deepEqual(body, { ok: true, score: 9, initials: '', updated: false });
   assert.equal(calls.put.length, 0);
   assert.equal(getStored('corner-score'), 9);
+});
+
+test('HotspotStore POST stores corner score initials for the matching high score', async () => {
+  const { state, calls, getStored } = makeKeyedState({ 'corner-score': { score: 11, initials: '' } });
+  const store = new HotspotStore(state);
+
+  const response = await store.fetch(
+    new Request('https://example.com/api/corner-score', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ score: 11, initials: 'ab3c' })
+    })
+  );
+  const body = await response.json();
+
+  assert.equal(response.status, 200);
+  assert.deepEqual(body, { ok: true, score: 11, initials: 'ABC', updated: true });
+  assert.equal(calls.put.length, 1);
+  assert.deepEqual(calls.put[0], { key: 'corner-score', value: { score: 11, initials: 'ABC' } });
+  assert.deepEqual(getStored('corner-score'), { score: 11, initials: 'ABC' });
 });
 
 test('HotspotStore GET returns default notes payload when storage is empty', async () => {

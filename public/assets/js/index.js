@@ -85,7 +85,7 @@
       const BIG_TV_SCREENSAVER_LOGO_URL = 'assets/images/dvd-logo.svg';
       const CORNER_SCORE_API_URL = '/api/corner-score';
       const CORNER_SCORE_SERVER_BASELINE = 3;
-      const CORNER_SCORE_HONOR_STREAK_GOALS = 3;
+      const CORNER_SCORE_INITIALS_LENGTH = 3;
       const WRONG_AUDIO_URL = 'assets/audio/wrong.v20260424.mp3';
       const DVD_COLOR_STEPS = Object.freeze([
         { color: '#ff4d4d', hue: 0 },
@@ -160,7 +160,7 @@
       const CALENDAR_MONTH_IMAGE_START = Object.freeze({ year: 2026, month: 4 }); // May 2026, zero-based month
       const CALENDAR_MONTH_IMAGE_END = Object.freeze({ year: 2030, month: 4 }); // May 2030, zero-based month
       const CALENDAR_MONTH_NAME_FORMATTER = new Intl.DateTimeFormat('en-US', { month: 'long' });
-      const BIG_TV_INTERACTIVE_UI_SELECTORS = '.big-tv-prompt-content, .big-tv-prompt-secret-box, .big-tv-tools-overlay, .login-overlay, .calendar-big-tv-overlay, .big-tv-fullscreen-exit-button';
+      const BIG_TV_INTERACTIVE_UI_SELECTORS = '.big-tv-prompt-content, .big-tv-prompt-secret-box, .big-tv-tools-overlay, .login-overlay, .calendar-big-tv-overlay, .big-tv-corner-score-initials-prompt, .big-tv-fullscreen-exit-button';
       // Keep values comfortably within localStorage and the on-screen form layout.
       const BIG_TV_TOOLS_MAX_NAME_LENGTH = 120;
       const BIG_TV_TOOLS_MAX_URL_LENGTH = 2000;
@@ -478,8 +478,11 @@
       let aquariumStaticVideoEl = null;
       let bigTvDvdOverlayEl = null;
       let bigTvDvdLogoEl = null;
-      let bigTvCornerHonorOverlayEl = null;
-      let bigTvCornerHonorDismissButtonEl = null;
+      let bigTvCornerScoreStatusEl = null;
+      let bigTvCornerScoreStatusLabelEl = null;
+      let bigTvCornerScoreInitialsPromptEl = null;
+      let bigTvCornerScoreInitialsInputEl = null;
+      let bigTvCornerScoreInitialsSubmitButtonEl = null;
       let isBigTvDvdLoopInterrupted = false;
       let dvdAnimationFrameId = null;
       let dvdLastFrameTime = 0;
@@ -492,14 +495,16 @@
       let dvdColorStepIndex = 0;
       let cornerScoreValue = 0;
       let cornerScoreHighScoreValue = CORNER_SCORE_SERVER_BASELINE;
+      let cornerScoreHighScoreInitials = '';
+      let cornerScoreStatusScoreValue = null;
+      let cornerScoreInitialsTargetScore = null;
       let isDvdCornerCountEnabled = false;
       let rightMonitorCornerScoreOverlayEl = null;
       let rightMonitorCornerScoreValueEl = null;
       let whiteboardCornerScoreValueEl = null;
+      let whiteboardCornerScoreInitialsEl = null;
       let rightMonitorScreenWindowEl = null;
       let cornerScorePersistQueue = Promise.resolve();
-      let cornerScoreGoalStreak = 0;
-      let isCornerScoreHonorVisible = false;
       let aquariumSequenceToken = 0;
       let aquariumLoopOwnerToken = 0;
       let isRightMonitorAquariumSequenceRunning = false;
@@ -827,40 +832,9 @@
         sparkleOscillator.stop(stopTime);
       }
 
-      function playWrongAudio() {
-        const wrongAudio = new Audio(WRONG_AUDIO_URL);
-        wrongAudio.play().catch((error) => {
-          if (error?.name !== 'AbortError') {
-            console.warn('Unable to play wrong audio.', error);
-          }
-        });
-      }
-
-      function hideCornerScoreHonorOverlay() {
-        isCornerScoreHonorVisible = false;
-        if (!bigTvCornerHonorOverlayEl) {
-          return;
-        }
-        bigTvCornerHonorOverlayEl.classList.remove('is-active');
-        bigTvCornerHonorOverlayEl.setAttribute('aria-hidden', 'true');
-      }
-
-      function showCornerScoreHonorOverlay() {
-        if (!bigTvCornerHonorOverlayEl) {
-          return;
-        }
-        isCornerScoreHonorVisible = true;
-        cornerScoreGoalStreak = 0;
-        bigTvCornerHonorOverlayEl.classList.add('is-active');
-        bigTvCornerHonorOverlayEl.setAttribute('aria-hidden', 'false');
-        if (bigTvCornerHonorDismissButtonEl) {
-          bigTvCornerHonorDismissButtonEl.focus({ preventScroll: true });
-        }
-      }
-
       function activateRightMonitorCornerScoreMode() {
-        setRightMonitorOverlayImageUrl(BIG_TV_RIGHT_MONITOR_OVERLAY_CORNER_SCORE_IMAGE_URL);
-        playRightMonitorScoringNoise();
+        isDvdCornerCountEnabled = true;
+        syncDvdScreensaverState();
       }
 
       function hasDefaultMonitorOverlays() {
@@ -893,6 +867,83 @@
         if (rightMonitorCornerScoreOverlayEl) {
           rightMonitorCornerScoreOverlayEl.style.setProperty('--corner-score-color', color);
         }
+        if (bigTvCornerScoreStatusEl) {
+          bigTvCornerScoreStatusEl.style.setProperty('--corner-score-color', color);
+        }
+        if (bigTvCornerScoreInitialsPromptEl) {
+          bigTvCornerScoreInitialsPromptEl.style.setProperty('--corner-score-color', color);
+        }
+      }
+
+      function sanitizeCornerScoreInitialsInput(value) {
+        return String(value ?? '')
+          .toUpperCase()
+          .replace(/[^A-Z]/g, '')
+          .slice(0, CORNER_SCORE_INITIALS_LENGTH);
+      }
+
+      function playWrongAudio() {
+        const wrongAudio = new Audio(WRONG_AUDIO_URL);
+        wrongAudio.play().catch((error) => {
+          if (error?.name !== 'AbortError') {
+            console.warn('Unable to play wrong audio.', error);
+          }
+        });
+      }
+
+      function hideCornerScoreStatus() {
+        cornerScoreStatusScoreValue = null;
+        if (!bigTvCornerScoreStatusEl) {
+          return;
+        }
+        bigTvCornerScoreStatusEl.classList.remove('is-active');
+        bigTvCornerScoreStatusEl.setAttribute('aria-hidden', 'true');
+      }
+
+      function showCornerScoreStatus(message, scoreValue = cornerScoreValue) {
+        if (!bigTvCornerScoreStatusEl || !bigTvCornerScoreStatusLabelEl) {
+          return;
+        }
+        cornerScoreStatusScoreValue = scoreValue;
+        bigTvCornerScoreStatusLabelEl.textContent = message;
+        bigTvCornerScoreStatusEl.classList.add('is-active');
+        bigTvCornerScoreStatusEl.setAttribute('aria-hidden', 'false');
+      }
+
+      function syncCornerScoreInitialsSubmitState() {
+        if (!bigTvCornerScoreInitialsSubmitButtonEl || !bigTvCornerScoreInitialsInputEl) {
+          return;
+        }
+        bigTvCornerScoreInitialsSubmitButtonEl.disabled =
+          sanitizeCornerScoreInitialsInput(bigTvCornerScoreInitialsInputEl.value).length !== CORNER_SCORE_INITIALS_LENGTH;
+      }
+
+      function hideCornerScoreInitialsPrompt({ clearInput = true } = {}) {
+        cornerScoreInitialsTargetScore = null;
+        if (!bigTvCornerScoreInitialsPromptEl) {
+          return;
+        }
+        bigTvCornerScoreInitialsPromptEl.classList.remove('is-active');
+        bigTvCornerScoreInitialsPromptEl.setAttribute('aria-hidden', 'true');
+        if (bigTvCornerScoreInitialsInputEl) {
+          if (clearInput) {
+            bigTvCornerScoreInitialsInputEl.value = '';
+          }
+          syncCornerScoreInitialsSubmitState();
+          bigTvCornerScoreInitialsInputEl.blur();
+        }
+      }
+
+      function showCornerScoreInitialsPrompt(scoreValue) {
+        if (!bigTvCornerScoreInitialsPromptEl || !bigTvCornerScoreInitialsInputEl) {
+          return;
+        }
+        cornerScoreInitialsTargetScore = scoreValue;
+        bigTvCornerScoreInitialsPromptEl.classList.add('is-active');
+        bigTvCornerScoreInitialsPromptEl.setAttribute('aria-hidden', 'false');
+        bigTvCornerScoreInitialsInputEl.value = '';
+        syncCornerScoreInitialsSubmitState();
+        bigTvCornerScoreInitialsInputEl.focus({ preventScroll: true });
       }
 
       function renderCornerScore() {
@@ -902,21 +953,30 @@
         if (whiteboardCornerScoreValueEl) {
           whiteboardCornerScoreValueEl.textContent = String(cornerScoreHighScoreValue);
         }
+        if (whiteboardCornerScoreInitialsEl) {
+          whiteboardCornerScoreInitialsEl.textContent = cornerScoreHighScoreInitials;
+          whiteboardCornerScoreInitialsEl.hidden = !cornerScoreHighScoreInitials;
+        }
       }
 
       function setCornerScore(nextScore) {
         if (!Number.isFinite(nextScore)) {
           return;
         }
-        cornerScoreValue = Math.max(0, Math.floor(nextScore));
+        const normalizedScore = Math.max(0, Math.floor(nextScore));
+        if (cornerScoreValue !== normalizedScore) {
+          hideCornerScoreStatus();
+        }
+        cornerScoreValue = normalizedScore;
         renderCornerScore();
       }
 
-      function setCornerScoreHighScore(nextScore) {
+      function setCornerScoreHighScore(nextScore, initials = cornerScoreHighScoreInitials) {
         if (!Number.isFinite(nextScore)) {
           return;
         }
         cornerScoreHighScoreValue = Math.max(CORNER_SCORE_SERVER_BASELINE, Math.floor(nextScore));
+        cornerScoreHighScoreInitials = sanitizeCornerScoreInitialsInput(initials);
         renderCornerScore();
       }
 
@@ -933,19 +993,26 @@
             return;
           }
           const payload = await response.json();
-          setCornerScoreHighScore(payload?.score);
+          setCornerScoreHighScore(payload?.score, payload?.initials);
         } catch (_) {}
       }
 
-      function queueCornerScoreUpdate(candidateScore = cornerScoreValue) {
-        if (!Number.isFinite(candidateScore) || candidateScore <= cornerScoreHighScoreValue) {
-          return;
+      function queueCornerScoreUpdate(
+        candidateScore = cornerScoreValue,
+        { force = false, initials = null } = {}
+      ) {
+        const sanitizedScore = Number.isFinite(candidateScore) ? Math.max(0, Math.floor(candidateScore)) : cornerScoreValue;
+        const sanitizedInitials = initials === null ? null : sanitizeCornerScoreInitialsInput(initials);
+        const shouldAttemptInitialsUpdate =
+          sanitizedInitials !== null &&
+          sanitizedInitials.length === CORNER_SCORE_INITIALS_LENGTH &&
+          sanitizedScore === cornerScoreHighScoreValue;
+        if (!force && !shouldAttemptInitialsUpdate && sanitizedScore <= cornerScoreHighScoreValue) {
+          return cornerScorePersistQueue;
         }
         cornerScorePersistQueue = cornerScorePersistQueue
           .then(async () => {
-            // Re-check at execution time because the queued candidate can become stale
-            // once earlier queue entries update the shared high score.
-            if (candidateScore <= cornerScoreHighScoreValue) {
+            if (!force && !shouldAttemptInitialsUpdate && sanitizedScore <= cornerScoreHighScoreValue) {
               return;
             }
             const controller = new AbortController();
@@ -953,7 +1020,10 @@
             const response = await fetch(CORNER_SCORE_API_URL, {
               method: 'POST',
               headers: { 'content-type': 'application/json' },
-              body: JSON.stringify({ score: candidateScore }),
+              body: JSON.stringify({
+                score: sanitizedScore,
+                ...(sanitizedInitials !== null ? { initials: sanitizedInitials } : {})
+              }),
               signal: controller.signal
             });
             window.clearTimeout(timeoutId);
@@ -961,9 +1031,34 @@
               return;
             }
             const payload = await response.json();
-            setCornerScoreHighScore(payload?.score);
+            setCornerScoreHighScore(payload?.score, payload?.initials);
           })
           .catch(() => {});
+        return cornerScorePersistQueue;
+      }
+
+      async function submitCornerScoreInitials() {
+        if (!bigTvCornerScoreInitialsInputEl || cornerScoreInitialsTargetScore === null) {
+          return;
+        }
+        const submittedInitials = sanitizeCornerScoreInitialsInput(bigTvCornerScoreInitialsInputEl.value);
+        if (submittedInitials.length !== CORNER_SCORE_INITIALS_LENGTH) {
+          syncCornerScoreInitialsSubmitState();
+          return;
+        }
+        if (bigTvCornerScoreInitialsSubmitButtonEl) {
+          bigTvCornerScoreInitialsSubmitButtonEl.disabled = true;
+        }
+        const targetScore = cornerScoreInitialsTargetScore;
+        await queueCornerScoreUpdate(cornerScoreInitialsTargetScore, {
+          force: true,
+          initials: submittedInitials
+        });
+        if (cornerScoreHighScoreValue === targetScore && cornerScoreHighScoreInitials === submittedInitials) {
+          hideCornerScoreInitialsPrompt();
+          return;
+        }
+        syncCornerScoreInitialsSubmitState();
       }
 
       function stopBigTvDvdAnimation() {
@@ -1061,21 +1156,23 @@
         const isNearCornerX = dvdPositionX <= DVD_CORNER_SCORE_TOLERANCE_PX || dvdPositionX >= maxX - DVD_CORNER_SCORE_TOLERANCE_PX;
         const isNearCornerY = dvdPositionY <= DVD_CORNER_SCORE_TOLERANCE_PX || dvdPositionY >= maxY - DVD_CORNER_SCORE_TOLERANCE_PX;
         const isCornerHit = (hitHorizontalEdge && isNearCornerY) || (hitVerticalEdge && isNearCornerX);
-        if (isCornerHit && isDvdCornerCountEnabled) {
-          if (isCornerScoreHonorVisible) {
-            playWrongAudio();
-          } else {
-            const nextCornerScore = cornerScoreValue + 1;
-            setCornerScore(nextCornerScore);
-            playRightMonitorScoringNoise();
-            cornerScoreGoalStreak += 1;
-            if (cornerScoreGoalStreak >= CORNER_SCORE_HONOR_STREAK_GOALS) {
-              showCornerScoreHonorOverlay();
-            }
-            queueCornerScoreUpdate(nextCornerScore);
-            if (!isRightMonitorInteractive() && !isRightMonitorCornerScoreWakeSequenceRunning) {
-              void wakeRightMonitorForCornerScore();
-            }
+        if (isCornerHit) {
+          const previousHighScore = cornerScoreHighScoreValue;
+          const nextCornerScore = cornerScoreValue + 1;
+          setCornerScore(nextCornerScore);
+          playRightMonitorScoringNoise();
+          isDvdCornerCountEnabled = true;
+          if (nextCornerScore === previousHighScore) {
+            showCornerScoreStatus('Tied for high-score!', nextCornerScore);
+          } else if (nextCornerScore > previousHighScore) {
+            setCornerScoreHighScore(nextCornerScore, '');
+            showCornerScoreStatus('New high-score!', nextCornerScore);
+            showCornerScoreInitialsPrompt(nextCornerScore);
+            void queueCornerScoreUpdate(nextCornerScore, { force: true });
+          }
+          syncDvdScreensaverState();
+          if (!isRightMonitorInteractive() && !isRightMonitorCornerScoreWakeSequenceRunning) {
+            void wakeRightMonitorForCornerScore();
           }
         }
 
@@ -1103,10 +1200,7 @@
           rightMonitorScreenWindowEl.classList.toggle('is-corner-score-active', isCornerScoreActive);
         }
         if (bigTvDvdOverlayEl) {
-          bigTvDvdOverlayEl.setAttribute(
-            'aria-label',
-            isDvdCornerCountEnabled ? 'Disable CornerCount on right monitor' : 'Enable CornerCount on right monitor'
-          );
+          bigTvDvdOverlayEl.setAttribute('aria-label', 'CornerScore screensaver');
         }
         if (isScreensaverActive) {
           startBigTvDvdAnimation();
@@ -4228,18 +4322,22 @@
         aquariumStaticVideoEl = null;
         bigTvDvdOverlayEl = null;
         bigTvDvdLogoEl = null;
-        bigTvCornerHonorOverlayEl = null;
-        bigTvCornerHonorDismissButtonEl = null;
+        bigTvCornerScoreStatusEl = null;
+        bigTvCornerScoreStatusLabelEl = null;
+        bigTvCornerScoreInitialsPromptEl = null;
+        bigTvCornerScoreInitialsInputEl = null;
+        bigTvCornerScoreInitialsSubmitButtonEl = null;
         isBigTvDvdLoopInterrupted = false;
         stopBigTvDvdAnimation();
         hasDvdPosition = false;
         dvdColorStepIndex = 0;
         isDvdCornerCountEnabled = false;
-        isCornerScoreHonorVisible = false;
-        cornerScoreGoalStreak = 0;
+        cornerScoreStatusScoreValue = null;
+        cornerScoreInitialsTargetScore = null;
         rightMonitorCornerScoreOverlayEl = null;
         rightMonitorCornerScoreValueEl = null;
         whiteboardCornerScoreValueEl = null;
+        whiteboardCornerScoreInitialsEl = null;
         rightMonitorScreenWindowEl = null;
         rightMonitorOverlayImageUrl = BIG_TV_RIGHT_MONITOR_OVERLAY_BLUE_IMAGE_URL;
         bigTvPromptOverlayEl = null;
@@ -4305,36 +4403,7 @@
             bigTvDvdOverlayEl = document.createElement('div');
             bigTvDvdOverlayEl.className = 'discord-static-overlay big-tv-dvd-overlay is-active';
             bigTvDvdOverlayEl.setAttribute('aria-hidden', 'false');
-            bigTvDvdOverlayEl.setAttribute('role', 'button');
-            bigTvDvdOverlayEl.setAttribute('aria-label', 'Enable CornerCount on right monitor');
-            bigTvDvdOverlayEl.tabIndex = 0;
-            const toggleDvdCornerCount = () => {
-              if (!isBigTvDefaultScreensaverActive()) {
-                return;
-              }
-              isDvdCornerCountEnabled = !isDvdCornerCountEnabled;
-              if (!isDvdCornerCountEnabled) {
-                hideCornerScoreHonorOverlay();
-                cornerScoreGoalStreak = 0;
-              }
-              syncDvdScreensaverState();
-            };
-            bigTvDvdOverlayEl.addEventListener('click', (event) => {
-              event.preventDefault();
-              event.stopPropagation();
-              toggleDvdCornerCount();
-            });
-            bigTvDvdOverlayEl.addEventListener('keydown', (event) => {
-              const isActivationKey =
-                event.key === 'Enter' ||
-                event.code === 'Space';
-              if (!isActivationKey) {
-                return;
-              }
-              event.preventDefault();
-              event.stopPropagation();
-              toggleDvdCornerCount();
-            });
+            bigTvDvdOverlayEl.setAttribute('aria-label', 'CornerScore screensaver');
             bigTvDvdLogoEl = document.createElement('img');
             bigTvDvdLogoEl.className = 'big-tv-dvd-logo';
             bigTvDvdLogoEl.alt = 'DVD logo';
@@ -4344,27 +4413,48 @@
             bigTvDvdLogoEl.decoding = 'async';
             bigTvDvdOverlayEl.appendChild(bigTvDvdLogoEl);
 
-            bigTvCornerHonorOverlayEl = document.createElement('div');
-            bigTvCornerHonorOverlayEl.className = 'big-tv-corner-honor-overlay';
-            bigTvCornerHonorOverlayEl.setAttribute('aria-hidden', 'true');
-            bigTvCornerHonorOverlayEl.addEventListener('pointerdown', (event) => event.stopPropagation());
-            bigTvCornerHonorOverlayEl.addEventListener('click', (event) => event.stopPropagation());
-            const cornerHonorLabelEl = document.createElement('p');
-            cornerHonorLabelEl.className = 'big-tv-corner-honor-label';
-            cornerHonorLabelEl.textContent = 'Honor Thy Interventions';
-            bigTvCornerHonorDismissButtonEl = document.createElement('button');
-            bigTvCornerHonorDismissButtonEl.type = 'button';
-            bigTvCornerHonorDismissButtonEl.className = 'big-tv-corner-honor-button';
-            bigTvCornerHonorDismissButtonEl.textContent = 'Mmmhmm';
-            bigTvCornerHonorDismissButtonEl.addEventListener('pointerdown', (event) => event.stopPropagation());
-            bigTvCornerHonorDismissButtonEl.addEventListener('click', (event) => {
+            bigTvCornerScoreStatusEl = document.createElement('div');
+            bigTvCornerScoreStatusEl.className = 'big-tv-corner-score-status';
+            bigTvCornerScoreStatusEl.setAttribute('aria-hidden', 'true');
+            bigTvCornerScoreStatusLabelEl = document.createElement('p');
+            bigTvCornerScoreStatusLabelEl.className = 'big-tv-corner-score-status-label';
+            bigTvCornerScoreStatusEl.appendChild(bigTvCornerScoreStatusLabelEl);
+            bigTvDvdOverlayEl.appendChild(bigTvCornerScoreStatusEl);
+
+            bigTvCornerScoreInitialsPromptEl = document.createElement('form');
+            bigTvCornerScoreInitialsPromptEl.className = 'big-tv-corner-score-initials-prompt';
+            bigTvCornerScoreInitialsPromptEl.setAttribute('aria-hidden', 'true');
+            bigTvCornerScoreInitialsPromptEl.addEventListener('pointerdown', (event) => event.stopPropagation());
+            bigTvCornerScoreInitialsPromptEl.addEventListener('submit', (event) => {
               event.preventDefault();
               event.stopPropagation();
-              hideCornerScoreHonorOverlay();
+              void submitCornerScoreInitials();
             });
-            bigTvCornerHonorDismissButtonEl.addEventListener('keydown', (event) => event.stopPropagation());
-            bigTvCornerHonorOverlayEl.append(cornerHonorLabelEl, bigTvCornerHonorDismissButtonEl);
-            bigTvDvdOverlayEl.appendChild(bigTvCornerHonorOverlayEl);
+            const initialsLabelEl = document.createElement('label');
+            initialsLabelEl.className = 'big-tv-corner-score-initials-label';
+            initialsLabelEl.textContent = 'Initials';
+            bigTvCornerScoreInitialsInputEl = document.createElement('input');
+            bigTvCornerScoreInitialsInputEl.type = 'text';
+            bigTvCornerScoreInitialsInputEl.className = 'big-tv-corner-score-initials-input';
+            bigTvCornerScoreInitialsInputEl.maxLength = CORNER_SCORE_INITIALS_LENGTH;
+            bigTvCornerScoreInitialsInputEl.autocomplete = 'off';
+            bigTvCornerScoreInitialsInputEl.autocapitalize = 'characters';
+            bigTvCornerScoreInitialsInputEl.spellcheck = false;
+            bigTvCornerScoreInitialsInputEl.addEventListener('input', () => {
+              bigTvCornerScoreInitialsInputEl.value = sanitizeCornerScoreInitialsInput(bigTvCornerScoreInitialsInputEl.value);
+              syncCornerScoreInitialsSubmitState();
+            });
+            bigTvCornerScoreInitialsInputEl.addEventListener('keydown', (event) => {
+              event.stopPropagation();
+            });
+            initialsLabelEl.appendChild(bigTvCornerScoreInitialsInputEl);
+            bigTvCornerScoreInitialsSubmitButtonEl = document.createElement('button');
+            bigTvCornerScoreInitialsSubmitButtonEl.type = 'submit';
+            bigTvCornerScoreInitialsSubmitButtonEl.className = 'big-tv-corner-score-initials-submit';
+            bigTvCornerScoreInitialsSubmitButtonEl.textContent = 'Submit';
+            bigTvCornerScoreInitialsPromptEl.append(initialsLabelEl, bigTvCornerScoreInitialsSubmitButtonEl);
+            bigTvDvdOverlayEl.appendChild(bigTvCornerScoreInitialsPromptEl);
+            syncCornerScoreInitialsSubmitState();
 
             el.appendChild(bigTvDvdOverlayEl);
             applyDvdColorStep();
@@ -4931,8 +5021,12 @@
             const valueEl = document.createElement('p');
             valueEl.className = 'whiteboard-corner-score-value';
             whiteboardCornerScoreValueEl = valueEl;
+            const initialsEl = document.createElement('p');
+            initialsEl.className = 'whiteboard-corner-score-initials';
+            initialsEl.hidden = true;
+            whiteboardCornerScoreInitialsEl = initialsEl;
             renderCornerScore();
-            stackEl.append(titleEl, subtitleEl, valueEl);
+            stackEl.append(titleEl, subtitleEl, valueEl, initialsEl);
             el.appendChild(stackEl);
           }
 
