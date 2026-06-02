@@ -2186,6 +2186,18 @@
         syncDvdScreensaverState();
       }
 
+      function restoreBigTvDvdLoop({ enableCornerScore = false } = {}) {
+        isBigTvDvdLoopInterrupted = false;
+        if (enableCornerScore) {
+          isDvdCornerCountEnabled = true;
+        }
+        if (bigTvDvdOverlayEl) {
+          bigTvDvdOverlayEl.classList.add('is-active');
+          bigTvDvdOverlayEl.setAttribute('aria-hidden', 'false');
+        }
+        syncDvdScreensaverState();
+      }
+
       async function playAquariumStaticPass(sequenceToken) {
         if (!aquariumStaticOverlayEl || !aquariumStaticVideoEl) {
           return false;
@@ -2273,6 +2285,32 @@
         if (aquariumLoopOwnerToken === sequenceToken) {
           aquariumLoopOwnerToken = 0;
         }
+      }
+
+      function isRightMonitorShrimpLogoActive() {
+        return rightMonitorShrimpLogoOverlayEl?.classList.contains('is-active') === true;
+      }
+
+      async function transitionAquariumToDvdCornerScoreFromRightMonitor() {
+        if (!isRightMonitorShrimpLogoActive()) {
+          return false;
+        }
+        cancelAquariumPlaybackSequence();
+        const sequenceToken = aquariumSequenceToken;
+        hideNedryGateOverlay();
+        hideAquariumStaticOverlay();
+        hideBigTvPromptOverlay({ clearInput: false });
+        hideBigTvToolsOverlay();
+        const staticEnded = await playAquariumStaticPass(sequenceToken);
+        hideAquariumStaticOverlay();
+        if (aquariumLoopOwnerToken === sequenceToken) {
+          aquariumLoopOwnerToken = 0;
+        }
+        while (isRightMonitorAquariumSequenceRunning) {
+          await wait(80);
+        }
+        restoreBigTvDvdLoop({ enableCornerScore: true });
+        return staticEnded;
       }
 
       async function playRightMonitorAquariumSequence() {
@@ -4048,6 +4086,16 @@
               return;
             }
             if (NEDRY_GATE_TRIGGER_HOTSPOT_IDS.has(spot.id)) {
+              if (spot.id === 'right-monitor' && isRightMonitorShrimpLogoActive()) {
+                void transitionAquariumToDvdCornerScoreFromRightMonitor();
+                return;
+              }
+              if (isAquariumPlaybackSequenceActive()) {
+                const didReplayAquariumSequence = replayAquariumPlaybackSequenceFromStatic();
+                if (didReplayAquariumSequence) {
+                  return;
+                }
+              }
               if (!isRightMonitorInteractive()) {
                 return;
               }
@@ -4653,6 +4701,10 @@
             button.addEventListener('click', (event) => {
               event.stopPropagation();
               if (!isRightMonitorInteractive()) {
+                return;
+              }
+              if (isRightMonitorShrimpLogoActive()) {
+                void transitionAquariumToDvdCornerScoreFromRightMonitor();
                 return;
               }
               if (discordAuthState && discordAuthState.authenticated) {
