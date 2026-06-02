@@ -4204,7 +4204,7 @@
             bigTvDvdOverlayEl.setAttribute('aria-label', 'Enable CornerCount on right monitor');
             bigTvDvdOverlayEl.tabIndex = 0;
             const toggleDvdCornerCount = () => {
-              if (!isBigTvDefaultScreensaverActive() || !isRightMonitorInteractive()) {
+              if (!isBigTvDefaultScreensaverActive()) {
                 return;
               }
               isDvdCornerCountEnabled = !isDvdCornerCountEnabled;
