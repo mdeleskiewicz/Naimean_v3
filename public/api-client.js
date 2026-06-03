@@ -15,7 +15,7 @@
     SAVED: 'saved',
     SYNCING: 'syncing',
     OFFLINE: 'offline',
-    NOT_SYNCING: 'not_syncing'
+    NOT_SYNCING: 'not-syncing'
   };
   const calendarSyncSubscribers = new Set();
   let calendarSessionChecked = false;
@@ -227,7 +227,7 @@
         calendarSyncErrored = false;
         return;
       }
-      if (!res.ok) throw new Error('Failed to fetch calendar events.');
+      if (!res.ok) throw new Error(`Failed to fetch calendar events (${res.status}).`);
       const body = await res.json().catch(() => ({}));
       mergeServerEvents(body && body.events);
       calendarSyncErrored = false;

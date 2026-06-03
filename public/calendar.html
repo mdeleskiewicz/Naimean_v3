@@ -2943,18 +2943,18 @@
 
   function renderSyncStatusBadge(status) {
     if (!calendarSyncStatusEl) return;
-    const normalized = status === 'not_syncing' ? 'not-syncing' : (
-      status === 'offline' ? 'offline' : (
-        status === 'saved' ? 'saved' : 'syncing'
-      )
-    );
-    const label = normalized === 'saved'
-      ? 'SAVED'
-      : normalized === 'syncing'
-        ? 'SYNCING'
-        : normalized === 'offline'
-          ? 'OFFLINE'
-          : 'NOT SYNCING';
+    const normalized = {
+      saved: 'saved',
+      syncing: 'syncing',
+      offline: 'offline',
+      'not-syncing': 'not-syncing'
+    }[status] || 'syncing';
+    const label = {
+      saved: 'SAVED',
+      syncing: 'SYNCING',
+      offline: 'OFFLINE',
+      'not-syncing': 'NOT SYNCING'
+    }[normalized] || 'SYNCING';
     calendarSyncStatusEl.classList.remove('saved', 'syncing', 'offline', 'not-syncing');
     calendarSyncStatusEl.classList.add(normalized);
     calendarSyncStatusEl.textContent = label;
