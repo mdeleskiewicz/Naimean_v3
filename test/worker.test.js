@@ -50,6 +50,100 @@ function makeKeyedState(initialEntries = {}) {
   };
 }
 
+function makeSqlState() {
+  const calendarEvents = new Map();
+  const userPreferences = new Map();
+  const roomState = new Map();
+  let userVersion = 0;
+
+  function rows(items) {
+    return items;
+  }
+
+  function sqlExec(query, ...params) {
+    const normalized = query.trim().replace(/\s+/g, ' ').toLowerCase();
+
+    if (normalized === 'pragma user_version') return rows([{ user_version: userVersion }]);
+    if (normalized.startsWith('pragma user_version =')) {
+      userVersion = Number(normalized.split('=').pop().trim()) || userVersion;
+      return rows([]);
+    }
+    if (normalized.startsWith('create table if not exists')) return rows([]);
+
+    if (normalized.startsWith('select id, user_id, title, start_at, end_at, data, updated_at from calendar_events where user_id = ?')) {
+      const [userId] = params;
+      return rows(
+        [...calendarEvents.values()]
+          .filter((row) => row.user_id === userId)
+          .sort((a, b) => (a.updated_at < b.updated_at ? 1 : -1))
+      );
+    }
+    if (normalized.startsWith('insert into calendar_events')) {
+      const [id, user_id, title, start_at, end_at, data, updated_at] = params;
+      if (calendarEvents.has(id)) throw new Error('UNIQUE constraint failed: calendar_events.id');
+      calendarEvents.set(id, { id, user_id, title, start_at, end_at, data, updated_at });
+      return rows([]);
+    }
+    if (normalized.startsWith('select id from calendar_events where id = ? and user_id = ?')) {
+      const [id, userId] = params;
+      const row = calendarEvents.get(id);
+      return row && row.user_id === userId ? rows([{ id }]) : rows([]);
+    }
+    if (normalized.startsWith('update calendar_events set title = ?, start_at = ?, end_at = ?, data = ?, updated_at = ? where id = ? and user_id = ?')) {
+      const [title, start_at, end_at, data, updated_at, id, userId] = params;
+      const row = calendarEvents.get(id);
+      if (row && row.user_id === userId) {
+        calendarEvents.set(id, { ...row, title, start_at, end_at, data, updated_at });
+      }
+      return rows([]);
+    }
+    if (normalized.startsWith('delete from calendar_events where id = ? and user_id = ?')) {
+      const [id, userId] = params;
+      const row = calendarEvents.get(id);
+      if (row && row.user_id === userId) calendarEvents.delete(id);
+      return rows([]);
+    }
+
+    if (normalized.startsWith('select key, value, updated_at from user_preferences where user_id = ?')) {
+      const [userId] = params;
+      return rows(
+        [...userPreferences.values()]
+          .filter((row) => row.user_id === userId)
+          .sort((a, b) => (a.key > b.key ? 1 : -1))
+      );
+    }
+    if (normalized.startsWith('insert into user_preferences')) {
+      const [user_id, key, value, updated_at] = params;
+      userPreferences.set(`${user_id}:${key}`, { user_id, key, value, updated_at });
+      return rows([]);
+    }
+
+    if (normalized.startsWith('select key, value, updated_at from room_state where room_id = ?')) {
+      const [roomId] = params;
+      return rows(
+        [...roomState.values()]
+          .filter((row) => row.room_id === roomId)
+          .sort((a, b) => (a.key > b.key ? 1 : -1))
+      );
+    }
+    if (normalized.startsWith('insert into room_state')) {
+      const [room_id, key, value, updated_at] = params;
+      roomState.set(`${room_id}:${key}`, { room_id, key, value, updated_at });
+      return rows([]);
+    }
+
+    throw new Error(`Unexpected SQL in test: ${query}`);
+  }
+
+  return {
+    state: {
+      storage: {
+        sql: { exec: sqlExec }
+      }
+    }
+  };
+}
+
 test('HotspotStore GET returns default hotspots when storage is empty', async () => {
   const { state } = makeState(undefined);
   const store = new HotspotStore(state);
@@ -402,6 +496,122 @@ test('HotspotStore POST preserves null note color sentinel', async () => {
   assert.deepEqual(getStored('notes'), calls.put[0].value);
 });
 
+test('HotspotStore calendar events CRUD uses SQLite tables', async () => {
+  const { state } = makeSqlState();
+  const store = new HotspotStore(state);
+  const headers = {
+    'content-type': 'application/json',
+    'x-naimean-user-id': 'user-1'
+  };
+
+  const postResponse = await store.fetch(
+    new Request('https://example.com/api/calendar-events', {
+      method: 'POST',
+      headers,
+      body: JSON.stringify({
+        id: 'evt-1',
+        title: 'Standup',
+        startAt: '2026-06-03T09:00:00Z',
+        endAt: '2026-06-03T09:15:00Z',
+        data: { source: 'test' }
+      })
+    })
+  );
+  assert.equal(postResponse.status, 200);
+  const postBody = await postResponse.json();
+  assert.equal(postBody.ok, true);
+  assert.equal(postBody.id, 'evt-1');
+  assert.equal(typeof postBody.updatedAt, 'string');
+
+  const getResponse = await store.fetch(
+    new Request('https://example.com/api/calendar-events', {
+      method: 'GET',
+      headers: { 'x-naimean-user-id': 'user-1' }
+    })
+  );
+  assert.equal(getResponse.status, 200);
+  const getBody = await getResponse.json();
+  assert.equal(getBody.events.length, 1);
+  assert.equal(getBody.events[0].id, 'evt-1');
+  assert.equal(getBody.events[0].title, 'Standup');
+  assert.deepEqual(getBody.events[0].data, { source: 'test' });
+
+  const putResponse = await store.fetch(
+    new Request('https://example.com/api/calendar-events', {
+      method: 'PUT',
+      headers,
+      body: JSON.stringify({
+        id: 'evt-1',
+        title: 'Updated Standup',
+        startAt: '2026-06-03T09:05:00Z',
+        endAt: '2026-06-03T09:20:00Z',
+        data: { source: 'updated' }
+      })
+    })
+  );
+  assert.equal(putResponse.status, 200);
+
+  const deleteResponse = await store.fetch(
+    new Request('https://example.com/api/calendar-events?id=evt-1', {
+      method: 'DELETE',
+      headers: { 'x-naimean-user-id': 'user-1' }
+    })
+  );
+  assert.equal(deleteResponse.status, 200);
+  assert.deepEqual(await deleteResponse.json(), { ok: true, id: 'evt-1' });
+});
+
+test('HotspotStore user preferences endpoint stores per-user values in SQLite', async () => {
+  const { state } = makeSqlState();
+  const store = new HotspotStore(state);
+
+  const putResponse = await store.fetch(
+    new Request('https://example.com/api/user-preferences', {
+      method: 'PUT',
+      headers: {
+        'content-type': 'application/json',
+        'x-naimean-user-id': 'user-1'
+      },
+      body: JSON.stringify({ preferences: { theme: 'dark', volume: 7 } })
+    })
+  );
+  assert.equal(putResponse.status, 200);
+  const putBody = await putResponse.json();
+  assert.equal(putBody.ok, true);
+  assert.deepEqual(putBody.preferences, { theme: 'dark', volume: 7 });
+
+  const getResponse = await store.fetch(
+    new Request('https://example.com/api/user-preferences', {
+      method: 'GET',
+      headers: { 'x-naimean-user-id': 'user-1' }
+    })
+  );
+  assert.equal(getResponse.status, 200);
+  assert.deepEqual(await getResponse.json(), { preferences: { theme: 'dark', volume: 7 } });
+});
+
+test('HotspotStore room state endpoint stores and reads room-scoped values in SQLite', async () => {
+  const { state } = makeSqlState();
+  const store = new HotspotStore(state);
+
+  const putResponse = await store.fetch(
+    new Request('https://example.com/api/room-state/den', {
+      method: 'PUT',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ state: { lights: 'off', mode: 'quiet' } })
+    })
+  );
+  assert.equal(putResponse.status, 200);
+  const putBody = await putResponse.json();
+  assert.equal(putBody.ok, true);
+  assert.equal(putBody.roomId, 'den');
+  assert.deepEqual(putBody.state, { lights: 'off', mode: 'quiet' });
+
+  const getResponse = await store.fetch(new Request('https://example.com/api/room-state/den', { method: 'GET' }));
+  assert.equal(getResponse.status, 200);
+  assert.deepEqual(await getResponse.json(), { roomId: 'den', state: { lights: 'off', mode: 'quiet' } });
+});
+
 test('worker routes /api/hotspots through HOTSPOT_STORE durable object', async () => {
   const calls = { idFromName: [], get: [], stubFetch: 0, assetsFetch: 0 };
   const expectedResponse = new Response(JSON.stringify({ ok: true }), {
@@ -642,6 +852,200 @@ test('worker rejects unauthenticated /api/notes requests', async () => {
 
   const response = await router.fetch(new Request('https://example.com/api/notes', { method: 'GET' }), env);
 
+  assert.equal(response.status, 401);
+  assert.deepEqual(await response.json(), { error: 'Unauthorized' });
+});
+
+test('worker routes authenticated /api/calendar-events through HOTSPOT_STORE with user header', async () => {
+  const calls = { idFromName: [], get: [], stubFetch: 0 };
+  const token = await createSessionToken(TEST_SESSION_SECRET, {
+    userId: 'calendar-user',
+    username: 'test',
+    avatar: null,
+    isMember: true,
+    hasRole: true
+  });
+  const expectedResponse = new Response(JSON.stringify({ ok: true }), {
+    status: 200,
+    headers: { 'content-type': 'application/json' }
+  });
+
+  const env = {
+    SESSION_SECRET: TEST_SESSION_SECRET,
+    HOTSPOT_STORE: {
+      idFromName(name) {
+        calls.idFromName.push(name);
+        return `id:${name}`;
+      },
+      get(id) {
+        calls.get.push(id);
+        return {
+          async fetch(request) {
+            calls.stubFetch += 1;
+            assert.equal(new URL(request.url).pathname, '/api/calendar-events');
+            assert.equal(request.headers.get('x-naimean-user-id'), 'calendar-user');
+            return expectedResponse;
+          }
+        };
+      }
+    },
+    ASSETS: {
+      async fetch() {
+        throw new Error('should not use ASSETS for /api/calendar-events');
+      }
+    }
+  };
+
+  const response = await router.fetch(
+    new Request('https://example.com/api/calendar-events', {
+      method: 'GET',
+      headers: { cookie: `naimean_session=${token}` }
+    }),
+    env
+  );
+
+  assert.equal(response, expectedResponse);
+  assert.deepEqual(calls.idFromName, ['calendar-events']);
+  assert.deepEqual(calls.get, ['id:calendar-events']);
+  assert.equal(calls.stubFetch, 1);
+});
+
+test('worker rejects unauthenticated /api/calendar-events requests', async () => {
+  const env = {
+    SESSION_SECRET: TEST_SESSION_SECRET,
+    HOTSPOT_STORE: {
+      idFromName() {
+        throw new Error('should not resolve durable object for unauthenticated requests');
+      },
+      get() {
+        throw new Error('should not resolve durable object for unauthenticated requests');
+      }
+    },
+    ASSETS: {
+      async fetch() {
+        throw new Error('should not hit assets for /api/calendar-events');
+      }
+    }
+  };
+
+  const response = await router.fetch(new Request('https://example.com/api/calendar-events', { method: 'GET' }), env);
+  assert.equal(response.status, 401);
+  assert.deepEqual(await response.json(), { error: 'Unauthorized' });
+});
+
+test('worker routes authenticated /api/user-preferences through HOTSPOT_STORE with user header', async () => {
+  const calls = { idFromName: [], get: [], stubFetch: 0 };
+  const token = await createSessionToken(TEST_SESSION_SECRET, {
+    userId: 'prefs-user',
+    username: 'test',
+    avatar: null,
+    isMember: true,
+    hasRole: true
+  });
+  const expectedResponse = new Response(JSON.stringify({ preferences: {} }), {
+    status: 200,
+    headers: { 'content-type': 'application/json' }
+  });
+
+  const env = {
+    SESSION_SECRET: TEST_SESSION_SECRET,
+    HOTSPOT_STORE: {
+      idFromName(name) {
+        calls.idFromName.push(name);
+        return `id:${name}`;
+      },
+      get(id) {
+        calls.get.push(id);
+        return {
+          async fetch(request) {
+            calls.stubFetch += 1;
+            assert.equal(new URL(request.url).pathname, '/api/user-preferences');
+            assert.equal(request.headers.get('x-naimean-user-id'), 'prefs-user');
+            return expectedResponse;
+          }
+        };
+      }
+    },
+    ASSETS: {
+      async fetch() {
+        throw new Error('should not use ASSETS for /api/user-preferences');
+      }
+    }
+  };
+
+  const response = await router.fetch(
+    new Request('https://example.com/api/user-preferences', {
+      method: 'GET',
+      headers: { cookie: `naimean_session=${token}` }
+    }),
+    env
+  );
+
+  assert.equal(response, expectedResponse);
+  assert.deepEqual(calls.idFromName, ['user-preferences']);
+  assert.deepEqual(calls.get, ['id:user-preferences']);
+  assert.equal(calls.stubFetch, 1);
+});
+
+test('worker routes /api/room-state/:roomId through HOTSPOT_STORE without auth by default', async () => {
+  const calls = { idFromName: [], get: [], stubFetch: 0 };
+  const expectedResponse = new Response(JSON.stringify({ roomId: 'den', state: {} }), {
+    status: 200,
+    headers: { 'content-type': 'application/json' }
+  });
+
+  const env = {
+    HOTSPOT_STORE: {
+      idFromName(name) {
+        calls.idFromName.push(name);
+        return `id:${name}`;
+      },
+      get(id) {
+        calls.get.push(id);
+        return {
+          async fetch(request) {
+            calls.stubFetch += 1;
+            assert.equal(new URL(request.url).pathname, '/api/room-state/den');
+            assert.equal(request.headers.get('x-naimean-user-id'), null);
+            return expectedResponse;
+          }
+        };
+      }
+    },
+    ASSETS: {
+      async fetch() {
+        throw new Error('should not use ASSETS for /api/room-state');
+      }
+    }
+  };
+
+  const response = await router.fetch(new Request('https://example.com/api/room-state/den', { method: 'GET' }), env);
+  assert.equal(response, expectedResponse);
+  assert.deepEqual(calls.idFromName, ['room-state']);
+  assert.deepEqual(calls.get, ['id:room-state']);
+  assert.equal(calls.stubFetch, 1);
+});
+
+test('worker enforces auth for /api/room-state/:roomId when ROOM_STATE_REQUIRE_AUTH is true', async () => {
+  const env = {
+    ROOM_STATE_REQUIRE_AUTH: 'true',
+    SESSION_SECRET: TEST_SESSION_SECRET,
+    HOTSPOT_STORE: {
+      idFromName() {
+        throw new Error('should not resolve durable object for unauthenticated requests');
+      },
+      get() {
+        throw new Error('should not resolve durable object for unauthenticated requests');
+      }
+    },
+    ASSETS: {
+      async fetch() {
+        throw new Error('should not use ASSETS for /api/room-state');
+      }
+    }
+  };
+
+  const response = await router.fetch(new Request('https://example.com/api/room-state/den', { method: 'GET' }), env);
   assert.equal(response.status, 401);
   assert.deepEqual(await response.json(), { error: 'Unauthorized' });
 });
