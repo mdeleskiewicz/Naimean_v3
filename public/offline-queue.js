@@ -4,10 +4,7 @@
   const STORAGE_KEY = 'naimean.offlineQueue';
   const MUTATION_METHODS = new Set(['POST', 'PUT', 'DELETE']);
   const INDICATOR_IDS = ['calendar-sync-status', 'topbar-save-status', 'save-hotspots-btn'];
-  const DEFAULT_HEADERS = {
-    'content-type': 'application/json; charset=UTF-8',
-    'cache-control': 'no-store'
-  };
+  const DEFAULT_HEADERS = { 'cache-control': 'no-store' };
 
   const originalFetch = window.fetch.bind(window);
   let isFlushing = false;
@@ -150,8 +147,8 @@
     };
   }
 
-  function makeQueuedResponse(length) {
-    return new Response(JSON.stringify({ ok: true, queued: true, pending: length }), {
+  function makeQueuedResponse(length, meta = {}) {
+    return new Response(JSON.stringify({ ok: true, queued: true, pending: length, ...meta }), {
       status: 202,
       headers: DEFAULT_HEADERS
     });
@@ -166,9 +163,9 @@
     return queue.length;
   }
 
-  function isRetryableFailure(error, response) {
+  function shouldEnqueueFailure(error, response) {
     if (response) return response.status >= 500;
-    return !!error;
+    return Boolean(error);
   }
 
   async function replayItem(item) {
@@ -264,12 +261,21 @@
 
     try {
       const response = await originalFetch(input, init);
-      if (!isRetryableFailure(null, response)) return response;
+      if (!shouldEnqueueFailure(null, response)) return response;
+      let errorText = '';
+      try {
+        errorText = (await response.clone().text()).trim().slice(0, 512);
+      } catch (_) {}
       const pendingLength = await enqueue(input, init);
-      return makeQueuedResponse(pendingLength);
+      return makeQueuedResponse(pendingLength, {
+        originalStatus: response.status,
+        error: errorText || `Request failed with status ${response.status} and was queued for retry.`
+      });
     } catch (error) {
       const pendingLength = await enqueue(input, init);
-      return makeQueuedResponse(pendingLength);
+      return makeQueuedResponse(pendingLength, {
+        error: error && error.message ? error.message : 'Network failure; request queued for retry.'
+      });
     }
   };
 
@@ -287,8 +293,4 @@
     if (typeof navigator !== 'undefined' && navigator.onLine === false) return;
     void flushQueue();
   });
-  window.setTimeout(() => {
-    if (typeof navigator !== 'undefined' && navigator.onLine === false) return;
-    void flushQueue();
-  }, 0);
 }());
