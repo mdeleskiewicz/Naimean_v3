@@ -2567,12 +2567,20 @@ test('worker /api/discord/logout returns 405 for GET', async () => {
   assert.equal(response.status, 405);
 });
 
-test('worker applies long-lived cache headers to versioned .png assets', async () => {
+test('worker bypasses routing and header rewriting for .png assets', async () => {
+  const calls = { url: null };
   const env = {
     HOTSPOT_STORE: {},
     ASSETS: {
-      async fetch() {
-        return new Response('img-bytes', { status: 200, headers: { 'content-type': 'image/png' } });
+      async fetch(request) {
+        calls.url = request.url;
+        return new Response('img-bytes', {
+          status: 200,
+          headers: {
+            'content-type': 'image/png',
+            'cache-control': 'upstream-cache'
+          }
+        });
       }
     }
   };
@@ -2581,9 +2589,10 @@ test('worker applies long-lived cache headers to versioned .png assets', async (
     env
   );
   assert.equal(response.status, 200);
-  assert.equal(response.headers.get('cache-control'), 'public, max-age=31536000, immutable');
-  assert.equal(response.headers.get('x-content-type-options'), 'nosniff');
-  assert.equal(response.headers.get('referrer-policy'), 'strict-origin-when-cross-origin');
+  assert.equal(calls.url, 'https://example.com/assets/images/commodore64.v20260424.png');
+  assert.equal(response.headers.get('cache-control'), 'upstream-cache');
+  assert.equal(response.headers.get('x-content-type-options'), null);
+  assert.equal(response.headers.get('referrer-policy'), null);
 });
 
 test('worker preserves MP4 range requests and 206 partial-content headers', async () => {
@@ -2618,42 +2627,68 @@ test('worker preserves MP4 range requests and 206 partial-content headers', asyn
   assert.equal(response.headers.get('accept-ranges'), 'bytes');
   assert.equal(response.headers.get('content-range'), 'bytes 0-1023/4096');
   assert.equal(response.headers.get('content-length'), '1024');
+  assert.equal(response.headers.get('x-content-type-options'), null);
 });
 
-test('worker applies long-lived cache headers to versioned .mp4 assets', async () => {
+test('worker bypasses routing and header rewriting for .css assets', async () => {
   const env = {
     HOTSPOT_STORE: {},
     ASSETS: {
       async fetch() {
-        return new Response('vid-bytes', { status: 200, headers: { 'content-type': 'video/mp4' } });
+        return new Response('body{color:#fff}', {
+          status: 200,
+          headers: {
+            'content-type': 'text/css',
+            'cache-control': 'upstream-css-cache'
+          }
+        });
       }
     }
   };
   const response = await router.fetch(
-    new Request('https://example.com/assets/video/static.v20260424.mp4'),
+    new Request('https://example.com/assets/css/site.v20260424.css'),
     env
   );
   assert.equal(response.status, 200);
-  assert.equal(response.headers.get('cache-control'), 'public, max-age=31536000, immutable');
-  assert.equal(response.headers.get('x-content-type-options'), 'nosniff');
-  assert.equal(response.headers.get('referrer-policy'), 'strict-origin-when-cross-origin');
+  assert.equal(response.headers.get('cache-control'), 'upstream-css-cache');
+  assert.equal(response.headers.get('x-content-type-options'), null);
+  assert.equal(response.headers.get('referrer-policy'), null);
 });
 
-test('worker applies must-revalidate cache headers to non-versioned assets', async () => {
+test('worker applies must-revalidate cache headers to non-bypassed non-versioned assets', async () => {
   const env = {
     HOTSPOT_STORE: {},
     ASSETS: {
       async fetch() {
-        return new Response('img-bytes', { status: 200, headers: { 'content-type': 'image/png' } });
+        return new Response('console.log("ok")', { status: 200, headers: { 'content-type': 'application/javascript' } });
       }
     }
   };
   const response = await router.fetch(
-    new Request('https://example.com/assets/images/logo.png'),
+    new Request('https://example.com/assets/js/app.js'),
     env
   );
   assert.equal(response.status, 200);
   assert.equal(response.headers.get('cache-control'), 'public, max-age=0, must-revalidate');
+  assert.equal(response.headers.get('x-content-type-options'), 'nosniff');
+  assert.equal(response.headers.get('referrer-policy'), 'strict-origin-when-cross-origin');
+});
+
+test('worker keeps .html requests on full asset handler path', async () => {
+  const env = {
+    HOTSPOT_STORE: {},
+    ASSETS: {
+      async fetch() {
+        return new Response('<html></html>', {
+          status: 200,
+          headers: { 'content-type': 'text/html; charset=UTF-8' }
+        });
+      }
+    }
+  };
+  const response = await router.fetch(new Request('https://example.com/index.html'), env);
+  assert.equal(response.status, 200);
+  assert.equal(response.headers.get('cache-control'), 'no-store');
   assert.equal(response.headers.get('x-content-type-options'), 'nosniff');
   assert.equal(response.headers.get('referrer-policy'), 'strict-origin-when-cross-origin');
 });

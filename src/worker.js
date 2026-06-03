@@ -142,6 +142,33 @@ function isHtmlPath(pathname) {
 }
 
 const VERSIONED_ASSET_RE = /\.v\d{4}[^.]*\.(png|mp4)$/i;
+const STATIC_BYPASS_EXTENSIONS = new Set([
+  '.mp4',
+  '.png',
+  '.jpg',
+  '.jpeg',
+  '.gif',
+  '.webp',
+  '.avif',
+  '.svg',
+  '.ico',
+  '.wav',
+  '.mp3',
+  '.ogg',
+  '.woff2',
+  '.woff',
+  '.ttf',
+  '.css'
+]);
+
+function shouldBypassStaticAsset(pathname) {
+  if (pathname.startsWith('/api/')) return false;
+  const lowerPath = pathname.toLowerCase();
+  for (const ext of STATIC_BYPASS_EXTENSIONS) {
+    if (lowerPath.endsWith(ext)) return true;
+  }
+  return false;
+}
 
 function applyAssetCacheHeaders(pathname, headers) {
   if (isHtmlPath(pathname)) {
@@ -1197,6 +1224,12 @@ export default {
   async fetch(request, env) {
     const url = new URL(request.url);
     const { pathname } = url;
+    if (shouldBypassStaticAsset(pathname)) {
+      if (!env.ASSETS?.fetch) {
+        return jsonResponse({ error: 'Static assets unavailable.' }, 500);
+      }
+      return env.ASSETS.fetch(request);
+    }
 
     // Route matching for Discord endpoints
     if (pathname === '/api/discord/auth') return handleDiscordAuth(request, env);
