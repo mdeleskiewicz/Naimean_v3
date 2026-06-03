@@ -94,6 +94,25 @@
       border: 1px solid transparent;
       background: transparent;
       color: #9fe7ff;
+      overflow: visible;
+    }
+
+    body.touch-optimized .touch-hit-target {
+      position: relative;
+    }
+
+    body.touch-optimized .touch-hit-target::before {
+      content: '';
+      position: absolute;
+      inset:
+        calc(-1 * var(--touch-hit-inset-y, 0px))
+        calc(-1 * var(--touch-hit-inset-x, 0px));
+      border-radius: inherit;
+      background: transparent;
+    }
+
+    body.debug .touch-hit-target::before {
+      display: none;
     }
 
     .hotspot-label {
@@ -1173,6 +1192,7 @@
     }
 
     .left-monitor-segment:hover,
+    .left-monitor-segment:active,
     .left-monitor-segment.is-selected {
       background: rgba(255, 255, 255, 0.14);
     }

@@ -109,6 +109,9 @@
       const DVD_CORNER_GOAL_TOLERANCE_PX = 3;
       const DVD_CORNER_MISS_MIN_TOLERANCE_PX = 4;
       const DVD_CORNER_MISS_MAX_TOLERANCE_PX = 16;
+      const DVD_CORNER_TOUCH_GOAL_TOLERANCE_PX = 20;
+      const DVD_CORNER_TAP_REGION_PX = 64;
+      const MIN_TOUCH_TARGET_PX = 44;
       const DVD_MISS_INDICATOR_DURATION_MS = 650;
       const AQUARIUM_STATIC_VIDEO_URL = 'assets/video/static.v20260424.mp4';
       const AQUARIUM_LOCAL_SHRIMP_CLIPS = Object.freeze(
@@ -999,6 +1002,77 @@
         return null;
       }
 
+      function getTappedCornerRegion(clientX, clientY) {
+        if (!bigTvDvdOverlayEl) return null;
+        const rect = bigTvDvdOverlayEl.getBoundingClientRect();
+        if (!rect.width || !rect.height) return null;
+        const localX = clientX - rect.left;
+        const localY = clientY - rect.top;
+        if (localX < 0 || localY < 0 || localX > rect.width || localY > rect.height) return null;
+        const regionWidth = Math.min(rect.width / 2, DVD_CORNER_TAP_REGION_PX);
+        const regionHeight = Math.min(rect.height / 2, DVD_CORNER_TAP_REGION_PX);
+        const isLeft = localX <= regionWidth;
+        const isRight = localX >= rect.width - regionWidth;
+        const isTop = localY <= regionHeight;
+        const isBottom = localY >= rect.height - regionHeight;
+        if (isTop && isLeft) return 'top-left';
+        if (isTop && isRight) return 'top-right';
+        if (isBottom && isLeft) return 'bottom-left';
+        if (isBottom && isRight) return 'bottom-right';
+        return null;
+      }
+
+      function getCurrentDvdCornerAtTolerance(maxTolerance) {
+        if (!bigTvDvdOverlayEl || !bigTvDvdLogoEl) return null;
+        const maxX = Math.max(0, bigTvDvdOverlayEl.clientWidth - bigTvDvdLogoEl.clientWidth);
+        const maxY = Math.max(0, bigTvDvdOverlayEl.clientHeight - bigTvDvdLogoEl.clientHeight);
+        return getCornerCollisionName({
+          hitHorizontalEdge: true,
+          hitVerticalEdge: true,
+          positionX: dvdPositionX,
+          positionY: dvdPositionY,
+          maxX,
+          maxY,
+          minTolerance: 0,
+          maxTolerance
+        });
+      }
+
+      function applyDvdCornerGoal() {
+        const previousHighScore = cornerScoreHighScoreValue;
+        const cornerScoreDelta = dvdSpeedMultiplier < 0 ? -1 : 1;
+        const nextCornerScore = cornerScoreValue + cornerScoreDelta;
+        setCornerScore(nextCornerScore);
+        playRightMonitorScoringNoise();
+        isDvdCornerCountEnabled = true;
+        if (cornerScoreDelta > 0) {
+          if (nextCornerScore === previousHighScore) {
+            showCornerScoreStatus('Tied for high-score!', nextCornerScore);
+            void queueCornerScoreUpdate(nextCornerScore, { force: true });
+          } else if (nextCornerScore > previousHighScore) {
+            setCornerScoreHighScore(nextCornerScore, '');
+            showCornerScoreStatus('New high-score!', nextCornerScore);
+            showCornerScoreInitialsPrompt(nextCornerScore);
+          }
+        }
+        syncDvdScreensaverState();
+        if (!isRightMonitorInteractive() && !isRightMonitorCornerScoreWakeSequenceRunning) {
+          void wakeRightMonitorForCornerScore();
+        }
+      }
+
+      function handleDvdCornerTap(clientX, clientY) {
+        if (!useLiteRendering || !isBigTvDefaultScreensaverActive() || !isRightMonitorInteractive()) return;
+        const tappedCorner = getTappedCornerRegion(clientX, clientY);
+        if (!tappedCorner) return;
+        const cornerAtTap = getCurrentDvdCornerAtTolerance(DVD_CORNER_TOUCH_GOAL_TOLERANCE_PX);
+        if (cornerAtTap === tappedCorner) {
+          applyDvdCornerGoal();
+          return;
+        }
+        showDvdMissIndicator(tappedCorner);
+      }
+
       function syncCornerScoreInitialsSubmitState() {
         if (!bigTvCornerScoreInitialsSubmitButtonEl || !bigTvCornerScoreInitialsInputEl) {
           return;
@@ -1310,26 +1384,7 @@
           maxTolerance: DVD_CORNER_GOAL_TOLERANCE_PX
         });
         if (goalCorner) {
-          const previousHighScore = cornerScoreHighScoreValue;
-          const cornerScoreDelta = dvdSpeedMultiplier < 0 ? -1 : 1;
-          const nextCornerScore = cornerScoreValue + cornerScoreDelta;
-          setCornerScore(nextCornerScore);
-          playRightMonitorScoringNoise();
-          isDvdCornerCountEnabled = true;
-          if (cornerScoreDelta > 0) {
-            if (nextCornerScore === previousHighScore) {
-              showCornerScoreStatus('Tied for high-score!', nextCornerScore);
-              void queueCornerScoreUpdate(nextCornerScore, { force: true });
-            } else if (nextCornerScore > previousHighScore) {
-              setCornerScoreHighScore(nextCornerScore, '');
-              showCornerScoreStatus('New high-score!', nextCornerScore);
-              showCornerScoreInitialsPrompt(nextCornerScore);
-            }
-          }
-          syncDvdScreensaverState();
-          if (!isRightMonitorInteractive() && !isRightMonitorCornerScoreWakeSequenceRunning) {
-            void wakeRightMonitorForCornerScore();
-          }
+          applyDvdCornerGoal();
         } else {
           const missCorner = getCornerCollisionName({
             hitHorizontalEdge,
@@ -3170,6 +3225,38 @@
         return Math.max(min, Math.min(value, max));
       }
 
+      function setTouchHitTargetInsets(element, designWidth, designHeight) {
+        if (!element) return;
+        if (!useLiteRendering || !scale) {
+          element.classList.remove('touch-hit-target');
+          element.style.removeProperty('--touch-hit-inset-x');
+          element.style.removeProperty('--touch-hit-inset-y');
+          return;
+        }
+        const widthPx = Math.max(0, designWidth * scale);
+        const heightPx = Math.max(0, designHeight * scale);
+        const neededX = Math.max(0, (MIN_TOUCH_TARGET_PX - widthPx) / 2);
+        const neededY = Math.max(0, (MIN_TOUCH_TARGET_PX - heightPx) / 2);
+        if (!neededX && !neededY) {
+          element.classList.remove('touch-hit-target');
+          element.style.removeProperty('--touch-hit-inset-x');
+          element.style.removeProperty('--touch-hit-inset-y');
+          return;
+        }
+        element.classList.add('touch-hit-target');
+        element.style.setProperty('--touch-hit-inset-x', `${neededX / scale}px`);
+        element.style.setProperty('--touch-hit-inset-y', `${neededY / scale}px`);
+      }
+
+      function refreshHotspotTouchHitTargets() {
+        hotspotLayer.querySelectorAll('.hotspot').forEach((element) => {
+          const width = Number.parseFloat(element.style.width);
+          const height = Number.parseFloat(element.style.height);
+          if (!Number.isFinite(width) || !Number.isFinite(height)) return;
+          setTouchHitTargetInsets(element, width, height);
+        });
+      }
+
       function isFiniteNumber(value) {
         return typeof value === 'number' && Number.isFinite(value);
       }
@@ -4503,6 +4590,7 @@
           hotspotLayer.appendChild(el);
         });
         refreshDebugObjectSelectOptions();
+        refreshHotspotTouchHitTargets();
       }
 
       function createOverlays() {
@@ -4598,6 +4686,13 @@
             bigTvDvdOverlayEl.className = 'discord-static-overlay big-tv-dvd-overlay is-active';
             bigTvDvdOverlayEl.setAttribute('aria-hidden', 'false');
             bigTvDvdOverlayEl.setAttribute('aria-label', 'CornerScore screensaver');
+            bigTvDvdOverlayEl.addEventListener('pointerup', (event) => {
+              if (event.pointerType === 'touch' || event.pointerType === 'pen') {
+                event.preventDefault();
+                event.stopPropagation();
+                handleDvdCornerTap(event.clientX, event.clientY);
+              }
+            });
             bigTvDvdLogoEl = document.createElement('img');
             bigTvDvdLogoEl.className = 'big-tv-dvd-logo';
             bigTvDvdLogoEl.alt = 'DVD logo';
@@ -5326,6 +5421,7 @@
             const KEYBOARD_TUNING_STEP = 0.02;
             const KEYBOARD_AUDIO_STOP_DELAY_MS = 120;
             let activeTunePointerId = null;
+            let activeTuneTouchId = null;
             let lastPointerClientX = 0;
             let stopTuneAudioTimeoutId = null;
 
@@ -5361,6 +5457,54 @@
               }
             }
 
+            function beginTuneTouch(event) {
+              const touch = event.changedTouches?.[0];
+              if (!touch || activeTuneTouchId !== null) return;
+              event.preventDefault();
+              event.stopPropagation();
+              activeTuneTouchId = touch.identifier;
+              lastPointerClientX = touch.clientX;
+              selectNextTuningAudio();
+              const didUpdateTuning = updateTuningFromClientX(touch.clientX, { playAudio: true, timestampMs: event.timeStamp });
+              if (!didUpdateTuning) {
+                resetRadioTuningPlayback(tuningAudio);
+                ensureRadioTuningLoopPlayback(tuningAudio);
+              }
+            }
+
+            function findChangedTouchById(changedTouches, touchId) {
+              if (!changedTouches) return null;
+              for (let index = 0; index < changedTouches.length; index += 1) {
+                if (changedTouches[index].identifier === touchId) {
+                  return changedTouches[index];
+                }
+              }
+              return null;
+            }
+
+            function moveTuneTouch(event) {
+              if (activeTuneTouchId === null) return;
+              const touch = findChangedTouchById(event.changedTouches, activeTuneTouchId);
+              if (!touch) return;
+              event.preventDefault();
+              event.stopPropagation();
+              const didMove = updateTuningFromClientX(touch.clientX, { playAudio: true, timestampMs: event.timeStamp });
+              if (!didMove && Math.abs(touch.clientX - lastPointerClientX) > TUNING_DRAG_THRESHOLD_PX) {
+                ensureRadioTuningLoopPlayback(tuningAudio);
+              }
+              lastPointerClientX = touch.clientX;
+            }
+
+            function endTuneTouch(event) {
+              if (activeTuneTouchId === null) return;
+              const touch = findChangedTouchById(event.changedTouches, activeTuneTouchId);
+              if (!touch) return;
+              event.preventDefault();
+              event.stopPropagation();
+              activeTuneTouchId = null;
+              stopRadioTuningLoopPlayback(tuningAudio);
+            }
+
             function selectNextTuningAudio() {
               const nextAudio = getRadioTuningAudioElement(getNextRadioTuningAudioUrl());
               if (tuningAudio && tuningAudio !== nextAudio) {
@@ -5388,6 +5532,13 @@
 
             scaleBlock.addEventListener('pointerdown', beginTuneDrag);
             selectorDot.addEventListener('pointerdown', beginTuneDrag);
+            const touchTuningTargets = [scaleBlock, selectorDot];
+            touchTuningTargets.forEach((target) => {
+              target.addEventListener('touchstart', beginTuneTouch, { passive: false });
+              target.addEventListener('touchmove', moveTuneTouch, { passive: false });
+              target.addEventListener('touchend', endTuneTouch, { passive: false });
+              target.addEventListener('touchcancel', endTuneTouch, { passive: false });
+            });
 
             scaleBlock.addEventListener('pointermove', (event) => {
               if (event.pointerId !== activeTunePointerId) return;
@@ -5591,6 +5742,7 @@
           targetCameraX = cameraX;
         }
         updateBigTvDebugWatermarkPlacement();
+        refreshHotspotTouchHitTargets();
       }
 
       function onWheel(event) {
@@ -5956,6 +6108,7 @@
         measureSyncSection('naimean-render-hotspots', renderHotspotLayers);
         if (useLiteRendering) {
           document.body.classList.add('lite-rendering');
+          document.body.classList.add('touch-optimized');
         }
 
         measureSyncSection('naimean-initial-resize', resize);

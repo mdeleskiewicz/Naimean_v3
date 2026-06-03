@@ -246,6 +246,25 @@
       background: transparent;
       cursor: pointer;
       pointer-events: auto;
+      overflow: visible;
+    }
+
+    body.touch-optimized .touch-hit-target {
+      position: absolute;
+    }
+
+    body.touch-optimized .touch-hit-target::before {
+      content: '';
+      position: absolute;
+      inset:
+        calc(-1 * var(--touch-hit-inset-y, 0px))
+        calc(-1 * var(--touch-hit-inset-x, 0px));
+      border-radius: inherit;
+      background: transparent;
+    }
+
+    body.debug .touch-hit-target::before {
+      display: none;
     }
 
     .power-button-visual {
@@ -662,6 +681,7 @@
     }
 
     #back-to-den-btn:hover,
+    #back-to-den-btn:active,
     #back-to-den-btn:focus-visible {
       background: rgba(0, 0, 0, 0.75);
       outline: 2px solid rgba(65, 229, 255, 0.95);
@@ -740,12 +760,15 @@
       const SAUCE_SPLATTER_DROPLET_MAX_DISTANCE_PX = 750;
       const SAUCE_SPLATTER_ANIMATION_MS = 620;
       const SAUCE_SPLATTER_START_RATIO = 0.72;
+      const MIN_TOUCH_TARGET_PX = 44;
       const COMMODORE_NAV_SOURCE_STORAGE_KEY = 'commodore.navigation.source.v1';
       const COMMODORE_POWER_STATE_STORAGE_KEY = 'commodore.screen.poweredOn.v1';
       const COMMODORE_NAV_SOURCE_CHAPEL = 'chapel';
       const COMMODORE_OFF_URL = '/commodore_off.html';
       const COMMODORE_ON_URL = '/commodore_on.html';
       const COMMODORE_POWER_TRANSITION_MS = 320;
+      const hasCoarsePointer = window.matchMedia('(pointer: coarse)').matches;
+      const useTouchOptimizedTargets = hasCoarsePointer;
       const ANCHOR_POINTS = {
         aceVenturaTopLeft: { x: 359, y: 2215 },
         aceVenturaBottomRight: { x: 457, y: 2355 },
@@ -1251,6 +1274,7 @@
         element.style.top = `${toPercentY(rect.top)}%`;
         element.style.width = `${toPercentX(rect.width)}%`;
         element.style.height = `${toPercentY(rect.height)}%`;
+        applyTouchTargetInsets(element, rect);
         if (definition.id === SAUCE_DROP_TRACK.id) {
           const trackHeight = Number(rect.height);
           if (Number.isFinite(trackHeight) && trackHeight > 0) {
@@ -1264,6 +1288,34 @@
         if (label) {
           label.textContent = formatRectLabel(definition, rect);
         }
+      }
+
+      function applyTouchTargetInsets(element, rect) {
+        if (!element || !rect || !useTouchOptimizedTargets) {
+          element?.classList.remove('touch-hit-target');
+          element?.style.removeProperty('--touch-hit-inset-x');
+          element?.style.removeProperty('--touch-hit-inset-y');
+          return;
+        }
+        const metrics = getOverlayMetrics();
+        if (!metrics.width || !metrics.height) {
+          return;
+        }
+        const widthPx = metrics.width * (rect.width / imageDimensions.width);
+        const heightPx = metrics.height * (rect.height / imageDimensions.height);
+        const neededX = Math.max(0, (MIN_TOUCH_TARGET_PX - widthPx) / 2);
+        const neededY = Math.max(0, (MIN_TOUCH_TARGET_PX - heightPx) / 2);
+        if (neededX <= 0 && neededY <= 0) {
+          element.classList.remove('touch-hit-target');
+          element.style.removeProperty('--touch-hit-inset-x');
+          element.style.removeProperty('--touch-hit-inset-y');
+          return;
+        }
+        const scaleX = metrics.width / imageDimensions.width;
+        const scaleY = metrics.height / imageDimensions.height;
+        element.classList.add('touch-hit-target');
+        element.style.setProperty('--touch-hit-inset-x', `${neededX / scaleX}px`);
+        element.style.setProperty('--touch-hit-inset-y', `${neededY / scaleY}px`);
       }
 
       function addResizeHandles(element) {
@@ -1801,6 +1853,9 @@
 
       async function initializeScene() {
         await loadHotspotsFromServer();
+        if (useTouchOptimizedTargets) {
+          document.body.classList.add('touch-optimized');
+        }
         syncImageDimensions();
         renderHotspots();
         clearSauceDripTimers();

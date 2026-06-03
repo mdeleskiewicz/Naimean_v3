@@ -278,6 +278,7 @@
     }
 
     .cabinet-card:hover,
+    .cabinet-card:active,
     .cabinet-card:focus-visible {
       transform: translateY(-6px);
       filter:
@@ -400,9 +401,20 @@
       cursor: pointer;
       transition: border-color 0.15s, background 0.15s;
       -webkit-tap-highlight-color: transparent;
+      position: relative;
+      overflow: visible;
+    }
+
+    .top-bar-btn::before {
+      content: '';
+      position: absolute;
+      inset: -8px -10px;
+      border-radius: inherit;
+      background: transparent;
     }
 
     .top-bar-btn:hover,
+    .top-bar-btn:active,
     .top-bar-btn:focus-visible {
       border-color: var(--accent);
       background: rgba(14, 10, 22, 0.88);
