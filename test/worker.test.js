@@ -2586,7 +2586,7 @@ test('worker applies long-lived cache headers to versioned .png assets', async (
   assert.equal(response.headers.get('referrer-policy'), 'strict-origin-when-cross-origin');
 });
 
-test('worker forwards Range requests for mp4 assets', async () => {
+test('worker preserves MP4 range requests and 206 partial-content headers', async () => {
   const calls = { range: null };
   const env = {
     HOTSPOT_STORE: {},
@@ -2597,7 +2597,9 @@ test('worker forwards Range requests for mp4 assets', async () => {
           status: 206,
           headers: {
             'content-type': 'video/mp4',
-            'content-range': 'bytes 0-1023/4096'
+            'accept-ranges': 'bytes',
+            'content-range': 'bytes 0-1023/4096',
+            'content-length': '1024'
           }
         });
       }
@@ -2605,14 +2607,17 @@ test('worker forwards Range requests for mp4 assets', async () => {
   };
   const response = await router.fetch(
     new Request('https://example.com/assets/video/static.v20260424.mp4', {
-      headers: { range: 'bytes=0-1023' }
+      headers: { range: 'bytes=0-' }
     }),
     env
   );
 
-  assert.equal(calls.range, 'bytes=0-1023');
+  assert.equal(calls.range, 'bytes=0-');
   assert.equal(response.status, 206);
+  assert.equal(response.headers.get('content-type'), 'video/mp4');
+  assert.equal(response.headers.get('accept-ranges'), 'bytes');
   assert.equal(response.headers.get('content-range'), 'bytes 0-1023/4096');
+  assert.equal(response.headers.get('content-length'), '1024');
 });
 
 test('worker applies long-lived cache headers to versioned .mp4 assets', async () => {
