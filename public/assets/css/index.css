@@ -125,6 +125,10 @@
         padding: 8px 12px;
         font-size: 36px;
       }
+
+      .big-tv-dvd-miss-indicator {
+        font-size: clamp(36px, 7.2vw, 78px);
+      }
     }
 
     /* Placeholder screens for TV and desk monitors. */
