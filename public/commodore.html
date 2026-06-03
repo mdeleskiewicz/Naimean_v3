@@ -481,12 +481,18 @@
     <div id="overlay-layer" aria-label="Commodore hotspots and overlays"></div>
   </main>
   <script>
-    (() => {
+    (async () => {
       const DESIGN_WIDTH = 444;
       const DESIGN_HEIGHT = 557;
       const MIN_SIZE = 12;
       const STORAGE_KEY = 'commodore.editor.layout.v1';
       const POWER_STATE_STORAGE_KEY = 'commodore.screen.poweredOn.v1';
+      const ROOM_STATE_ENDPOINT = '/api/room-state/commodore';
+      const ROOM_STATE_KEY_POWER_STATE = 'powerState';
+      const ROOM_STATE_KEY_DEBUG_LAYOUT = 'debugLayout';
+      const POWER_STATE_ON = 'on';
+      const POWER_STATE_OFF = 'off';
+      const POWER_STATE_BOOTING = 'booting';
       const COMMODORE_NAV_SOURCE_STORAGE_KEY = 'commodore.navigation.source.v1';
       const COMMODORE_NAV_SOURCE_DEN = 'den';
       const COMMODORE_HISTORY_SOURCE_KEY = 'commodoreSource';
@@ -520,7 +526,9 @@
       let editState = null;
       let saveButtonResetTimer = null;
       let hasDebugSaveAccess = false;
-      let isPoweredOn = loadPowerState();
+      let powerState = loadPowerState();
+      let isPoweredOn = powerState !== POWER_STATE_OFF;
+      let canSyncRoomStateRemotely = false;
       let shouldRouteBackToDen = consumeCommodoreEntrySource() === COMMODORE_NAV_SOURCE_DEN;
       let isPoweringOff = false;
       let powerOffNavigationTimeoutId = null;
@@ -589,28 +597,119 @@
         };
       }
 
+      function normalizePowerState(value) {
+        if (value === true || value === 'true') return POWER_STATE_ON;
+        if (value === false || value === 'false') return POWER_STATE_OFF;
+        const normalized = typeof value === 'string' ? value.trim().toLowerCase() : '';
+        if (normalized === POWER_STATE_ON || normalized === POWER_STATE_OFF || normalized === POWER_STATE_BOOTING) {
+          return normalized;
+        }
+        return POWER_STATE_OFF;
+      }
+
+      function normalizeLayout(layoutCandidate) {
+        if (!layoutCandidate || typeof layoutCandidate !== 'object' || Array.isArray(layoutCandidate)) return null;
+        const next = {};
+        Object.entries(DEFAULT_LAYOUT).forEach(([id, fallback]) => {
+          next[id] = sanitizeRect(layoutCandidate[id], fallback);
+        });
+        return next;
+      }
+
+      function cloneLayoutForStorage() {
+        const cloned = {};
+        Object.entries(layout).forEach(([id, rect]) => {
+          cloned[id] = sanitizeRect(rect, DEFAULT_LAYOUT[id]);
+        });
+        return cloned;
+      }
+
       function loadLayout() {
         try {
           const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
-          const next = {};
-          Object.entries(DEFAULT_LAYOUT).forEach(([id, fallback]) => {
-            next[id] = sanitizeRect(saved[id], fallback);
-          });
-          return next;
+          return normalizeLayout(saved) || normalizeLayout(DEFAULT_LAYOUT);
         } catch {
-          const next = {};
-          Object.entries(DEFAULT_LAYOUT).forEach(([id, fallback]) => {
-            next[id] = { ...fallback };
-          });
-          return next;
+          return normalizeLayout(DEFAULT_LAYOUT);
         }
       }
 
       function loadPowerState() {
         try {
-          return sessionStorage.getItem(POWER_STATE_STORAGE_KEY) === 'true';
+          return normalizePowerState(sessionStorage.getItem(POWER_STATE_STORAGE_KEY));
         } catch {
+          return POWER_STATE_OFF;
+        }
+      }
+
+      async function fetchAuthenticatedRoomState() {
+        try {
+          const sessionResponse = await fetch('/api/discord/me', {
+            credentials: 'include',
+            cache: 'no-store'
+          });
+          if (!sessionResponse.ok) return null;
+          const sessionBody = await sessionResponse.json().catch(() => null);
+          if (!sessionBody?.authenticated) return null;
+
+          const roomStateResponse = await fetch(ROOM_STATE_ENDPOINT, {
+            method: 'GET',
+            credentials: 'include',
+            cache: 'no-store'
+          });
+          if (roomStateResponse.status === 401) return null;
+          if (!roomStateResponse.ok) {
+            throw new Error(`Failed to load room state (${roomStateResponse.status})`);
+          }
+          const roomStateBody = await roomStateResponse.json().catch(() => ({}));
+          canSyncRoomStateRemotely = true;
+          if (!roomStateBody || typeof roomStateBody !== 'object') return {};
+          if (!roomStateBody.state || typeof roomStateBody.state !== 'object') return {};
+          return roomStateBody.state;
+        } catch (error) {
+          canSyncRoomStateRemotely = false;
+          console.warn('Unable to load Commodore room state.', error);
+          return null;
+        }
+      }
+
+      async function saveRoomStateToServer(statePatch) {
+        if (!canSyncRoomStateRemotely) return false;
+        try {
+          const response = await fetch(ROOM_STATE_ENDPOINT, {
+            method: 'PUT',
+            credentials: 'include',
+            headers: { 'content-type': 'application/json' },
+            body: JSON.stringify({ state: statePatch })
+          });
+          if (response.status === 401) {
+            canSyncRoomStateRemotely = false;
+            return false;
+          }
+          if (!response.ok) throw new Error(`Failed to save room state (${response.status})`);
+          return true;
+        } catch (error) {
+          canSyncRoomStateRemotely = false;
+          console.warn('Unable to save Commodore room state.', error);
           return false;
+        }
+      }
+
+      async function hydrateStateFromServer() {
+        const roomState = await fetchAuthenticatedRoomState();
+        if (!roomState || typeof roomState !== 'object') return;
+
+        if (Object.prototype.hasOwnProperty.call(roomState, ROOM_STATE_KEY_POWER_STATE)) {
+          powerState = normalizePowerState(roomState[ROOM_STATE_KEY_POWER_STATE]);
+          isPoweredOn = powerState !== POWER_STATE_OFF;
+        }
+
+        if (Object.prototype.hasOwnProperty.call(roomState, ROOM_STATE_KEY_DEBUG_LAYOUT)) {
+          const normalizedLayout = normalizeLayout(roomState[ROOM_STATE_KEY_DEBUG_LAYOUT]);
+          if (normalizedLayout) {
+            Object.entries(normalizedLayout).forEach(([id, rect]) => {
+              layout[id] = rect;
+            });
+          }
         }
       }
 
@@ -649,18 +748,22 @@
         }
       }
 
-      function savePowerState() {
+      function savePowerState(nextPowerState = powerState) {
+        powerState = normalizePowerState(nextPowerState);
+        isPoweredOn = powerState !== POWER_STATE_OFF;
         try {
-          sessionStorage.setItem(POWER_STATE_STORAGE_KEY, String(isPoweredOn));
+          sessionStorage.setItem(POWER_STATE_STORAGE_KEY, powerState);
         } catch (error) {
           console.warn('Unable to save Commodore power state.', error);
         }
+        saveRoomStateToServer({ [ROOM_STATE_KEY_POWER_STATE]: powerState });
       }
 
       function togglePowerState() {
         isPoweredOn = !isPoweredOn;
+        const nextPowerState = isPoweredOn ? POWER_STATE_BOOTING : POWER_STATE_OFF;
         applyPowerState({ animate: isPoweredOn });
-        savePowerState();
+        savePowerState(nextPowerState);
       }
 
       function navigateToChapel() {
@@ -681,8 +784,9 @@
         if (!isPoweredOn || isPoweringOff) return;
         isPoweringOff = true;
         isPoweredOn = false;
+        powerState = POWER_STATE_OFF;
         applyPowerState({ animateOff: true });
-        savePowerState();
+        savePowerState(POWER_STATE_OFF);
         const audioEl = getPowerOffAudioElement();
         audioEl.currentTime = 0;
         schedulePowerOffNavigation();
@@ -724,7 +828,9 @@
           return false;
         }
         try {
-          localStorage.setItem(STORAGE_KEY, JSON.stringify(layout));
+          const layoutSnapshot = cloneLayoutForStorage();
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(layoutSnapshot));
+          saveRoomStateToServer({ [ROOM_STATE_KEY_DEBUG_LAYOUT]: layoutSnapshot });
           if (showFeedback) setSaveButtonState('saved', 'Saved');
           return true;
         } catch (error) {
@@ -865,6 +971,7 @@
       }
 
       Object.entries(layout).forEach(([id, config]) => makeEditable(id, config));
+      await hydrateStateFromServer();
       primeBackNavigationToDen();
       monitorShadowEl = overlayLayer.querySelector('[data-id="monitor-shadow"]');
       powerButtonEl = overlayLayer.querySelector('[data-id="power-button"]');
@@ -877,7 +984,7 @@
       });
       overlayLayer.appendChild(greenscreenTextEl);
       renderLayout();
-      applyPowerState();
+      applyPowerState({ animate: powerState === POWER_STATE_BOOTING });
       monitorShadowEl?.addEventListener('animationend', (event) => {
         if (event.animationName === 'commodore-monitor-power-off') {
           monitorShadowEl.classList.remove('is-powering-off');
@@ -888,6 +995,7 @@
         if (!isPoweredOn) return;
         monitorShadowEl.classList.remove('is-powering-on');
         monitorShadowEl.classList.add('is-powered-on');
+        savePowerState(POWER_STATE_ON);
       });
 
       overlayLayer.addEventListener('pointerdown', (event) => {

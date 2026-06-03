@@ -590,26 +590,46 @@ test('HotspotStore user preferences endpoint stores per-user values in SQLite', 
   assert.deepEqual(await getResponse.json(), { preferences: { theme: 'dark', volume: 7 } });
 });
 
-test('HotspotStore room state endpoint stores and reads room-scoped values in SQLite', async () => {
+test('HotspotStore room state endpoint stores and reads Commodore room state in SQLite', async () => {
   const { state } = makeSqlState();
   const store = new HotspotStore(state);
 
   const putResponse = await store.fetch(
-    new Request('https://example.com/api/room-state/den', {
+    new Request('https://example.com/api/room-state/commodore', {
       method: 'PUT',
       headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ state: { lights: 'off', mode: 'quiet' } })
+      body: JSON.stringify({
+        state: {
+          powerState: 'booting',
+          debugLayout: {
+            'monitor-shadow': { x: 150, y: 120, w: 148, h: 72 }
+          }
+        }
+      })
     })
   );
   assert.equal(putResponse.status, 200);
   const putBody = await putResponse.json();
   assert.equal(putBody.ok, true);
-  assert.equal(putBody.roomId, 'den');
-  assert.deepEqual(putBody.state, { lights: 'off', mode: 'quiet' });
+  assert.equal(putBody.roomId, 'commodore');
+  assert.deepEqual(putBody.state, {
+    powerState: 'booting',
+    debugLayout: {
+      'monitor-shadow': { x: 150, y: 120, w: 148, h: 72 }
+    }
+  });
 
-  const getResponse = await store.fetch(new Request('https://example.com/api/room-state/den', { method: 'GET' }));
+  const getResponse = await store.fetch(new Request('https://example.com/api/room-state/commodore', { method: 'GET' }));
   assert.equal(getResponse.status, 200);
-  assert.deepEqual(await getResponse.json(), { roomId: 'den', state: { lights: 'off', mode: 'quiet' } });
+  assert.deepEqual(await getResponse.json(), {
+    roomId: 'commodore',
+    state: {
+      powerState: 'booting',
+      debugLayout: {
+        'monitor-shadow': { x: 150, y: 120, w: 148, h: 72 }
+      }
+    }
+  });
 });
 
 test('worker routes /api/hotspots through HOTSPOT_STORE durable object', async () => {
