@@ -1226,7 +1226,16 @@ test('worker serves /mame_gui through the MAME GUI asset alias', async () => {
 
 test('worker serves /mame-gui through the MAME GUI asset alias', async () => {
   const calls = { assetsFetch: [] };
+  const token = await createSessionToken(TEST_SESSION_SECRET, {
+    userId: 'mame-user',
+    username: 'tester',
+    avatar: null,
+    isMember: true,
+    roles: [],
+    exp: Date.now() + 60_000
+  });
   const env = {
+    SESSION_SECRET: TEST_SESSION_SECRET,
     HOTSPOT_STORE: {},
     ASSETS: {
       async fetch(request) {
@@ -1236,11 +1245,70 @@ test('worker serves /mame-gui through the MAME GUI asset alias', async () => {
     }
   };
 
-  const response = await router.fetch(new Request('https://example.com/mame-gui'), env);
+  const response = await router.fetch(
+    new Request('https://example.com/mame-gui', {
+      headers: { Cookie: `naimean_session=${token}` }
+    }),
+    env
+  );
 
   assert.equal(response.status, 200);
   assert.equal(await response.text(), 'mame gui');
   assert.deepEqual(calls.assetsFetch, ['/mame-gui.html']);
+});
+
+test('worker redirects unauthenticated protected page requests to Discord auth', async () => {
+  const calls = { assetsFetch: 0 };
+  const env = {
+    HOTSPOT_STORE: {},
+    ASSETS: {
+      async fetch() {
+        calls.assetsFetch += 1;
+        return new Response('should-not-render');
+      }
+    }
+  };
+
+  const response = await router.fetch(new Request('https://example.com/notes'), env);
+  const location = new URL(response.headers.get('Location'));
+
+  assert.equal(response.status, 302);
+  assert.equal(location.pathname, '/api/discord/auth');
+  assert.equal(location.searchParams.get('state'), '/notes');
+  assert.equal(calls.assetsFetch, 0);
+});
+
+test('worker serves protected page requests when session cookie is valid', async () => {
+  const calls = { assetsFetch: [] };
+  const token = await createSessionToken(TEST_SESSION_SECRET, {
+    userId: 'protected-page-user',
+    username: 'tester',
+    avatar: null,
+    isMember: true,
+    roles: ['role-a'],
+    exp: Date.now() + 60_000
+  });
+  const env = {
+    SESSION_SECRET: TEST_SESSION_SECRET,
+    HOTSPOT_STORE: {},
+    ASSETS: {
+      async fetch(request) {
+        calls.assetsFetch.push(new URL(request.url).pathname);
+        return new Response('calendar page');
+      }
+    }
+  };
+
+  const response = await router.fetch(
+    new Request('https://example.com/calendar.html', {
+      headers: { Cookie: `naimean_session=${token}` }
+    }),
+    env
+  );
+
+  assert.equal(response.status, 200);
+  assert.equal(await response.text(), 'calendar page');
+  assert.deepEqual(calls.assetsFetch, ['/calendar.html']);
 });
 
 test('functions/api/hotspots onRequest delegates to HOTSPOT_STORE durable object', async () => {
@@ -2362,6 +2430,57 @@ test('worker /api/discord/callback succeeds, sets session cookie and redirects t
     assert.equal(session.username, 'naimean_tester');
     assert.equal(session.isMember, true);
     assert.deepEqual(session.roles, ['role-alpha', 'role-beta']);
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
+
+test('worker /api/discord/callback redirects to protected page requested in auth state', async () => {
+  const authEnv = {
+    DISCORD_CLIENT_ID: 'cid',
+    ASSETS: { async fetch() { return new Response(''); } }
+  };
+  const authResponse = await router.fetch(
+    new Request('https://naimean.com/api/discord/auth?state=%2Fcalendar.html'),
+    authEnv
+  );
+  const stateCookie = authResponse.headers.get('Set-Cookie');
+  const oauthState = new URL(authResponse.headers.get('Location')).searchParams.get('state');
+  const oauthCookieValue = stateCookie.split(';')[0];
+
+  const env = {
+    DISCORD_CLIENT_ID: 'cid',
+    DISCORD_CLIENT_SECRET: 'secret',
+    SESSION_SECRET: TEST_SESSION_SECRET,
+    DISCORD_GUILD_ID: 'guild123',
+    ASSETS: { async fetch() { return new Response(''); } }
+  };
+
+  const originalFetch = globalThis.fetch;
+  globalThis.fetch = async (url) => {
+    const u = String(url);
+    if (u.includes('/oauth2/token')) {
+      return Response.json({ access_token: 'tok789', token_type: 'Bearer' });
+    }
+    if (u.includes('/users/@me/guilds/')) {
+      return Response.json({ roles: [] });
+    }
+    if (u.includes('/users/@me')) {
+      return Response.json({ id: 'userabc', username: 'auth-user', avatar: null });
+    }
+    throw new Error(`Unexpected fetch: ${u}`);
+  };
+
+  try {
+    const callbackResponse = await router.fetch(
+      new Request(`https://naimean.com/api/discord/callback?code=code789&state=${encodeURIComponent(oauthState)}`, {
+        headers: { Cookie: oauthCookieValue }
+      }),
+      env
+    );
+
+    assert.equal(callbackResponse.status, 302);
+    assert.equal(callbackResponse.headers.get('Location'), '/calendar.html');
   } finally {
     globalThis.fetch = originalFetch;
   }
