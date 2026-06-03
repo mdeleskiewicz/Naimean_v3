@@ -2595,7 +2595,7 @@ test('worker bypasses routing and header rewriting for .png assets', async () =>
   assert.equal(response.headers.get('referrer-policy'), null);
 });
 
-test('worker bypasses routing and sends .mp4 assets directly to ASSETS.fetch', async () => {
+test('worker preserves MP4 range requests and 206 partial-content headers', async () => {
   const calls = { range: null };
   const env = {
     HOTSPOT_STORE: {},
@@ -2606,7 +2606,9 @@ test('worker bypasses routing and sends .mp4 assets directly to ASSETS.fetch', a
           status: 206,
           headers: {
             'content-type': 'video/mp4',
-            'content-range': 'bytes 0-1023/4096'
+            'Accept-Ranges': 'bytes',
+            'content-range': 'bytes 0-1023/4096',
+            'content-length': '1024'
           }
         });
       }
@@ -2614,14 +2616,17 @@ test('worker bypasses routing and sends .mp4 assets directly to ASSETS.fetch', a
   };
   const response = await router.fetch(
     new Request('https://example.com/assets/video/static.v20260424.mp4', {
-      headers: { range: 'bytes=0-1023' }
+      headers: { range: 'bytes=0-' }
     }),
     env
   );
 
-  assert.equal(calls.range, 'bytes=0-1023');
+  assert.equal(calls.range, 'bytes=0-');
   assert.equal(response.status, 206);
+  assert.equal(response.headers.get('content-type'), 'video/mp4');
+  assert.equal(response.headers.get('accept-ranges'), 'bytes');
   assert.equal(response.headers.get('content-range'), 'bytes 0-1023/4096');
+  assert.equal(response.headers.get('content-length'), '1024');
   assert.equal(response.headers.get('x-content-type-options'), null);
 });
 
