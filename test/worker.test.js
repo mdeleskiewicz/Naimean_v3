@@ -2650,17 +2650,17 @@ test('worker bypasses routing and header rewriting for .css assets', async () =>
   assert.equal(response.headers.get('referrer-policy'), null);
 });
 
-test('worker applies must-revalidate cache headers to non-versioned assets', async () => {
+test('worker applies must-revalidate cache headers to non-bypassed non-versioned assets', async () => {
   const env = {
     HOTSPOT_STORE: {},
     ASSETS: {
       async fetch() {
-        return new Response('img-bytes', { status: 200, headers: { 'content-type': 'image/png' } });
+        return new Response('console.log("ok")', { status: 200, headers: { 'content-type': 'application/javascript' } });
       }
     }
   };
   const response = await router.fetch(
-    new Request('https://example.com/assets/images/logo.png'),
+    new Request('https://example.com/assets/js/app.js'),
     env
   );
   assert.equal(response.status, 200);
