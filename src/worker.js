@@ -1,19 +1,20 @@
 // ─── Session token utilities ──────────────────────────────────────────────────
-const DEFAULT_SESSION_SECRET = 'fallback-dev-secret-key-string';
 const HMAC_KEY_CACHE = new Map();
 
 async function importHmacKey(secret) {
-  const normalizedSecret = secret || DEFAULT_SESSION_SECRET;
-  let keyPromise = HMAC_KEY_CACHE.get(normalizedSecret);
+  if (!secret) {
+    throw new Error('SESSION_SECRET is not configured.');
+  }
+  let keyPromise = HMAC_KEY_CACHE.get(secret);
   if (!keyPromise) {
     keyPromise = crypto.subtle.importKey(
       'raw',
-      new TextEncoder().encode(normalizedSecret),
+      new TextEncoder().encode(secret),
       { name: 'HMAC', hash: 'SHA-256' },
       false,
       ['sign', 'verify']
     );
-    HMAC_KEY_CACHE.set(normalizedSecret, keyPromise);
+    HMAC_KEY_CACHE.set(secret, keyPromise);
   }
   return keyPromise;
 }
@@ -162,6 +163,12 @@ async function serveAsset(request, env, pathname) {
   } else if (ASSET_ALIAS_PATHS.has(pathname)) {
     assetRequest = new Request(new URL(ASSET_ALIAS_PATHS.get(pathname), request.url).toString(), request);
   }
+  const rangeHeader = request.headers.get('range');
+  if (rangeHeader && pathname.toLowerCase().endsWith('.mp4')) {
+    const headers = new Headers(assetRequest.headers);
+    headers.set('range', rangeHeader);
+    assetRequest = new Request(assetRequest, { headers });
+  }
   const upstream = await env.ASSETS.fetch(assetRequest);
   const headers = new Headers(upstream.headers);
   applyAssetCacheHeaders(pathname, headers);
@@ -249,6 +256,14 @@ const DISCORD_API = 'https://discord.com/api/v10';
 const OAUTH_STATE_COOKIE = 'naimean_oauth_state';
 const SESSION_COOKIE = 'naimean_session';
 const SESSION_TTL_MS = 7 * 24 * 60 * 60 * 1000;
+const REQUIRED_DISCORD_GUILD_ID_PLACEHOLDER = 'REQUIRED_SET_DISCORD_GUILD_ID';
+
+function requireSessionSecret(env) {
+  if (!env.SESSION_SECRET) {
+    throw new Error('SESSION_SECRET is not configured.');
+  }
+  return env.SESSION_SECRET;
+}
 
 async function handleDiscordAuth(request, env) {
   if (request.method !== 'GET') return new Response('Method Not Allowed', { status: 405 });
@@ -328,19 +343,20 @@ async function handleDiscordCallback(request, env) {
   const user = await userRes.json();
   
   const guildId = env.DISCORD_GUILD_ID;
+  if (!guildId || guildId === REQUIRED_DISCORD_GUILD_ID_PLACEHOLDER) {
+    return errorRedirect(`${origin}/`, 'configuration_error');
+  }
   let isMember = true;
   let roles = [];
-  if (guildId) {
-    const memberRes = await fetch(`${DISCORD_API}/users/@me/guilds/${guildId}/member`, { headers: authHeader });
-    if (memberRes.ok) {
-      const member = await memberRes.json();
-      roles = Array.isArray(member?.roles) ? member.roles : [];
-    } else if (memberRes.status === 403 || memberRes.status === 404) {
-      isMember = false;
-      roles = [];
-    } else {
-      return errorRedirect(`${origin}/`, 'guild_lookup_failed');
-    }
+  const memberRes = await fetch(`${DISCORD_API}/users/@me/guilds/${guildId}/member`, { headers: authHeader });
+  if (memberRes.ok) {
+    const member = await memberRes.json();
+    roles = Array.isArray(member?.roles) ? member.roles : [];
+  } else if (memberRes.status === 403 || memberRes.status === 404) {
+    isMember = false;
+    roles = [];
+  } else {
+    return errorRedirect(`${origin}/`, 'guild_lookup_failed');
   }
   
   const exp = Date.now() + SESSION_TTL_MS;
@@ -376,7 +392,7 @@ async function handleDiscordCallback(request, env) {
 }
 
 async function handleDiscordMe(request, env) {
-  const sessionSecret = env.SESSION_SECRET || DEFAULT_SESSION_SECRET;
+  const sessionSecret = requireSessionSecret(env);
   const cookies = parseCookies(request);
   const token = cookies[SESSION_COOKIE];
   if (!token) return jsonResponse({ authenticated: false });
@@ -775,7 +791,7 @@ async function dispatchToHotspotStore(env, request, instanceName) {
 }
 
 async function handleNotes(request, env) {
-  const sessionSecret = env.SESSION_SECRET || DEFAULT_SESSION_SECRET;
+  const sessionSecret = requireSessionSecret(env);
   const cookies = parseCookies(request);
   const token = cookies[SESSION_COOKIE];
   const session = token ? await verifySessionToken(sessionSecret, token) : null;

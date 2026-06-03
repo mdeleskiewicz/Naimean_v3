@@ -195,6 +195,7 @@ test('HotspotStore POST sanitizes and stores arcade URL overrides', async () => 
       Quake: '/quake.html'
     }
   });
+
   assert.deepEqual(getStored('arcade-url-overrides'), {
     DOOM: 'https://example.com/doom',
     Quake: '/quake.html'
@@ -623,6 +624,7 @@ test('worker routes authenticated /api/notes through user-specific HOTSPOT_STORE
 
 test('worker rejects unauthenticated /api/notes requests', async () => {
   const env = {
+    SESSION_SECRET: TEST_SESSION_SECRET,
     HOTSPOT_STORE: {
       idFromName() {
         throw new Error('should not resolve durable object for unauthenticated requests');
@@ -1856,6 +1858,40 @@ test('worker /api/discord/callback redirects to /?discord_error=configuration_er
   assert.ok(response.headers.get('Location').includes('discord_error=configuration_error'));
 });
 
+test('worker /api/discord/callback redirects to /?discord_error=configuration_error when DISCORD_GUILD_ID is placeholder', async () => {
+  const env = {
+    DISCORD_CLIENT_ID: 'cid',
+    DISCORD_CLIENT_SECRET: 'secret',
+    SESSION_SECRET: TEST_SESSION_SECRET,
+    DISCORD_GUILD_ID: 'REQUIRED_SET_DISCORD_GUILD_ID',
+    ASSETS: { async fetch() { return new Response(''); } }
+  };
+  const originalFetch = globalThis.fetch;
+  globalThis.fetch = async (url) => {
+    const u = String(url);
+    if (u.includes('/oauth2/token')) {
+      return Response.json({ access_token: 'tok123', token_type: 'Bearer' });
+    }
+    if (u.includes('/users/@me')) {
+      return Response.json({ id: 'user123', username: 'tester', avatar: null });
+    }
+    throw new Error(`Unexpected fetch: ${u}`);
+  };
+
+  try {
+    const response = await router.fetch(
+      new Request('https://naimean.com/api/discord/callback?code=mycode&state=abc', {
+        headers: { Cookie: 'naimean_oauth_state=abc' }
+      }),
+      env
+    );
+    assert.equal(response.status, 302);
+    assert.ok(response.headers.get('Location').includes('discord_error=configuration_error'));
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
+
 test('worker /api/discord/callback returns 302 to error page when Discord returns error param', async () => {
   const env = { ASSETS: { async fetch() { return new Response(''); } } };
   const response = await router.fetch(
@@ -2017,6 +2053,17 @@ test('worker /api/discord/me returns unauthenticated when no session cookie', as
   assert.deepEqual(await response.json(), { authenticated: false });
 });
 
+test('worker /api/discord/me throws when SESSION_SECRET is missing', async () => {
+  const env = {
+    ASSETS: { async fetch() { return new Response(''); } }
+  };
+
+  await assert.rejects(
+    router.fetch(new Request('https://naimean.com/api/discord/me'), env),
+    /SESSION_SECRET is not configured/
+  );
+});
+
 test('worker /api/discord/me returns user info for valid session', async () => {
   const env = {
     SESSION_SECRET: TEST_SESSION_SECRET,
@@ -2133,6 +2180,35 @@ test('worker applies long-lived cache headers to versioned .png assets', async (
   assert.equal(response.headers.get('cache-control'), 'public, max-age=31536000, immutable');
   assert.equal(response.headers.get('x-content-type-options'), 'nosniff');
   assert.equal(response.headers.get('referrer-policy'), 'strict-origin-when-cross-origin');
+});
+
+test('worker forwards Range requests for mp4 assets', async () => {
+  const calls = { range: null };
+  const env = {
+    HOTSPOT_STORE: {},
+    ASSETS: {
+      async fetch(request) {
+        calls.range = request.headers.get('range');
+        return new Response('partial-vid-bytes', {
+          status: 206,
+          headers: {
+            'content-type': 'video/mp4',
+            'content-range': 'bytes 0-1023/4096'
+          }
+        });
+      }
+    }
+  };
+  const response = await router.fetch(
+    new Request('https://example.com/assets/video/static.v20260424.mp4', {
+      headers: { range: 'bytes=0-1023' }
+    }),
+    env
+  );
+
+  assert.equal(calls.range, 'bytes=0-1023');
+  assert.equal(response.status, 206);
+  assert.equal(response.headers.get('content-range'), 'bytes 0-1023/4096');
 });
 
 test('worker applies long-lived cache headers to versioned .mp4 assets', async () => {

@@ -19,7 +19,7 @@
     "GOOGLE_DRIVE_PAGE_SIZE": "100",
     "AQUARIUM_LOCAL_CLIP_COUNT": "23",
     "DISCORD_CLIENT_ID": "1495879141638275213",
-    "DISCORD_GUILD_ID": "your-guild-id-here",
+    "DISCORD_GUILD_ID": "REQUIRED_SET_DISCORD_GUILD_ID",
     "DISCORD_ALLOWED_ROLE_IDS": "comma-separated-role-ids-or-leave-empty-for-members-only"
   },
   "durable_objects": {
