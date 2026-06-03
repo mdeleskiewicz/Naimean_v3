@@ -982,6 +982,7 @@
 
   <button class="fab" id="fab" aria-label="New note" title="New note">&#xFF0B;</button>
 
+  <script src="assets/js/sync-badge.js"></script>
   <script src="api-client.js"></script>
   <script>
     (function () {
@@ -1016,6 +1017,7 @@
       var _isAuth      = false;
       var _saveTimer   = null;
       var _srvTimer    = null;
+      var _serverBadge = null;
       var _colorOpen   = false;
       var _dragId      = null;
 
@@ -1118,12 +1120,23 @@
         scheduleServerSave();
       }
 
+      function doServerSave() {
+        if (!_isAuth) return;
+        _serverBadge.saving();
+        NaimeanAPI.saveNotes(serializeState())
+          .then(function (res) {
+            if (!res.ok) throw new Error('HTTP ' + res.status);
+            _serverBadge.saved();
+          })
+          .catch(function () {
+            _serverBadge.failed(doServerSave);
+          });
+      }
+
       function scheduleServerSave() {
         if (!_isAuth) return;
         if (_srvTimer) clearTimeout(_srvTimer);
-        _srvTimer = setTimeout(function () {
-          NaimeanAPI.saveNotes(serializeState()).catch(function () {});
-        }, SERVER_DELAY);
+        _srvTimer = setTimeout(doServerSave, SERVER_DELAY);
       }
 
       // ── Helpers ──────────────────────────────────────────────────────────
@@ -1247,6 +1260,7 @@
       var backBtn       = document.getElementById('back-btn');
       var fabEl         = document.getElementById('fab');
       var saveStatus    = document.getElementById('topbar-save-status');
+      _serverBadge = window.makeSyncBadge(saveStatus);
 
       // ── Note operations ──────────────────────────────────────────────────
       function createNote() {
@@ -1958,7 +1972,7 @@
                   try { localStorage.setItem(STORAGE_KEY, JSON.stringify(serializeState())); } catch (_) {}
                   renderTagNav();
                   renderNoteList();
-                  NaimeanAPI.saveNotes(serializeState()).catch(function () {});
+                  doServerSave();
                 });
             })
             .catch(function () {});

@@ -555,6 +555,16 @@
       right: 68px;
     }
 
+    /* Sync badge – position it above the Save button */
+    #save-hotspots-btn + .sync-badge {
+      position: fixed;
+      right: 68px;
+      bottom: 64px;
+      z-index: 1000;
+      background: rgba(0, 0, 0, 0.6);
+      border-radius: 4px;
+    }
+
     #debug-toggle-btn:focus-visible,
     #save-hotspots-btn:focus-visible,
     .save-modal-btn:focus-visible {
@@ -702,6 +712,7 @@
     </div>
   </div>
   <div id="debug-status" class="sr-only" role="status" aria-live="polite"></div>
+  <script src="assets/js/sync-badge.js"></script>
   <script>
     (() => {
       const HOTSPOT_API_PATH = '/api/chapel-hotspots';
@@ -866,6 +877,7 @@
       const debugStatus = document.getElementById('debug-status');
       const debugToggleButton = document.getElementById('debug-toggle-btn');
       const saveButton = document.getElementById('save-hotspots-btn');
+      const saveBadge = window.makeSyncBadge(saveButton);
       const saveModal = document.getElementById('save-modal');
       const saveModalTitle = document.getElementById('save-modal-title');
       const saveModalTextarea = document.getElementById('save-modal-textarea');
@@ -1678,6 +1690,7 @@
         hideSaveModal();
         saveButton.textContent = 'Saving...';
         saveButton.disabled = true;
+        saveBadge.saving();
         const payload = getSerializedHotspotPayload();
         let lastError = null;
 
@@ -1696,6 +1709,7 @@
             const savedPayload = await response.json();
             applyServerConfig(savedPayload);
             renderHotspots();
+            saveBadge.saved();
             saveButton.textContent = 'Saved!';
             window.setTimeout(() => {
               saveButton.textContent = 'Save';
@@ -1712,6 +1726,7 @@
           }
         }
 
+        saveBadge.failed(saveHotspots);
         saveButton.textContent = 'Save failed';
         saveButton.disabled = false;
         showSaveModal(
