@@ -227,6 +227,7 @@
     </section>
   </main>
 
+  <script src="assets/js/sync-badge.js"></script>
   <script>
     (async () => {
       const status = document.getElementById('status');
@@ -234,6 +235,7 @@
       const cards = document.getElementById('cards');
       const jump = document.getElementById('cabinet-jump');
       const saveButton = document.getElementById('save-urls');
+      const saveBadge = window.makeSyncBadge(saveButton);
       const resetButton = document.getElementById('reset-urls');
       const URL_OVERRIDES_KEY = 'naimean.arcade.urlOverrides';
       const URL_OVERRIDES_API = '/api/arcade-url-overrides';
@@ -398,6 +400,7 @@
         const invalid = [];
 
         saveButton.disabled = true;
+        saveBadge.saving();
         try {
           const serverOverrides = await loadServerOverrides();
           const nextOverrides = { ...serverOverrides };
@@ -423,11 +426,13 @@
           });
 
           if (invalid.length) {
+            saveBadge.clear();
             setEditorStatus(`Could not save. Invalid URL format: ${invalid.join(', ')}`, true);
             return;
           }
 
           if (!changedCount) {
+            saveBadge.clear();
             dirtyCabinets.clear();
             renderCards();
             setEditorStatus('No URL updates differed from saved server values.');
@@ -438,8 +443,10 @@
           saveLocalOverrides(urlOverrides);
           dirtyCabinets.clear();
           renderCards();
+          saveBadge.saved();
           setEditorStatus(`Saved ${changedCount} URL update${changedCount === 1 ? '' : 's'} server-side.`);
         } catch (error) {
+          saveBadge.failed(saveUrlOverrides);
           setEditorStatus(error.message || 'Could not save URL updates.', true);
         } finally {
           saveButton.disabled = false;

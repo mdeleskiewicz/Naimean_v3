@@ -3033,6 +3033,16 @@
       opacity: 0.75;
     }
 
+    /* Sync badge – position it above the Save button */
+    #save-hotspots-btn + .sync-badge {
+      position: fixed;
+      right: 68px;
+      bottom: 64px;
+      z-index: 1000;
+      background: rgba(0, 0, 0, 0.6);
+      border-radius: 4px;
+    }
+
     /* Save output modal */
     #save-modal {
       position: fixed;

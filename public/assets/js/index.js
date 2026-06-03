@@ -437,6 +437,7 @@
       const debugUrlInput = document.getElementById('debug-url-input');
       const debugUrlSaveButton = document.getElementById('debug-url-save-btn');
       const saveBtn = document.getElementById('save-hotspots-btn');
+      let saveBadge = window.makeSyncBadge(saveBtn);
       const saveModal = document.getElementById('save-modal');
       const saveModalTitle = document.getElementById('save-modal-title');
       const saveModalTextarea = document.getElementById('save-modal-textarea');
@@ -5853,13 +5854,16 @@
         hideSaveModal();
 
         setSaveButtonText('Saving...', true);
+        saveBadge.saving();
         try {
           await postHotspotsToServer(savedSourceHotspots);
+          saveBadge.saved();
           persistSaveResultFlash('Hotspots saved to the server.');
           setDebugMode(false);
           window.location.reload();
         } catch (error) {
           setSaveButtonText('Save failed');
+          saveBadge.failed(saveHotspots);
           debugStatus.textContent = 'Server save failed; hotspots were not persisted (server-only mode).';
           showSaveFallbackModal(
             savedSourceHotspots,
