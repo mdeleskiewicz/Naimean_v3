@@ -1,130 +1,93 @@
 # Naimean_v3
 
-Naimean_v3 is a retro, room-based interactive site built around a virtual den and deployed on Cloudflare Workers. The repository combines static HTML/CSS/JS pages in `public/` with a Worker in `src/worker.js` that handles routing, auth, persistence, and media APIs.
+Naimean_v3 is a retro, room-based interactive site (naimean.com) built around a virtual den, deployed on Cloudflare Workers. The repository combines static HTML/CSS/JS pages in `public/` with a Worker in `src/worker.js` that handles routing, auth, persistence, and media APIs.
 
-## What the site is
+## Site pages
 
-The site is a collection of themed spaces and utilities:
+| Page | URL | Description |
+|---|---|---|
+| **Den** | `/` | Main interactive side-scrolling room — hotspots, overlays, debug editing, Discord embeds, dual monitors, DVD screensaver, corner score game, audio/video behavior, and links into the rest of the site |
+| **Noah's Arcade** | `/noahs-arcade.html` | Arcade cabinet launcher with per-cabinet URL overrides (MAME GUI) |
+| **Chapel** | `/chapel.html` | Hotspot-driven interactive soundboard scene with persistent config |
+| **Commodore** | `/commodore.html` | Commodore 64–themed screen with power-state transitions and debug layout controls |
+| **Antechamber** | `/antechamber.html` | Themed transition/room page |
+| **Calendar** | `/calendar.html` | Full calendar — event creation, recurrence, schedule/day/week/month views, search, print, ICS export/subscription |
+| **Notes** | `/notes.html` | Retro notes board — tags, pinning, completion, list/grid modes, authenticated server sync |
+| **Recombobulator** | `/recombobulator.html` | Themed media utility for audio/video volume adjustment |
+| **MAME GUI** | `/mame-gui.html` | Editor for arcade cabinet URL overrides (saved to server via `/api/arcade-url-overrides`) |
+| **Commodore states** | `/commodore_on.html`, `/commodore_off.html` | Visual state variants for the Commodore page |
 
-- **Den (`/`)** — main interactive side-scrolling room with hotspots, overlays, debug editing tools, Discord embeds, screens, audio/video behavior, and links into the rest of the site
-- **Noah's Arcade (`/noahs-arcade.html`)** — arcade cabinet launcher with configurable cabinet destinations
-- **Chapel (`/chapel.html`)** — interactive soundboard / hotspot-driven scene with persistent hotspot config
-- **Commodore (`/commodore.html`)** — Commodore-themed interactive screen with power-state transitions and debug layout controls
-- **Antechamber (`/antechamber.html`)** — themed transition / room page
-- **Calendar (`/calendar.html`)** — calendar UI with event creation, recurrence, schedule/day/week/month views, search, print, and ICS export/subscription helpers
-- **Notes (`/notes.html`)** — retro notes board with tags, pinning, completion state, list/grid modes, and authenticated server sync
-- **Recombobulator (`/recombobulator.html`)** — themed media utility for audio/video volume adjustment workflows
-- **MAME GUI (`/mame-gui.html`)** — editor for arcade cabinet URL overrides
-- **Commodore state pages (`/commodore_on.html`, `/commodore_off.html`)** — visual state variants
-
-## Core architecture
+## Architecture
 
 - **Frontend:** vanilla HTML, CSS, and inline JavaScript under `/public`
-- **Backend/runtime:** Cloudflare Worker in `/src/worker.js`
-- **Static hosting:** Cloudflare assets binding from `/public`
-- **Persistence:** Cloudflare Durable Object `HOTSPOT_STORE`
-- **Auth:** Discord OAuth with signed session cookies
-- **Media integration:** optional Google Drive-backed aquarium clip catalog with local fallback
+- **Backend/runtime:** Cloudflare Worker in `src/worker.js`
+- **Static hosting:** Cloudflare Pages assets binding from `public/`
+- **Persistence:** Cloudflare Durable Object `HOTSPOT_STORE` (SQLite-backed)
+- **Auth:** Discord OAuth with HMAC-signed session cookies
+- **Media:** optional Google Drive–backed aquarium clip catalog with local fallback; shrimp video assets in `public/assets/video/shrimp`
 
-## GitHub ↔ Cloudflare responsibility split
+## Routing and deployment
 
-### GitHub side
-
-GitHub holds:
-
-- the source of truth for site pages, Worker code, tests, and Wrangler config
-- implementation history and PR trail
-- branch/PR workflows for code review and iteration
-
-### Cloudflare side
-
-Cloudflare provides:
-
-- Worker runtime (`src/worker.js`)
-- static asset hosting from `public/`
-- Worker-first routing for the whole site
-- Durable Object persistence via `HOTSPOT_STORE`
-- SQLite-backed storage in the Durable Object
-- runtime secrets and environment variables (Discord + Google Drive)
-
-In practice: GitHub is where behavior is defined and reviewed; Cloudflare is where behavior executes and state persists.
-
-## Cloudflare setup
-
-`/wrangler.jsonc` defines:
+`wrangler.jsonc` defines:
 
 - Worker entrypoint: `src/worker.js`
 - Assets directory: `public`
-- Worker-first routing on all asset paths (`run_worker_first: ["/*"]`)
+- Worker-first routing on all paths (`run_worker_first: ["/*"]`)
 - Durable Object binding: `HOTSPOT_STORE`
 - SQLite-backed Durable Object migration `v1`
 
-## Backend functionality
+**GitHub** is the source of truth for code, config, and history. **Cloudflare** is where code executes and state persists.
 
-The Worker provides:
+## Worker API endpoints
 
-- **Static asset serving and route aliases**
-  - `/` serves the main den page
-  - `/den` and `/den.html` alias to the main den asset
-  - `/mame_gui`, `/mame_gui.html`, and `/mame-gui` alias to `/mame-gui.html`
-- **Security/caching headers**
-  - `no-store` on HTML
-  - long-lived immutable caching on versioned `.png` and `.mp4` assets
-- **Discord auth endpoints**
-  - `/api/discord/auth`
-  - `/api/discord/callback`
-  - `/api/discord/me`
-  - `/api/discord/logout`
-- **Durable Object-backed persistence endpoints**
-  - `/api/hotspots`
-  - `/api/chapel-hotspots`
-  - `/api/arcade-url-overrides`
-  - `/api/corner-score`
-  - `/api/notes`
-- **Aquarium media endpoints**
-  - `/api/aquarium/shrimp-clips`
-  - `/api/aquarium/shrimp-clip/:id`
-- **Health check**
-  - `/api/health`
+| Endpoint | Purpose |
+|---|---|
+| `GET /` | Den main page (`/index.html`) |
+| `/den`, `/den.html`, `/index.html` | Alias → `/index.html` |
+| `/mame_gui`, `/mame-gui` | Alias → `/mame-gui.html` |
+| `GET /api/health` | Health check |
+| `GET/PUT /api/hotspots` | Den hotspot layout (Durable Object) |
+| `GET/PUT /api/chapel-hotspots` | Chapel hotspot config (Durable Object) |
+| `GET/PUT /api/arcade-url-overrides` | Arcade cabinet URLs (Durable Object) |
+| `GET/POST /api/corner-score` | Corner high score + initials (Durable Object) |
+| `GET/POST/PUT/DELETE /api/notes` | Per-user authenticated notes (Durable Object) |
+| `GET /api/aquarium/shrimp-clips` | Aquarium clip catalog |
+| `GET /api/aquarium/shrimp-clip/:id` | Individual aquarium clip |
+| `/api/discord/auth`, `/callback`, `/me`, `/logout` | Discord OAuth session management |
 
 ## Persistence status
 
-### Already server-side
+### Server-side (Durable Object)
 
-- Den hotspot layout (`/api/hotspots`)
-- Chapel hotspot configuration (`/api/chapel-hotspots`)
-- Arcade URL overrides (`/api/arcade-url-overrides`)
-- Corner high score + initials (`/api/corner-score`)
-- Authenticated per-user notes (`/api/notes`)
+- Den hotspot layout
+- Chapel hotspot configuration
+- Arcade URL overrides
+- Corner high score + initials
+- Authenticated per-user notes
 
-### Still local or hybrid
+### Still local or hybrid (not yet server-synced)
 
-- Calendar events and preferences (`public/api-client.js`, `public/calendar.html`)
-- Commodore debug layout
-- Commodore power/navigation state (`sessionStorage`)
-- Calendar label visibility/rename/color preferences
-- Arcade URL overrides fallback cache when server read fails
+- Calendar events and label preferences
+- Commodore debug layout and power/navigation state (`sessionStorage`)
+- Arcade URL overrides offline fallback cache
 - Notes local-first pending sync behavior
-
-## Strategy to remove “pretend saving”
-
-1. Treat the Worker API as source of truth for any cross-session/device state.
-2. Add missing server APIs for local-only features (calendar, Commodore layout, user preferences).
-3. Replace silent local fallback with explicit offline/unsynced states.
-4. Protect mutable shared state with auth and role checks where appropriate.
-5. Keep Durable Objects for serialized object/state writes; use D1 when relational querying is needed; use R2 only for large binary files.
 
 ## Repository layout
 
-- `/public` — site pages and static assets
-- `/src/worker.js` — Worker runtime, routing, auth, and persistence
-- `/test` — Node tests for Worker behavior and related contracts
-- `/wrangler.jsonc` — Cloudflare deployment config
-- `/package.json` — minimal scripts for build/test
+```
+/public          site pages and all static assets
+/src/worker.js   Worker: routing, auth, persistence
+/test            Node test suite
+/wrangler.jsonc  Cloudflare deployment config
+/package.json    build/test scripts
+```
 
-## Local development and verification
+## Development
 
-- `npm run build` — placeholder build script (`No build step required`)
-- `npm test` — runs the Node test suite
+```
+npm run build   # no-op (no build step)
+npm test        # runs Node test suite (node --test)
+npx wrangler@latest deploy --dry-run   # validate Cloudflare config
+```
 
-Current tests cover Worker routing, Durable Object behavior, Discord auth flows, aquarium endpoints, asset caching rules, and persistence behavior.
+Tests cover Worker routing, Durable Object behavior, Discord auth flows, aquarium endpoints, asset caching rules, and persistence contracts.
