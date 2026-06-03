@@ -2597,7 +2597,7 @@ test('worker preserves MP4 range requests and 206 partial-content headers', asyn
           status: 206,
           headers: {
             'content-type': 'video/mp4',
-            'accept-ranges': 'bytes',
+            'Accept-Ranges': 'bytes',
             'content-range': 'bytes 0-1023/4096',
             'content-length': '1024'
           }
