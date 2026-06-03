@@ -167,6 +167,7 @@
       const BIG_TV_PROMPT_ACCEPTED_VALUE = 'please';
       const BIG_TV_PROMPT_MIN_LOCAL_SCORE = 10;
       const BIG_TV_TOOLS_STORAGE_KEY = 'naimean.bigTvTools.entries';
+      const USER_PREF_MOTION_REDUCED_KEY = 'naimean.pref.motionReduced';
       const DEN_URL_OVERRIDES_STORAGE_KEY = 'naimean.den.urlOverrides';
       const BIG_TV_TOOLS_LOGO_URL = 'assets/images/tools_logo.png';
       const LOGIN_LOGO_URL = 'assets/images/login_logo.png';
@@ -418,6 +419,18 @@
           adjustedOverlay.w = Math.max(0, adjustedOverlay.w - 2);
           adjustedOverlay.h = Math.max(0, adjustedOverlay.h - 2);
         }
+
+        function loadMotionReducedPreference() {
+          try {
+            const rawValue = window.localStorage.getItem(USER_PREF_MOTION_REDUCED_KEY);
+            if (!rawValue) return false;
+            if (rawValue === 'true' || rawValue === 'false') return rawValue === 'true';
+            const parsedValue = JSON.parse(rawValue);
+            return Boolean(parsedValue);
+          } catch {
+            return false;
+          }
+        }
         return adjustedOverlay;
       });
 
@@ -608,6 +621,7 @@
       let debugEditStartY = 0;
       let debugEditOrigRect = null; // { left, top, w, h } in design-space px
       let denUrlOverrides = loadDenUrlOverrides();
+      let isMotionReducedPreferenceEnabled = loadMotionReducedPreference();
 
       let hotspots = sourceHotspotsToRuntime(defaultHotspots);
 
@@ -1873,6 +1887,31 @@
         notesLaunchBtn.append(notesName, notesUrl);
         notesRow.appendChild(notesLaunchBtn);
         bigTvToolsListEl.appendChild(notesRow);
+
+        const settingsRow = document.createElement('div');
+        settingsRow.className = 'big-tv-tools-menu-item';
+        settingsRow.addEventListener('pointerdown', (event) => event.stopPropagation());
+        const settingsLaunchBtn = document.createElement('button');
+        settingsLaunchBtn.type = 'button';
+        settingsLaunchBtn.className = 'big-tv-tools-menu-item-launch';
+        settingsLaunchBtn.setAttribute('aria-label', 'Global Settings — opens settings panel');
+        settingsLaunchBtn.addEventListener('click', (event) => {
+          event.stopPropagation();
+          if (window.NaimeanSettingsPanel && typeof window.NaimeanSettingsPanel.open === 'function') {
+            window.NaimeanSettingsPanel.open();
+            return;
+          }
+          window.dispatchEvent(new CustomEvent('naimean:open-settings'));
+        });
+        const settingsName = document.createElement('span');
+        settingsName.className = 'big-tv-tools-menu-item-name';
+        settingsName.textContent = 'Settings';
+        const settingsUrl = document.createElement('span');
+        settingsUrl.className = 'big-tv-tools-menu-item-url';
+        settingsUrl.textContent = 'Global preferences';
+        settingsLaunchBtn.append(settingsName, settingsUrl);
+        settingsRow.appendChild(settingsLaunchBtn);
+        bigTvToolsListEl.appendChild(settingsRow);
         // ────────────────────────────────────────────────────────────────
 
         bigTvToolsEntries.forEach((entry, index) => {
@@ -5514,12 +5553,21 @@
 
       function setTargetCameraX(nextCameraX) {
         const nextTarget = clamp(nextCameraX, 0, maxCameraX);
+        if (isMotionReducedPreferenceEnabled) {
+          targetCameraX = nextTarget;
+          setCameraX(nextTarget);
+          return;
+        }
         if (targetCameraX === nextTarget) return;
         targetCameraX = nextTarget;
         startCameraAnimation();
       }
 
       function startCameraAnimation() {
+        if (isMotionReducedPreferenceEnabled) {
+          setCameraX(targetCameraX);
+          return;
+        }
         if (cameraAnimationFrameId !== null) return;
         cameraAnimationFrameId = window.requestAnimationFrame(tickCamera);
       }
@@ -5537,6 +5585,10 @@
 
       function startMomentum(initialVelocityX) {
         stopMomentum();
+        if (isMotionReducedPreferenceEnabled) {
+          setCameraX(targetCameraX);
+          return;
+        }
         if (!shouldUseMomentum(activePointerType) || Math.abs(initialVelocityX) < TOUCH_MOMENTUM_MIN_VELOCITY) {
           return;
         }
@@ -5984,6 +6036,19 @@
       window.addEventListener('keydown', handleBigTvPromptTyping);
       window.addEventListener('pageshow', handlePageShow);
       document.addEventListener('fullscreenchange', syncBigTvFullscreenUi);
+      window.addEventListener('naimean:user-preference-change', (event) => {
+        const detail = event?.detail;
+        if (!detail || detail.key !== USER_PREF_MOTION_REDUCED_KEY) return;
+        isMotionReducedPreferenceEnabled = Boolean(detail.value);
+        if (isMotionReducedPreferenceEnabled) {
+          stopMomentum();
+          if (cameraAnimationFrameId !== null) {
+            window.cancelAnimationFrame(cameraAnimationFrameId);
+            cameraAnimationFrameId = null;
+          }
+          targetCameraX = cameraX;
+        }
+      });
       window.addEventListener('resize', resize);
       window.addEventListener('beforeunload', cleanup, { once: true });
       debugToggleButton.addEventListener('click', onDebugButtonClick);

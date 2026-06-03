@@ -191,6 +191,7 @@ function readReturnPathFromOAuthState(state) {
 }
 
 const VERSIONED_ASSET_RE = /\.v\d{4}[^.]*\.(png|mp4)$/i;
+const GLOBAL_SETTINGS_SCRIPT_SRC = '/assets/js/user-settings-panel.js';
 const STATIC_BYPASS_EXTENSIONS = new Set([
   '.mp4',
   '.png',
@@ -229,6 +230,24 @@ function applyAssetCacheHeaders(pathname, headers) {
   }
 }
 
+class HeadScriptInjector {
+  constructor(scriptSrc) {
+    this.scriptSrc = scriptSrc;
+  }
+
+  element(element) {
+    element.append(`<script src="${this.scriptSrc}" defer></script>`, { html: true });
+  }
+}
+
+function isHtmlResponse(pathname, response) {
+  if (!isHtmlPath(pathname)) return false;
+  if (!response?.body) return false;
+  if (response.status < 200 || response.status >= 300) return false;
+  const contentType = String(response.headers.get('content-type') || '').toLowerCase();
+  return contentType.includes('text/html');
+}
+
 async function serveAsset(request, env, pathname) {
   if (!env.ASSETS?.fetch) {
     return jsonResponse({ error: 'Static assets unavailable.' }, 500);
@@ -249,11 +268,17 @@ async function serveAsset(request, env, pathname) {
   const headers = new Headers(upstream.headers);
   applyAssetCacheHeaders(pathname, headers);
   applySecurityHeaders(headers);
-  return new Response(upstream.body, {
+  let response = new Response(upstream.body, {
     status: upstream.status,
     statusText: upstream.statusText,
     headers
   });
+  if (isHtmlResponse(pathname, response)) {
+    response = new HTMLRewriter()
+      .on('head', new HeadScriptInjector(GLOBAL_SETTINGS_SCRIPT_SRC))
+      .transform(response);
+  }
+  return response;
 }
 
 // ─── HotspotStore ─────────────────────────────────────────────────────────────
