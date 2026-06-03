@@ -437,7 +437,7 @@
       const debugUrlInput = document.getElementById('debug-url-input');
       const debugUrlSaveButton = document.getElementById('debug-url-save-btn');
       const saveBtn = document.getElementById('save-hotspots-btn');
-      saveBadge = window.makeSyncBadge(saveBtn);
+      let saveBadge = window.makeSyncBadge(saveBtn);
       const saveModal = document.getElementById('save-modal');
       const saveModalTitle = document.getElementById('save-modal-title');
       const saveModalTextarea = document.getElementById('save-modal-textarea');
@@ -478,7 +478,6 @@
       let saveButtonResetTimeoutId = null;
       let hasDebugSaveAccess = false;
       let hotspotApiMode = 'primary';
-      let saveBadge = null;
       let flipClockIntervalId = null;
       let flipClockAlignTimeoutId = null;
       let performancePanelEl = null;
