@@ -10,6 +10,21 @@
   const DAY_MS = 24 * 60 * 60 * 1000;
   const WEEKDAY_CODES = ['SU', 'MO', 'TU', 'WE', 'TH', 'FR', 'SA'];
   const WEEKDAY_INDEX = new Map(WEEKDAY_CODES.map((code, index) => [code, index]));
+  const CALENDAR_SYNC_ENDPOINT = '/api/calendar-events';
+  const CALENDAR_SYNC_STATUS = {
+    SAVED: 'saved',
+    SYNCING: 'syncing',
+    OFFLINE: 'offline',
+    NOT_SYNCING: 'not_syncing'
+  };
+  const calendarSyncSubscribers = new Set();
+  let calendarSessionChecked = false;
+  let calendarSyncInitialized = false;
+  let calendarIsAuthenticated = false;
+  let calendarSyncInFlight = 0;
+  let calendarSyncErrored = false;
+  let calendarSessionCheckFailed = false;
+  let lastCalendarSyncStatus = null;
 
   function loadEvents() {
     try {
@@ -24,6 +39,255 @@
 
   function saveEvents(events) {
     window.localStorage.setItem(STORAGE_KEY, JSON.stringify(events));
+  }
+
+  function isOffline() {
+    return typeof navigator !== 'undefined' && navigator.onLine === false;
+  }
+
+  function toTimestamp(value) {
+    const n = Number(value);
+    if (Number.isFinite(n)) return Math.floor(n);
+    if (typeof value === 'string') {
+      const parsed = Date.parse(value);
+      if (Number.isFinite(parsed)) return Math.floor(parsed);
+    }
+    return null;
+  }
+
+  function toIsoTimestamp(ts) {
+    return Number.isFinite(ts) ? new Date(ts).toISOString() : null;
+  }
+
+  function getEventUpdatedAt(event) {
+    return toTimestamp(event && event.updatedAt)
+      || toTimestamp(event && event.createdAt)
+      || 0;
+  }
+
+  function getCalendarSyncStatus() {
+    if (calendarSessionChecked && !calendarIsAuthenticated && !calendarSessionCheckFailed) {
+      return CALENDAR_SYNC_STATUS.NOT_SYNCING;
+    }
+    if (calendarSyncInFlight > 0 || !calendarSyncInitialized) return CALENDAR_SYNC_STATUS.SYNCING;
+    if (calendarSyncErrored || isOffline()) return CALENDAR_SYNC_STATUS.OFFLINE;
+    return CALENDAR_SYNC_STATUS.SAVED;
+  }
+
+  function notifyCalendarSyncStatus(force = false) {
+    const status = getCalendarSyncStatus();
+    if (!force && status === lastCalendarSyncStatus) return;
+    lastCalendarSyncStatus = status;
+    calendarSyncSubscribers.forEach((listener) => {
+      try {
+        listener(status);
+      } catch (_) {}
+    });
+  }
+
+  function subscribeCalendarSyncStatus(listener) {
+    if (typeof listener !== 'function') return function noop() {};
+    calendarSyncSubscribers.add(listener);
+    try {
+      listener(getCalendarSyncStatus());
+    } catch (_) {}
+    return function unsubscribe() {
+      calendarSyncSubscribers.delete(listener);
+    };
+  }
+
+  async function getAuthSession() {
+    return fetch('/api/discord/me', { credentials: 'include', cache: 'no-store' });
+  }
+
+  async function ensureCalendarSessionState() {
+    if (calendarSessionChecked) return;
+    calendarSyncInFlight += 1;
+    notifyCalendarSyncStatus();
+    try {
+      const res = await getAuthSession();
+      const body = res.ok ? await res.json().catch(() => null) : null;
+      calendarIsAuthenticated = Boolean(body && body.authenticated);
+      calendarSessionChecked = true;
+      calendarSessionCheckFailed = false;
+      if (!calendarIsAuthenticated) {
+        calendarSyncErrored = false;
+      }
+    } catch (_) {
+      calendarSessionChecked = true;
+      calendarSessionCheckFailed = true;
+      calendarSyncErrored = true;
+    } finally {
+      calendarSyncInFlight = Math.max(0, calendarSyncInFlight - 1);
+      notifyCalendarSyncStatus();
+    }
+  }
+
+  function eventFromServerRow(row) {
+    if (!row || typeof row !== 'object') return null;
+    const data = row.data && typeof row.data === 'object' && !Array.isArray(row.data) ? row.data : {};
+    const id = typeof row.id === 'string' && row.id.trim() ? row.id.trim() : (typeof data.id === 'string' ? data.id.trim() : '');
+    if (!id) return null;
+    const startTs = toTimestamp(data.startTs) ?? toTimestamp(row.startAt);
+    const endTs = toTimestamp(data.endTs) ?? toTimestamp(row.endAt);
+    if (!Number.isFinite(startTs) || !Number.isFinite(endTs)) return null;
+    const title = typeof data.title === 'string' && data.title.trim()
+      ? data.title.trim()
+      : typeof row.title === 'string'
+        ? row.title.trim()
+        : '';
+    if (!title) return null;
+    const serverUpdatedAt = toTimestamp(row.updatedAt) ?? toTimestamp(data.updatedAt) ?? Date.now();
+    return {
+      id,
+      title,
+      description: typeof data.description === 'string' ? data.description : '',
+      startTs: Math.floor(startTs),
+      endTs: Math.floor(endTs),
+      allDay: Boolean(data.allDay),
+      color: typeof data.color === 'string' && data.color.trim() ? data.color.trim() : '#55FF55',
+      eventType: typeof data.eventType === 'string' && data.eventType.trim() ? data.eventType.trim() : '',
+      recurrenceRule: normalizeRule(data.recurrenceRule),
+      calendarId: typeof data.calendarId === 'string' && data.calendarId.trim() ? data.calendarId.trim() : 'family',
+      createdBy: typeof data.createdBy === 'string' && data.createdBy ? data.createdBy : 'local-user',
+      createdByName: typeof data.createdByName === 'string' && data.createdByName ? data.createdByName : DEFAULT_CREATOR,
+      createdAt: toTimestamp(data.createdAt) ?? serverUpdatedAt,
+      updatedAt: serverUpdatedAt,
+      updatedByName: typeof data.updatedByName === 'string' && data.updatedByName ? data.updatedByName : DEFAULT_CREATOR
+    };
+  }
+
+  function mergeServerEvents(serverRows) {
+    const localEvents = loadEvents();
+    const byId = new Map(localEvents.map((event) => [event.id, event]));
+    (Array.isArray(serverRows) ? serverRows : []).forEach((row) => {
+      const serverEvent = eventFromServerRow(row);
+      if (!serverEvent) return;
+      const localEvent = byId.get(serverEvent.id);
+      if (!localEvent) {
+        byId.set(serverEvent.id, serverEvent);
+        return;
+      }
+      const localUpdatedAt = getEventUpdatedAt(localEvent);
+      const serverUpdatedAt = getEventUpdatedAt(serverEvent);
+      if (serverUpdatedAt >= localUpdatedAt) {
+        byId.set(serverEvent.id, serverEvent);
+      }
+    });
+    const merged = [...byId.values()];
+    saveEvents(merged);
+    return merged;
+  }
+
+  function updateLocalEventUpdatedAt(id, updatedAt) {
+    const updatedTs = toTimestamp(updatedAt);
+    if (!id || !Number.isFinite(updatedTs)) return;
+    const events = loadEvents();
+    const index = events.findIndex((event) => event.id === id);
+    if (index === -1) return;
+    events[index] = { ...events[index], updatedAt: updatedTs };
+    saveEvents(events);
+  }
+
+  function serverPayloadFromEvent(event) {
+    const startAt = toIsoTimestamp(event.startTs);
+    const endAt = toIsoTimestamp(event.endTs);
+    return {
+      id: event.id,
+      title: event.title,
+      startAt,
+      endAt,
+      data: {
+        ...event,
+        startTs: event.startTs,
+        endTs: event.endTs,
+        updatedAt: event.updatedAt
+      }
+    };
+  }
+
+  async function fetchAndMergeServerEvents() {
+    if (!calendarIsAuthenticated) return;
+    if (isOffline()) {
+      calendarSyncErrored = true;
+      notifyCalendarSyncStatus();
+      return;
+    }
+    calendarSyncInFlight += 1;
+    notifyCalendarSyncStatus();
+    try {
+      const res = await fetch(CALENDAR_SYNC_ENDPOINT, {
+        method: 'GET',
+        credentials: 'include',
+        cache: 'no-store'
+      });
+      if (res.status === 401) {
+        calendarIsAuthenticated = false;
+        calendarSessionCheckFailed = false;
+        calendarSyncErrored = false;
+        return;
+      }
+      if (!res.ok) throw new Error('Failed to fetch calendar events.');
+      const body = await res.json().catch(() => ({}));
+      mergeServerEvents(body && body.events);
+      calendarSyncErrored = false;
+    } catch (_) {
+      calendarSyncErrored = true;
+    } finally {
+      calendarSyncInFlight = Math.max(0, calendarSyncInFlight - 1);
+      notifyCalendarSyncStatus();
+    }
+  }
+
+  async function initCalendarSync() {
+    if (calendarSyncInitialized) return;
+    await ensureCalendarSessionState();
+    if (calendarIsAuthenticated) {
+      await fetchAndMergeServerEvents();
+    }
+    calendarSyncInitialized = true;
+    notifyCalendarSyncStatus(true);
+  }
+
+  function runServerSyncRequest(requestFactory, onSuccess) {
+    if (!calendarIsAuthenticated) {
+      notifyCalendarSyncStatus();
+      return;
+    }
+    if (isOffline()) {
+      calendarSyncErrored = true;
+      notifyCalendarSyncStatus();
+      return;
+    }
+    calendarSyncInFlight += 1;
+    notifyCalendarSyncStatus();
+    Promise.resolve()
+      .then(() => requestFactory())
+      .then(async (res) => {
+        if (res.status === 401) {
+          calendarIsAuthenticated = false;
+          calendarSessionCheckFailed = false;
+          calendarSyncErrored = false;
+          return null;
+        }
+        if (!res.ok) throw new Error(`Calendar sync failed: ${res.status}`);
+        const body = await res.json().catch(() => ({}));
+        calendarSyncErrored = false;
+        if (typeof onSuccess === 'function') onSuccess(body);
+        return null;
+      })
+      .catch(() => {
+        calendarSyncErrored = true;
+      })
+      .finally(() => {
+        calendarSyncInFlight = Math.max(0, calendarSyncInFlight - 1);
+        notifyCalendarSyncStatus();
+      });
+  }
+
+  async function queueCalendarMutationSync(requestFactory, onSuccess) {
+    await ensureCalendarSessionState();
+    runServerSyncRequest(requestFactory, onSuccess);
   }
 
   function jsonResponse(data, status = 200) {
@@ -292,6 +556,7 @@
   }
 
   async function getCalendarEvents(from, to, calendarId) {
+    await initCalendarSync();
     const fromTs = Number(from);
     const toTs = Number(to);
     return jsonResponse({ events: listEvents(fromTs, toTs, calendarId) });
@@ -303,6 +568,15 @@
       const nextEvent = normalizeEvent(data);
       events.push(nextEvent);
       saveEvents(events);
+      void queueCalendarMutationSync(
+        () => fetch(CALENDAR_SYNC_ENDPOINT, {
+          method: 'POST',
+          credentials: 'include',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify(serverPayloadFromEvent(nextEvent))
+        }),
+        (body) => updateLocalEventUpdatedAt(nextEvent.id, body && body.updatedAt)
+      );
       return jsonResponse({ ok: true, event: decorateEvent(nextEvent) });
     } catch (error) {
       return jsonResponse({ error: error.message || 'Unable to create event.' }, 400);
@@ -319,6 +593,15 @@
       const merged = normalizeEvent({ ...events[index], ...data, calendarId: events[index].calendarId }, events[index]);
       events[index] = merged;
       saveEvents(events);
+      void queueCalendarMutationSync(
+        () => fetch(CALENDAR_SYNC_ENDPOINT, {
+          method: 'PUT',
+          credentials: 'include',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify(serverPayloadFromEvent(merged))
+        }),
+        (body) => updateLocalEventUpdatedAt(merged.id, body && body.updatedAt)
+      );
       return jsonResponse({ ok: true, event: decorateEvent(merged) });
     } catch (error) {
       return jsonResponse({ error: error.message || 'Unable to update event.' }, 400);
@@ -332,6 +615,13 @@
       return jsonResponse({ error: 'Event not found.' }, 404);
     }
     saveEvents(nextEvents);
+    const encodedId = encodeURIComponent(id);
+    void queueCalendarMutationSync(
+      () => fetch(`${CALENDAR_SYNC_ENDPOINT}?id=${encodedId}`, {
+        method: 'DELETE',
+        credentials: 'include'
+      })
+    );
     return jsonResponse({ ok: true });
   }
 
@@ -377,9 +667,10 @@
     getCalendarIcsText,
     getCalendarIcalUrl,
     openCalendarSubscription,
-    getAuthSession: function () {
-      return fetch('/api/discord/me', { credentials: 'include', cache: 'no-store' });
-    },
+    initCalendarSync,
+    getCalendarSyncStatus,
+    subscribeCalendarSyncStatus,
+    getAuthSession,
     getNotes: function () {
       return fetch('/api/notes', { credentials: 'include', cache: 'no-store' });
     },
@@ -392,4 +683,14 @@
       });
     }
   };
+
+  if (typeof window !== 'undefined') {
+    window.addEventListener('online', () => {
+      calendarSyncErrored = false;
+      notifyCalendarSyncStatus();
+    });
+    window.addEventListener('offline', () => {
+      notifyCalendarSyncStatus();
+    });
+  }
 }());

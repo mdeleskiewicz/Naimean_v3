@@ -363,16 +363,33 @@
       flex-wrap: wrap;
     }
 
-    #auth-status {
+    .sync-badge {
       font-size: 16px;
       color: var(--c64-white);
+      border: 1px solid rgba(200, 216, 255, 0.45);
+      background: rgba(18, 24, 46, 0.65);
+      border-radius: 999px;
+      padding: 2px 9px;
+      line-height: 1.1;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      white-space: nowrap;
     }
-
-    #auth-status a {
+    .sync-badge.saved {
       color: var(--c64-green);
-      text-decoration: underline;
-      cursor: pointer;
-      text-shadow: var(--glow-g);
+      border-color: rgba(0, 232, 122, 0.55);
+      box-shadow: 0 0 6px rgba(0, 232, 122, 0.25);
+    }
+    .sync-badge.syncing {
+      color: var(--c64-cyan);
+      border-color: rgba(85, 255, 255, 0.55);
+      box-shadow: 0 0 6px rgba(85, 255, 255, 0.22);
+    }
+    .sync-badge.offline,
+    .sync-badge.not-syncing {
+      color: var(--c64-yellow);
+      border-color: rgba(255, 255, 85, 0.55);
+      box-shadow: 0 0 6px rgba(255, 255, 85, 0.2);
     }
 
     /* ── Tab bar ─────────────────────────────────────────────────── */
@@ -2224,6 +2241,7 @@
       <button class="btn btn-sm btn-view active" id="view-monthly-btn">MONTHLY</button>
       <button class="btn btn-sm btn-view" id="view-schedule-btn">SCHEDULE</button>
     </div>
+    <div id="calendar-sync-status" class="sync-badge syncing" aria-live="polite">SYNCING</div>
     <div id="topbar-overflow">
       <div id="topbar-overflow-btns">
         <button class="btn btn-sm" id="subscribe-btn" title="Subscribe with iOS Calendar or Outlook">SUBSCRIBE</button>
@@ -2583,6 +2601,7 @@
   const bnavDaily        = document.getElementById('bnav-daily');
   const bnavToday        = document.getElementById('bnav-today');
   const bnavSchedule     = document.getElementById('bnav-schedule');
+  const calendarSyncStatusEl = document.getElementById('calendar-sync-status');
 
   // ── Color preset list (must match HTML swatches) ──────────────────
   const COLOR_PRESETS = [
@@ -2914,7 +2933,31 @@
 
   // ── Auth ─────────────────────────────────────────────────────────
   async function refreshAuth() {
+    if (typeof NaimeanAPI !== 'undefined' && typeof NaimeanAPI.initCalendarSync === 'function') {
+      try {
+        await NaimeanAPI.initCalendarSync();
+      } catch (_) {}
+    }
     showApp();
+  }
+
+  function renderSyncStatusBadge(status) {
+    if (!calendarSyncStatusEl) return;
+    const normalized = status === 'not_syncing' ? 'not-syncing' : (
+      status === 'offline' ? 'offline' : (
+        status === 'saved' ? 'saved' : 'syncing'
+      )
+    );
+    const label = normalized === 'saved'
+      ? 'SAVED'
+      : normalized === 'syncing'
+        ? 'SYNCING'
+        : normalized === 'offline'
+          ? 'OFFLINE'
+          : 'NOT SYNCING';
+    calendarSyncStatusEl.classList.remove('saved', 'syncing', 'offline', 'not-syncing');
+    calendarSyncStatusEl.classList.add(normalized);
+    calendarSyncStatusEl.textContent = label;
   }
 
   function showApp() {
@@ -5298,6 +5341,14 @@
 
   // ── Init ──────────────────────────────────────────────────────────
   async function init() {
+    if (typeof NaimeanAPI !== 'undefined') {
+      if (typeof NaimeanAPI.getCalendarSyncStatus === 'function') {
+        renderSyncStatusBadge(NaimeanAPI.getCalendarSyncStatus());
+      }
+      if (typeof NaimeanAPI.subscribeCalendarSyncStatus === 'function') {
+        NaimeanAPI.subscribeCalendarSyncStatus(renderSyncStatusBadge);
+      }
+    }
     await refreshAuth();
     renderMiniCal();      // render mini cal immediately (before events load)
     updateBottomNav();
