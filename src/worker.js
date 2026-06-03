@@ -604,12 +604,381 @@ function hotspotJson(body, status = 200) {
   });
 }
 
+const HOTSPOT_SQL_MIGRATIONS = [
+  { version: 1, statements: [] },
+  {
+    version: 2,
+    statements: [
+      `CREATE TABLE IF NOT EXISTS calendar_events (
+        id TEXT PRIMARY KEY,
+        user_id TEXT,
+        title TEXT,
+        start_at TEXT,
+        end_at TEXT,
+        data TEXT,
+        updated_at TEXT
+      )`,
+      `CREATE TABLE IF NOT EXISTS user_preferences (
+        user_id TEXT,
+        key TEXT,
+        value TEXT,
+        updated_at TEXT,
+        UNIQUE(user_id, key)
+      )`,
+      `CREATE TABLE IF NOT EXISTS room_state (
+        room_id TEXT,
+        key TEXT,
+        value TEXT,
+        updated_at TEXT,
+        PRIMARY KEY(room_id, key)
+      )`
+    ]
+  }
+];
+
+function parseJsonText(text) {
+  if (typeof text !== 'string') return text ?? null;
+  try {
+    return JSON.parse(text);
+  } catch {
+    return text;
+  }
+}
+
+function toStoredText(value) {
+  if (value === null || value === undefined) return null;
+  if (typeof value === 'string') return value;
+  try {
+    return JSON.stringify(value);
+  } catch {
+    return String(value);
+  }
+}
+
 export class HotspotStore {
   constructor(state) {
     this.state = state;
+    this.sqlSchemaReady = false;
   }
+
+  readSqlFirstColumn(row) {
+    if (!row || typeof row !== 'object') return 0;
+    const values = Object.values(row);
+    if (values.length === 0) return 0;
+    const candidate = Number(values[0]);
+    return Number.isFinite(candidate) ? candidate : 0;
+  }
+
+  ensureSqlCursorRows(cursor) {
+    if (!cursor) return [];
+    if (typeof cursor.toArray === 'function') return cursor.toArray();
+    if (typeof cursor[Symbol.iterator] === 'function') return [...cursor];
+    return [];
+  }
+
+  ensureSqlSchema() {
+    if (this.sqlSchemaReady) return;
+    const sql = this.state?.storage?.sql;
+    if (!sql || typeof sql.exec !== 'function') return;
+    const pragmaRows = this.ensureSqlCursorRows(sql.exec('PRAGMA user_version'));
+    let currentVersion = pragmaRows.length > 0 ? this.readSqlFirstColumn(pragmaRows[0]) : 0;
+    HOTSPOT_SQL_MIGRATIONS.forEach((migration) => {
+      if (migration.version <= currentVersion) return;
+      migration.statements.forEach((statement) => sql.exec(statement));
+      sql.exec(`PRAGMA user_version = ${migration.version}`);
+      currentVersion = migration.version;
+    });
+    this.sqlSchemaReady = true;
+  }
+
+  async parseJsonBody(request) {
+    try {
+      return { body: await request.json(), error: null };
+    } catch {
+      return { body: null, error: hotspotJson({ error: 'Invalid JSON body.' }, 400) };
+    }
+  }
+
+  userIdFromRequest(request) {
+    const userId = request.headers.get('x-naimean-user-id');
+    return typeof userId === 'string' && userId.trim() ? userId.trim() : null;
+  }
+
+  handleCalendarEventsGet(userId) {
+    this.ensureSqlSchema();
+    const sql = this.state.storage.sql;
+    const rows = this.ensureSqlCursorRows(
+      sql.exec(
+        `SELECT id, user_id, title, start_at, end_at, data, updated_at
+         FROM calendar_events
+         WHERE user_id = ?
+         ORDER BY updated_at DESC`,
+        userId
+      )
+    );
+    return hotspotJson({
+      events: rows.map((row) => ({
+        id: row.id,
+        userId: row.user_id,
+        title: row.title ?? '',
+        startAt: row.start_at ?? null,
+        endAt: row.end_at ?? null,
+        data: parseJsonText(row.data),
+        updatedAt: row.updated_at ?? null
+      }))
+    });
+  }
+
+  handleCalendarEventsPost(userId, body) {
+    this.ensureSqlSchema();
+    const sql = this.state.storage.sql;
+    const id = typeof body?.id === 'string' && body.id.trim() ? body.id.trim() : crypto.randomUUID();
+    const updatedAt = new Date().toISOString();
+    try {
+      sql.exec(
+        `INSERT INTO calendar_events (id, user_id, title, start_at, end_at, data, updated_at)
+         VALUES (?, ?, ?, ?, ?, ?, ?)`,
+        id,
+        userId,
+        typeof body?.title === 'string' ? body.title : '',
+        typeof body?.startAt === 'string' ? body.startAt : null,
+        typeof body?.endAt === 'string' ? body.endAt : null,
+        toStoredText(body?.data),
+        updatedAt
+      );
+    } catch (err) {
+      if (String(err?.message || '').toLowerCase().includes('unique')) {
+        return hotspotJson({ error: 'Calendar event id already exists.' }, 409);
+      }
+      return hotspotJson({ error: `Failed to save calendar event: ${err?.message || 'Unknown error'}` }, 500);
+    }
+    return hotspotJson({ ok: true, id, updatedAt });
+  }
+
+  handleCalendarEventsPut(userId, body) {
+    this.ensureSqlSchema();
+    const sql = this.state.storage.sql;
+    const id = typeof body?.id === 'string' ? body.id.trim() : '';
+    if (!id) return hotspotJson({ error: 'Calendar event id is required.' }, 400);
+    const existing = this.ensureSqlCursorRows(
+      sql.exec(
+        'SELECT id FROM calendar_events WHERE id = ? AND user_id = ?',
+        id,
+        userId
+      )
+    );
+    if (existing.length === 0) return hotspotJson({ error: 'Calendar event not found.' }, 404);
+    const updatedAt = new Date().toISOString();
+    sql.exec(
+      `UPDATE calendar_events
+       SET title = ?, start_at = ?, end_at = ?, data = ?, updated_at = ?
+       WHERE id = ? AND user_id = ?`,
+      typeof body?.title === 'string' ? body.title : '',
+      typeof body?.startAt === 'string' ? body.startAt : null,
+      typeof body?.endAt === 'string' ? body.endAt : null,
+      toStoredText(body?.data),
+      updatedAt,
+      id,
+      userId
+    );
+    return hotspotJson({ ok: true, id, updatedAt });
+  }
+
+  handleCalendarEventsDelete(request, userId, body) {
+    this.ensureSqlSchema();
+    const sql = this.state.storage.sql;
+    const url = new URL(request.url);
+    const idFromQuery = url.searchParams.get('id');
+    const idFromBody = typeof body?.id === 'string' ? body.id.trim() : '';
+    const id = (idFromQuery && idFromQuery.trim()) || idFromBody;
+    if (!id) return hotspotJson({ error: 'Calendar event id is required.' }, 400);
+    const existing = this.ensureSqlCursorRows(
+      sql.exec(
+        'SELECT id FROM calendar_events WHERE id = ? AND user_id = ?',
+        id,
+        userId
+      )
+    );
+    if (existing.length === 0) return hotspotJson({ error: 'Calendar event not found.' }, 404);
+    sql.exec('DELETE FROM calendar_events WHERE id = ? AND user_id = ?', id, userId);
+    return hotspotJson({ ok: true, id });
+  }
+
+  readUserPreferences(userId) {
+    this.ensureSqlSchema();
+    const sql = this.state.storage.sql;
+    const rows = this.ensureSqlCursorRows(
+      sql.exec(
+        `SELECT key, value, updated_at
+         FROM user_preferences
+         WHERE user_id = ?
+         ORDER BY key ASC`,
+        userId
+      )
+    );
+    const preferences = {};
+    rows.forEach((row) => {
+      preferences[row.key] = parseJsonText(row.value);
+    });
+    return { preferences };
+  }
+
+  handleUserPreferencesPut(userId, body) {
+    this.ensureSqlSchema();
+    const sql = this.state.storage.sql;
+    const entries = [];
+    if (typeof body?.key === 'string' && Object.prototype.hasOwnProperty.call(body, 'value')) {
+      entries.push([body.key, body.value]);
+    }
+    if (body?.preferences && typeof body.preferences === 'object' && !Array.isArray(body.preferences)) {
+      Object.entries(body.preferences).forEach(([key, value]) => {
+        entries.push([key, value]);
+      });
+    }
+    const normalizedEntries = entries
+      .map(([key, value]) => [typeof key === 'string' ? key.trim() : '', value])
+      .filter(([key]) => Boolean(key));
+    if (normalizedEntries.length === 0) {
+      return hotspotJson({ error: 'No preferences provided.' }, 400);
+    }
+    const updatedAt = new Date().toISOString();
+    normalizedEntries.forEach(([key, value]) => {
+      sql.exec(
+        `INSERT INTO user_preferences (user_id, key, value, updated_at)
+         VALUES (?, ?, ?, ?)
+         ON CONFLICT(user_id, key)
+         DO UPDATE SET value = excluded.value, updated_at = excluded.updated_at`,
+        userId,
+        key,
+        toStoredText(value),
+        updatedAt
+      );
+    });
+    return hotspotJson({ ok: true, ...this.readUserPreferences(userId) });
+  }
+
+  readRoomState(roomId) {
+    this.ensureSqlSchema();
+    const sql = this.state.storage.sql;
+    const rows = this.ensureSqlCursorRows(
+      sql.exec(
+        `SELECT key, value, updated_at
+         FROM room_state
+         WHERE room_id = ?
+         ORDER BY key ASC`,
+        roomId
+      )
+    );
+    const state = {};
+    rows.forEach((row) => {
+      state[row.key] = parseJsonText(row.value);
+    });
+    return { roomId, state };
+  }
+
+  handleRoomStatePut(roomId, body) {
+    this.ensureSqlSchema();
+    const sql = this.state.storage.sql;
+    const entries = [];
+    if (typeof body?.key === 'string' && Object.prototype.hasOwnProperty.call(body, 'value')) {
+      entries.push([body.key, body.value]);
+    }
+    if (body?.state && typeof body.state === 'object' && !Array.isArray(body.state)) {
+      Object.entries(body.state).forEach(([key, value]) => {
+        entries.push([key, value]);
+      });
+    }
+    const normalizedEntries = entries
+      .map(([key, value]) => [typeof key === 'string' ? key.trim() : '', value])
+      .filter(([key]) => Boolean(key));
+    if (normalizedEntries.length === 0) {
+      return hotspotJson({ error: 'No room state provided.' }, 400);
+    }
+    const updatedAt = new Date().toISOString();
+    normalizedEntries.forEach(([key, value]) => {
+      sql.exec(
+        `INSERT INTO room_state (room_id, key, value, updated_at)
+         VALUES (?, ?, ?, ?)
+         ON CONFLICT(room_id, key)
+         DO UPDATE SET value = excluded.value, updated_at = excluded.updated_at`,
+        roomId,
+        key,
+        toStoredText(value),
+        updatedAt
+      );
+    });
+    return hotspotJson({ ok: true, ...this.readRoomState(roomId) });
+  }
+
   async fetch(request) {
     const pathname = new URL(request.url).pathname;
+    const isCalendarEvents = pathname === '/api/calendar-events';
+    const isUserPreferences = pathname === '/api/user-preferences';
+    const roomStateMatch = pathname.match(/^\/api\/room-state\/([^/]+)$/);
+
+    if (request.method === 'OPTIONS' && (isCalendarEvents || isUserPreferences || roomStateMatch)) {
+      const methods = isCalendarEvents
+        ? 'GET, POST, PUT, DELETE, OPTIONS'
+        : 'GET, PUT, OPTIONS';
+      return new Response(null, {
+        status: 204,
+        headers: {
+          ...HOTSPOT_JSON_HEADERS,
+          'access-control-allow-methods': methods
+        }
+      });
+    }
+
+    if (isCalendarEvents) {
+      const userId = this.userIdFromRequest(request);
+      if (!userId) return hotspotJson({ error: 'Unauthorized' }, 401);
+      if (request.method === 'GET') return this.handleCalendarEventsGet(userId);
+      if (request.method === 'POST') {
+        const { body, error } = await this.parseJsonBody(request);
+        if (error) return error;
+        return this.handleCalendarEventsPost(userId, body);
+      }
+      if (request.method === 'PUT') {
+        const { body, error } = await this.parseJsonBody(request);
+        if (error) return error;
+        return this.handleCalendarEventsPut(userId, body);
+      }
+      if (request.method === 'DELETE') {
+        let body = null;
+        if (request.headers.get('content-type')?.toLowerCase().includes('application/json')) {
+          const parsed = await this.parseJsonBody(request);
+          if (parsed.error) return parsed.error;
+          body = parsed.body;
+        }
+        return this.handleCalendarEventsDelete(request, userId, body);
+      }
+      return hotspotJson({ error: 'Method not allowed.' }, 405);
+    }
+
+    if (isUserPreferences) {
+      const userId = this.userIdFromRequest(request);
+      if (!userId) return hotspotJson({ error: 'Unauthorized' }, 401);
+      if (request.method === 'GET') return hotspotJson(this.readUserPreferences(userId));
+      if (request.method === 'PUT') {
+        const { body, error } = await this.parseJsonBody(request);
+        if (error) return error;
+        return this.handleUserPreferencesPut(userId, body);
+      }
+      return hotspotJson({ error: 'Method not allowed.' }, 405);
+    }
+
+    if (roomStateMatch) {
+      const roomId = decodeURIComponent(roomStateMatch[1] || '').trim();
+      if (!roomId) return hotspotJson({ error: 'Room id is required.' }, 400);
+      if (request.method === 'GET') return hotspotJson(this.readRoomState(roomId));
+      if (request.method === 'PUT') {
+        const { body, error } = await this.parseJsonBody(request);
+        if (error) return error;
+        return this.handleRoomStatePut(roomId, body);
+      }
+      return hotspotJson({ error: 'Method not allowed.' }, 405);
+    }
+
     const isChapelConfig = pathname === '/api/chapel-hotspots';
     const isArcadeUrlOverrides = pathname === '/api/arcade-url-overrides';
     const isCornerScore = pathname === '/api/corner-score';
@@ -790,13 +1159,37 @@ async function dispatchToHotspotStore(env, request, instanceName) {
   }
 }
 
-async function handleNotes(request, env) {
+async function getRequestSession(request, env) {
   const sessionSecret = requireSessionSecret(env);
   const cookies = parseCookies(request);
   const token = cookies[SESSION_COOKIE];
-  const session = token ? await verifySessionToken(sessionSecret, token) : null;
+  return token ? verifySessionToken(sessionSecret, token) : null;
+}
+
+function withUserIdHeader(request, userId) {
+  const headers = new Headers(request.headers);
+  headers.set('x-naimean-user-id', userId);
+  return new Request(request, { headers });
+}
+
+async function handleAuthenticatedHotspotRoute(request, env, instanceName) {
+  const session = await getRequestSession(request, env);
+  if (!session?.userId) return jsonResponse({ error: 'Unauthorized' }, 401);
+  return dispatchToHotspotStore(env, withUserIdHeader(request, session.userId), instanceName);
+}
+
+async function handleNotes(request, env) {
+  const session = await getRequestSession(request, env);
   if (!session?.userId) return jsonResponse({ error: 'Unauthorized' }, 401);
   return dispatchToHotspotStore(env, request, `notes-${session.userId}`);
+}
+
+async function handleRoomStateRoute(request, env) {
+  const roomAuthEnabled = String(env.ROOM_STATE_REQUIRE_AUTH || '').toLowerCase() === 'true';
+  if (!roomAuthEnabled) return dispatchToHotspotStore(env, request, 'room-state');
+  const session = await getRequestSession(request, env);
+  if (!session?.userId) return jsonResponse({ error: 'Unauthorized' }, 401);
+  return dispatchToHotspotStore(env, withUserIdHeader(request, session.userId), 'room-state');
 }
 
 // ─── Main worker entry router ──────────────────────────────────────────────────
@@ -819,6 +1212,9 @@ export default {
 
     // Per-user notes store
     if (pathname === '/api/notes') return handleNotes(request, env);
+    if (pathname === '/api/calendar-events') return handleAuthenticatedHotspotRoute(request, env, 'calendar-events');
+    if (pathname === '/api/user-preferences') return handleAuthenticatedHotspotRoute(request, env, 'user-preferences');
+    if (pathname.startsWith('/api/room-state/')) return handleRoomStateRoute(request, env);
 
     // /api/aquarium/shrimp-clips
     if (pathname === '/api/aquarium/shrimp-clips') {
