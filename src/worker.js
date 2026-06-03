@@ -134,11 +134,60 @@ const ASSET_ALIAS_PATHS = new Map([
   ['/mame_gui.html', '/mame-gui.html'],
   ['/mame-gui', '/mame-gui.html']
 ]);
+const PROTECTED_PAGE_PATHS = new Set([
+  '/notes',
+  '/notes.html',
+  '/mame-gui',
+  '/mame-gui.html',
+  '/calendar',
+  '/calendar.html'
+]);
 
 function isHtmlPath(pathname) {
   if (pathname.startsWith('/api/')) return false;
   const lastSegment = pathname.split('/').pop() || '';
   return pathname === '/' || pathname.endsWith('.html') || !lastSegment.includes('.');
+}
+
+function normalizePostAuthPath(rawPath) {
+  if (typeof rawPath !== 'string' || !rawPath.startsWith('/') || rawPath.startsWith('//')) return '/';
+  let parsed;
+  try {
+    parsed = new URL(rawPath, 'https://naimean.local');
+  } catch {
+    return '/';
+  }
+  if (parsed.origin !== 'https://naimean.local') return '/';
+  if (!PROTECTED_PAGE_PATHS.has(parsed.pathname)) return '/';
+  return `${parsed.pathname}${parsed.search}`;
+}
+
+function encodeOAuthStateValue(value) {
+  return btoa(value).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/g, '');
+}
+
+function decodeOAuthStateValue(value) {
+  const normalized = String(value || '').replace(/-/g, '+').replace(/_/g, '/');
+  const padding = '='.repeat((4 - (normalized.length % 4)) % 4);
+  return atob(normalized + padding);
+}
+
+function createOAuthState(returnPath) {
+  return encodeOAuthStateValue(
+    JSON.stringify({
+      nonce: crypto.randomUUID().replace(/-/g, ''),
+      returnPath: normalizePostAuthPath(returnPath)
+    })
+  );
+}
+
+function readReturnPathFromOAuthState(state) {
+  try {
+    const parsed = JSON.parse(decodeOAuthStateValue(state));
+    return normalizePostAuthPath(parsed?.returnPath);
+  } catch {
+    return '/';
+  }
 }
 
 const VERSIONED_ASSET_RE = /\.v\d{4}[^.]*\.(png|mp4)$/i;
@@ -299,7 +348,8 @@ async function handleDiscordAuth(request, env) {
   if (!clientId) return errorRedirect(`${url.origin}/`, 'configuration_error');
   
   const redirectUri = env.DISCORD_REDIRECT_URI || `${url.origin}/api/discord/callback`;
-  const state = crypto.randomUUID().replace(/-/g, '');
+  const requestedReturnPath = normalizePostAuthPath(url.searchParams.get('state') || '/');
+  const state = createOAuthState(requestedReturnPath);
   const params = new URLSearchParams({
     client_id: clientId,
     redirect_uri: redirectUri,
@@ -338,6 +388,7 @@ async function handleDiscordCallback(request, env) {
   if (!cookies[OAUTH_STATE_COOKIE] || cookies[OAUTH_STATE_COOKIE] !== state) {
     return errorRedirect(`${origin}/`, 'state_mismatch');
   }
+  const postAuthPath = readReturnPathFromOAuthState(state);
   
   const clientId = env.DISCORD_CLIENT_ID;
   const clientSecret = env.DISCORD_CLIENT_SECRET;
@@ -411,7 +462,7 @@ async function handleDiscordCallback(request, env) {
     secure
   });
   
-  const headers = new Headers({ Location: '/' });
+  const headers = new Headers({ Location: postAuthPath });
   headers.append('Set-Cookie', sessionCookieStr);
   headers.append('Set-Cookie', clearStateCookie);
   applySecurityHeaders(headers);
@@ -1187,10 +1238,20 @@ async function dispatchToHotspotStore(env, request, instanceName) {
 }
 
 async function getRequestSession(request, env) {
-  const sessionSecret = requireSessionSecret(env);
   const cookies = parseCookies(request);
   const token = cookies[SESSION_COOKIE];
-  return token ? verifySessionToken(sessionSecret, token) : null;
+  if (!token) return null;
+  const sessionSecret = requireSessionSecret(env);
+  return verifySessionToken(sessionSecret, token);
+}
+
+async function maybeRedirectProtectedPage(request, env, url) {
+  if (!PROTECTED_PAGE_PATHS.has(url.pathname)) return null;
+  const session = await getRequestSession(request, env);
+  if (session?.userId) return null;
+  const authUrl = new URL('/api/discord/auth', url.origin);
+  authUrl.searchParams.set('state', `${url.pathname}${url.search}`);
+  return Response.redirect(authUrl.toString(), 302);
 }
 
 function withUserIdHeader(request, userId) {
@@ -1264,6 +1325,9 @@ export default {
     }
 
     if (pathname === '/api/health') return jsonResponse({ status: 'healthy', timestamp: Date.now() });
+
+    const protectedPageRedirect = await maybeRedirectProtectedPage(request, env, url);
+    if (protectedPageRedirect) return protectedPageRedirect;
 
     // Catch all static paths → Asset handler
     return serveAsset(request, env, pathname);
