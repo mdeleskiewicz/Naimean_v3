@@ -46,6 +46,7 @@
       const WHITEBOARD_HOTSPOT_URLS = Object.freeze({
         whiteboard: MICROSOFT_WHITEBOARD_URL,
         'rca-board': MICROSOFT_WHITEBOARD_URL,
+        'rca-apps': 'https://www.naimean.com',
         'cap-ex': 'https://app.smartsheet.com/b/form/70b07591b76a4289bc6f5d5e1aabac91',
         'snow-tickets': SERVICE_NOW_ASSIGNED_WORK_URL,
         'ntst-cases':
@@ -65,6 +66,7 @@
       ];
       const WHITEBOARD_HOTSPOT_IDS = new Set([
         'rca-board',
+        'rca-apps',
         'whiteboard',
         ...WHITEBOARD_TASK_HOTSPOTS.map((spot) => spot.id)
       ]);
