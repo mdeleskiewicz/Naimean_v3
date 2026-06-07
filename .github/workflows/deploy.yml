@@ -15,6 +15,5 @@ jobs:
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          # Force a specific version and add verbose logging
-          wranglerVersion: '3.90.0'
-          command: deploy --verbose
+          # Removing --verbose; adding --config to ensure it reads your local settings
+          command: deploy --config wrangler.toml
