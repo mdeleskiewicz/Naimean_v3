@@ -17,3 +17,4 @@ jobs:
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           # Removing --verbose; adding --config to ensure it reads your local settings
           command: deploy --config wrangler.toml
+          
