@@ -7,12 +7,13 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-- name: Deploy
+    steps:
+      - uses: actions/checkout@v4
+      - name: Deploy
         uses: cloudflare/wrangler-action@v3
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           wranglerVersion: '4.98.0'
-          # Explicitly set the working directory to your root
-          workingDirectory: '.' 
+          workingDirectory: '.'
           command: deploy --config wrangler.toml
