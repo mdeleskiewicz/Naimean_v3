@@ -5,5 +5,8 @@
   "scripts": {
     "build": "node -e \"console.log('No build step required')\"",
     "test": "node --test"
+  },
+  "devDependencies": {
+    "wrangler": "^4.98.0"
   }
 }
