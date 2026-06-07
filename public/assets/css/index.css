@@ -1476,7 +1476,8 @@
       cursor: pointer;
       box-shadow:
         0 0 16px rgba(88, 235, 255, 0.2),
-        inset 0 0 0 1px rgba(255, 255, 255, 0.88);
+        inset 0 0 0 1px rgba(255, 255, 255, 0.88);.big-tv-tools-list
+        
     }
 
     .big-tv-tools-logo {
@@ -1818,6 +1819,16 @@
       font-weight: 700;
       letter-spacing: 0.12em;
       text-transform: uppercase;
+/* style: top-justify Tools overlay components */
+.big-tv-tools-header {
+    padding-top: 0;
+    padding-bottom: 4px;
+}
+
+.big-tv-tools-list {
+    padding-top: 0;
+    justify-content: flex-start;
+}
     }
 
     .login-title {
