@@ -1,0 +1,3 @@
+name = "naimeav3"
+main = "src/index.js" # Make sure this matches your actual entry file!
+compatibility_date = "2026-06-07"
