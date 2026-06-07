@@ -8,10 +8,12 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     name: Deploy
+    steps:
+      - uses: actions/checkout@v4
+      - name: Deploy
         uses: cloudflare/wrangler-action@v3
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          # This forces it to use the wrangler version in your package.json
-          packageManager: npm 
+          packageManager: npm
           command: deploy --config wrangler.toml
