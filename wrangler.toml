@@ -1,3 +1,6 @@
 name = "naimeav3"
-main = "src/worker.js" 
+main = "src/worker/index.js" # Corrected to your specific path
 compatibility_date = "2026-06-07"
+
+[assets]
+directory = "dist" # Ensure this points to where your site assets are built
