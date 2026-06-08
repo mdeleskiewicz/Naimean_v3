@@ -22,7 +22,13 @@ jobs:
         env:
           GDRIVE_CREDENTIALS: ${{ secrets.GDRIVE_CREDENTIALS }}
         run: |
+          # 1. Install the required Google libraries
+          pip install google-api-python-client google-auth
+          
+          # 2. Create the credentials file
           echo "$GDRIVE_CREDENTIALS" > sa-key.json
+          
+          # 3. Execute the upload script
           python3 - <<EOF
           from google.oauth2 import service_account
           from googleapiclient.discovery import build
