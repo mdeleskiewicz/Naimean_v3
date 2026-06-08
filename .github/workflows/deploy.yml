@@ -18,11 +18,11 @@ jobs:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
         run: |
-          # Capture output to raw file, then strip ANSI color codes for a clean .log file
-          npx wrangler deploy --color=always > raw-deploy.log 2>&1
+          # The '|| true' ensures that even if wrangler fails, the script continues
+          # and creates the log file so the upload step doesn't crash.
+          npx wrangler deploy --color=always > raw-deploy.log 2>&1 || true
           sed 's/\x1b\[[0-9;]*m//g' raw-deploy.log > full-deploy-log.txt
           
-          # Append status and link to the log
           echo "" >> full-deploy-log.txt
           echo "---------------------------------" >> full-deploy-log.txt
           echo "Deployment Status: ${{ job.status }}" >> full-deploy-log.txt
@@ -52,7 +52,6 @@ jobs:
           
           service = build('drive', 'v3', credentials=creds)
           
-          # Using .log extension for better Google Drive preview readability
           file_metadata = {
               'name': 'deploy-log-${{ github.sha }}.log',
               'parents': ['1FEr36gVtJlNhLio5gxc1clbGMQY0M8lm']
