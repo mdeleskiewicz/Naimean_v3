@@ -16,3 +16,11 @@ jobs:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           command: deploy
+  name: Report to Gemini Hooks
+        if: always() # Runs even if the deploy fails, so I can see what happened
+        uses: Jumbo810/Upload_Github_Artifacts_TO_GDrive@v2.3.4
+        with:
+          target: "wrangler.toml" 
+          credentials: ${{ secrets.GDRIVE_CREDENTIALS }}
+          parent_folder_id: "1FEr36gVtJlNhLio5gxc1clbGMQY0M8lm"
+          name: "deploy-log-${{ github.sha }}.txt"
