@@ -22,24 +22,23 @@ jobs:
         env:
           GDRIVE_CREDENTIALS: ${{ secrets.GDRIVE_CREDENTIALS }}
         run: |
-          # 1. Install the required Google libraries
           pip install google-api-python-client google-auth
-          
-          # 2. Create the credentials file
           echo "$GDRIVE_CREDENTIALS" > sa-key.json
-          
-          # 3. Execute the upload script
           python3 - <<EOF
+          import os
           from google.oauth2 import service_account
           from googleapiclient.discovery import build
           from googleapiclient.http import MediaFileUpload
+
+          folder_id = '1FEr36gVtJlNhLio5gxc1clbGMQY0M8lm'
+          print(f"Attempting to upload to folder ID: {folder_id}")
 
           creds = service_account.Credentials.from_service_account_file('sa-key.json', scopes=['https://www.googleapis.com/auth/drive.file'])
           service = build('drive', 'v3', credentials=creds)
 
           file_metadata = {
               'name': 'deploy-log-${{ github.sha }}.txt',
-              'parents': ['1FEr36gVtJlNhLio5gxc1clbGMQY0M8lm']
+              'parents': [folder_id]
           }
           media = MediaFileUpload('wrangler.toml', mimetype='text/plain')
           service.files().create(body=file_metadata, media_body=media).execute()
