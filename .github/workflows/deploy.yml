@@ -25,21 +25,27 @@ jobs:
           pip install google-api-python-client google-auth
           echo "$GDRIVE_CREDENTIALS" > sa-key.json
           python3 - <<EOF
-          import os
           from google.oauth2 import service_account
           from googleapiclient.discovery import build
           from googleapiclient.http import MediaFileUpload
 
-          folder_id = '1FEr36gVtJlNhLio5gxc1clbGMQY0M8lm'
-          print(f"Attempting to upload to folder ID: {folder_id}")
-
-          creds = service_account.Credentials.from_service_account_file('sa-key.json', scopes=['https://www.googleapis.com/auth/drive.file'])
+          creds = service_account.Credentials.from_service_account_file(
+              'sa-key.json', 
+              scopes=['https://www.googleapis.com/auth/drive.file']
+          )
           service = build('drive', 'v3', credentials=creds)
 
           file_metadata = {
               'name': 'deploy-log-${{ github.sha }}.txt',
-              'parents': [folder_id]
+              'parents': ['1FEr36gVtJlNhLio5gxc1clbGMQY0M8lm']
           }
-          media = MediaFileUpload('wrangler.toml', mimetype='text/plain')
-          service.files().create(body=file_metadata, media_body=media).execute()
+          media = MediaFileUpload('wrangler.toml', mimetype='text/plain', resumable=True)
+          
+          # We use the 'resumable' upload which often handles 
+          # quota attribution differently for Service Accounts.
+          service.files().create(
+              body=file_metadata, 
+              media_body=media,
+              fields='id'
+          ).execute()
           EOF
