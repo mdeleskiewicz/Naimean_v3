@@ -18,8 +18,15 @@ jobs:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
         run: |
-          # Install Wrangler and run the deploy, capturing all output to a file
-          npx wrangler deploy > full-deploy-log.txt 2>&1
+          # Capture output to raw file, then strip ANSI color codes for a clean .log file
+          npx wrangler deploy --color=always > raw-deploy.log 2>&1
+          sed 's/\x1b\[[0-9;]*m//g' raw-deploy.log > full-deploy-log.txt
+          
+          # Append status and link to the log
+          echo "" >> full-deploy-log.txt
+          echo "---------------------------------" >> full-deploy-log.txt
+          echo "Deployment Status: ${{ job.status }}" >> full-deploy-log.txt
+          echo "Workflow Run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}" >> full-deploy-log.txt
 
       - name: Report to Gemini Hooks
         if: always()
@@ -28,12 +35,6 @@ jobs:
           CLIENT_ID: ${{ secrets.GDRIVE_CLIENT_ID }}
           CLIENT_SECRET: ${{ secrets.GDRIVE_CLIENT_SECRET }}
         run: |
-          # Append the job status to the log file we just created
-          echo "" >> full-deploy-log.txt
-          echo "---------------------------------" >> full-deploy-log.txt
-          echo "Deployment Status: ${{ job.status }}" >> full-deploy-log.txt
-          echo "Workflow Run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}" >> full-deploy-log.txt
-          
           pip install google-api-python-client google-auth
           python3 - <<EOF
           import os
@@ -51,8 +52,9 @@ jobs:
           
           service = build('drive', 'v3', credentials=creds)
           
+          # Using .log extension for better Google Drive preview readability
           file_metadata = {
-              'name': 'deploy-log-${{ github.sha }}.txt',
+              'name': 'deploy-log-${{ github.sha }}.log',
               'parents': ['1FEr36gVtJlNhLio5gxc1clbGMQY0M8lm']
           }
           
