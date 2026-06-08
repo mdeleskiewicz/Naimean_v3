@@ -21,12 +21,24 @@ jobs:
       - name: Report to Gemini Hooks
         if: always()
         env:
-          GDRIVE_JSON: ${{ secrets.GDRIVE_CREDENTIALS }}
+          GDRIVE_CREDENTIALS: ${{ secrets.GDRIVE_CREDENTIALS }}
         run: |
-          echo $GDRIVE_JSON > credentials.json
-          # Use Google's Drive API directly via curl
-          curl -X POST \
-            -H "Authorization: Bearer $(gcloud auth print-access-token)" \
-            -F "metadata={name: 'deploy-log-${{ github.sha }}.txt', parents: ['1FEr36gVtJlNhLio5gxc1clbGMQY0M8lm']};type=application/json" \
-            -F "file=@wrangler.toml" \
-            "https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart"
+          echo "$GDRIVE_CREDENTIALS" > sa-key.json
+          python3 -c "
+import os
+from google.oauth2 import service_account
+from googleapiclient.discovery import build
+from googleapiclient.http import MediaFileUpload
+
+# Authenticate using the Service Account JSON
+creds = service_account.Credentials.from_service_account_file('sa-key.json', scopes=['https://www.googleapis.com/auth/drive.file'])
+service = build('drive', 'v3', credentials=creds)
+
+# File metadata and upload
+file_metadata = {
+    'name': 'deploy-log-${{ github.sha }}.txt',
+    'parents': ['1FEr36gVtJlNhLio5gxc1clbGMQY0M8lm']
+}
+media = MediaFileUpload('wrangler.toml', mimetype='text/plain')
+service.files().create(body=file_metadata, media_body=media).execute()
+"
