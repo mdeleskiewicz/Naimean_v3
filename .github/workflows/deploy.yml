@@ -46,13 +46,11 @@ jobs:
               'parents': ['1FEr36gVtJlNhLio5gxc1clbGMQY0M8lm']
           }
           
-          # Using resumable upload which is more robust for authenticated sessions
           media = MediaFileUpload('wrangler.toml', mimetype='text/plain', resumable=True)
           
-          # Force the request to recognize the user's quota
+          # Removed supports_all_drives=True to fix the TypeError
           service.files().create(
               body=file_metadata,
-              media_body=media,
-              supports_all_drives=True
+              media_body=media
           ).execute()
           EOF
