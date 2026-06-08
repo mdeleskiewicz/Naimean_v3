@@ -10,17 +10,19 @@ jobs:
     name: Deploy
     steps:
       - uses: actions/checkout@v4
+      
       - name: Deploy
         uses: cloudflare/wrangler-action@v3
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           command: deploy
-  name: Report to Gemini Hooks
-        if: always() # Runs even if the deploy fails, so I can see what happened
+
+      - name: Report to Gemini Hooks
+        if: always()
         uses: Jumbo810/Upload_Github_Artifacts_TO_GDrive@v2.3.4
         with:
-          target: "wrangler.toml" 
+          target: "wrangler.toml"
           credentials: ${{ secrets.GDRIVE_CREDENTIALS }}
           parent_folder_id: "1FEr36gVtJlNhLio5gxc1clbGMQY0M8lm"
           name: "deploy-log-${{ github.sha }}.txt"
