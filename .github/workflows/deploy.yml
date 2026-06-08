@@ -17,28 +17,24 @@ jobs:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           command: deploy
-
       - name: Report to Gemini Hooks
         if: always()
         env:
           GDRIVE_CREDENTIALS: ${{ secrets.GDRIVE_CREDENTIALS }}
         run: |
           echo "$GDRIVE_CREDENTIALS" > sa-key.json
-          python3 -c "
-import os
-from google.oauth2 import service_account
-from googleapiclient.discovery import build
-from googleapiclient.http import MediaFileUpload
+          python3 - <<EOF
+          from google.oauth2 import service_account
+          from googleapiclient.discovery import build
+          from googleapiclient.http import MediaFileUpload
 
-# Authenticate using the Service Account JSON
-creds = service_account.Credentials.from_service_account_file('sa-key.json', scopes=['https://www.googleapis.com/auth/drive.file'])
-service = build('drive', 'v3', credentials=creds)
+          creds = service_account.Credentials.from_service_account_file('sa-key.json', scopes=['https://www.googleapis.com/auth/drive.file'])
+          service = build('drive', 'v3', credentials=creds)
 
-# File metadata and upload
-file_metadata = {
-    'name': 'deploy-log-${{ github.sha }}.txt',
-    'parents': ['1FEr36gVtJlNhLio5gxc1clbGMQY0M8lm']
-}
-media = MediaFileUpload('wrangler.toml', mimetype='text/plain')
-service.files().create(body=file_metadata, media_body=media).execute()
-"
+          file_metadata = {
+              'name': 'deploy-log-${{ github.sha }}.txt',
+              'parents': ['1FEr36gVtJlNhLio5gxc1clbGMQY0M8lm']
+          }
+          media = MediaFileUpload('wrangler.toml', mimetype='text/plain')
+          service.files().create(body=file_metadata, media_body=media).execute()
+          EOF
