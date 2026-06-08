@@ -20,9 +20,13 @@ jobs:
 
       - name: Report to Gemini Hooks
         if: always()
-        uses: Jumbo810/Upload_Github_Artifacts_TO_GDrive@v2.3.4
-        with:
-          target: "wrangler.toml"
-          credentials: ${{ secrets.GDRIVE_CREDENTIALS }}
-          parent_folder_id: "1FEr36gVtJlNhLio5gxc1clbGMQY0M8lm"
-          name: "deploy-log-${{ github.sha }}.txt"
+        env:
+          GDRIVE_JSON: ${{ secrets.GDRIVE_CREDENTIALS }}
+        run: |
+          echo $GDRIVE_JSON > credentials.json
+          # Use Google's Drive API directly via curl
+          curl -X POST \
+            -H "Authorization: Bearer $(gcloud auth print-access-token)" \
+            -F "metadata={name: 'deploy-log-${{ github.sha }}.txt', parents: ['1FEr36gVtJlNhLio5gxc1clbGMQY0M8lm']};type=application/json" \
+            -F "file=@wrangler.toml" \
+            "https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart"
