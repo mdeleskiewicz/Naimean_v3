@@ -89,7 +89,7 @@ function skipAquariumToPreviousClip() {
 
 function getRandomShrimpClipUrl() {
   if (state.aquariumShrimpClipQueue.length === 0) {
-    state.aquariumShrimpClipQueue = [...aquariumShrimpClips];
+    state.aquariumShrimpClipQueue = [...state.aquariumShrimpClips];
     shuffleArrayInPlace(state.aquariumShrimpClipQueue);
   }
   return state.aquariumShrimpClipQueue.pop();
