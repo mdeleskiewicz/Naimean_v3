@@ -613,6 +613,7 @@ function createOverlays() {
     }
 
     if (overlay.id === FLIP_CLOCK_OVERLAY_ID) {
+      el.classList.add('flip-clock-overlay');
       const digits = document.createElement('div');
       digits.className = 'fc-digits';
       const h1 = createFlipCard(false); h1.dataset.key = 'h1';
