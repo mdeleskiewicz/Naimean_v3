@@ -40,3 +40,24 @@ test('aquarium overlay owns the big-screen video overlay', () => {
     'Expected the shrimp video overlay to be created inside the aquarium overlay',
   );
 });
+
+test('flip clock overlay includes required style classes', () => {
+  const overlaysJsPath = path.join(repoRoot, 'public', 'assets', 'js', 'ui', 'overlays.js');
+  const source = fs.readFileSync(overlaysJsPath, 'utf8');
+  const flipClockBlock = getOverlayBlock(
+    source,
+    "if (overlay.id === FLIP_CLOCK_OVERLAY_ID) {",
+    "if (BIG_TV_FULLSCREEN_OVERLAY_IDS.has(overlay.id)) {",
+  );
+
+  assert.match(
+    flipClockBlock,
+    /el\.classList\.add\('flip-clock-overlay'\);/,
+    'Expected flip clock overlay container to include the flip-clock-overlay class',
+  );
+  assert.match(
+    flipClockBlock,
+    /dateBadge\.className = 'rc-date-badge';/,
+    'Expected flip clock date badge to include the rc-date-badge class',
+  );
+});
