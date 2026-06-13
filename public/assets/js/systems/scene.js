@@ -41,7 +41,7 @@ import { clamp, isTextEntryTarget, measureSyncSection, scheduleNonCriticalTask, 
 import { createOverlays } from '../ui/overlays.js';
 import { consumeDiscordLoginFlowState, syncDiscordAuthBodyClass, syncDiscordButtonUi, syncLoginOverlayUi } from './login.js';
 import { loadCommodorePowerState, syncStoredCommodorePowerState, handlePageShow, cancelMonitorPowerTimeouts } from './monitors.js';
-import { playWrongAudio } from './cornerScore.js';
+import { playWrongAudio, unlockCornerScoreScoringAudioFromGesture } from './cornerScore.js';
 import { adjustDvdSpeed, stopBigTvDvdAnimation } from './dvd.js';
 import { stopRadioTuningLoopPlayback } from './flipClock.js';
 import { createHotspots, getRuntimeHotspotById, syncControlledOverlaysFromHotspots, consumeSaveResultFlash, hydrateHotspotsFromServer, hydrateNonCriticalSceneData, refreshDebugObjectActions, refreshDebugObjectSelectOptions, setHotspotDebugLockState, getSelectedDebugHotspotElement, saveDenUrlOverride, saveHotspots, hideSaveModal, encodeDebugSavePassword, hasMatchingDebugSaveCipher } from './hotspots.js';
@@ -277,6 +277,7 @@ function applyDebugEdit(event) {
 }
 
 function onPointerDown(event) {
+  unlockCornerScoreScoringAudioFromGesture();
   if (state.activePointerId !== null) return;
   stopMomentum();
   if (document.body.classList.contains('debug')) {
@@ -348,6 +349,7 @@ function onPointerUp(event) {
 }
 
 function onKeyDown(event) {
+  unlockCornerScoreScoringAudioFromGesture();
   const debugComboPressed = event.code === 'KeyD' && (event.ctrlKey || event.metaKey) && event.shiftKey;
   if (event.code === 'Backquote' || debugComboPressed) toggleDebugMode();
   const isIncreaseDvdSpeedKey = event.key === '+' || event.code === 'NumpadAdd';

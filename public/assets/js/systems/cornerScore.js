@@ -262,6 +262,19 @@ function submitCornerScoreInitials() {
   });
 }
 
+function unlockCornerScoreScoringAudioFromGesture() {
+  const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+  if (!AudioContextClass) {
+    return;
+  }
+  if (!state.cornerScoreCoinAudioContext) {
+    state.cornerScoreCoinAudioContext = new AudioContextClass();
+  }
+  if (state.cornerScoreCoinAudioContext.state === 'suspended') {
+    void state.cornerScoreCoinAudioContext.resume().catch(() => {});
+  }
+}
+
 function playRightMonitorScoringNoise() {
   const AudioContextClass = window.AudioContext || window.webkitAudioContext;
   if (!AudioContextClass) {
@@ -278,13 +291,9 @@ function playRightMonitorScoringNoise() {
     return;
   }
 
-  if (!state.cornerScoreCoinAudioContext) {
-    state.cornerScoreCoinAudioContext = new AudioContextClass();
-  }
-
   const audioContext = state.cornerScoreCoinAudioContext;
-  if (audioContext.state === 'suspended') {
-    void audioContext.resume().catch(() => {});
+  if (!audioContext || audioContext.state !== 'running') {
+    return;
   }
   const startTime = audioContext.currentTime + 0.005;
   const stopTime = startTime + 0.17;
@@ -321,4 +330,4 @@ function activateRightMonitorCornerScoreMode() {
   state._cb.syncDvdScreensaverState?.();
 }
 
-export { sanitizeCornerScoreInitialsInput, playWrongAudio, hideCornerScoreStatus, showCornerScoreStatus, clearDvdMissIndicatorTimeout, hideDvdMissIndicator, hideAllDvdMissIndicators, showDvdMissIndicator, syncCornerScoreInitialsSubmitState, hideCornerScoreInitialsPrompt, showCornerScoreInitialsPrompt, syncCornerScoreInitialsPromptVisibility, renderCornerScore, setCornerScore, setCornerScoreHighScore, loadCornerScoreFromServer, queueCornerScoreUpdate, submitCornerScoreInitials, playRightMonitorScoringNoise, activateRightMonitorCornerScoreMode };
+export { sanitizeCornerScoreInitialsInput, playWrongAudio, hideCornerScoreStatus, showCornerScoreStatus, clearDvdMissIndicatorTimeout, hideDvdMissIndicator, hideAllDvdMissIndicators, showDvdMissIndicator, syncCornerScoreInitialsSubmitState, hideCornerScoreInitialsPrompt, showCornerScoreInitialsPrompt, syncCornerScoreInitialsPromptVisibility, renderCornerScore, setCornerScore, setCornerScoreHighScore, loadCornerScoreFromServer, queueCornerScoreUpdate, submitCornerScoreInitials, unlockCornerScoreScoringAudioFromGesture, playRightMonitorScoringNoise, activateRightMonitorCornerScoreMode };
