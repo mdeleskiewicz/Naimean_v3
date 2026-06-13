@@ -1,6 +1,17 @@
 name = "naimeav3"
 main = "src/worker.js"
-compatibility_date = "2026-06-07"
+compatibility_date = "2026-05-18"
+compatibility_flags = ["nodejs_compat"]
 
 [assets]
 directory = "public"
+binding = "ASSETS"
+run_worker_first = ["/*"]
+
+[[durable_objects.bindings]]
+name = "HOTSPOT_STORE"
+class_name = "HotspotStore"
+
+[[migrations]]
+tag = "v1"
+new_sqlite_classes = ["HotspotStore"]
