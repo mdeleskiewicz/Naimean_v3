@@ -89,6 +89,55 @@ function createAshtraySmokeEffect() {
   el.style.top = `${Math.round(smokeControlSpot?.y ?? (ASHTRAY_SMOKE_Y - smokeRiseDistance + SMOKE_SOURCE_VERTICAL_OFFSET))}px`;
   el.style.width = `${Math.max(MIN_HOTSPOT_SIZE, Math.round(smokeControlSpot?.w ?? ASHTRAY_SMOKE_DEFAULT_WIDTH))}px`;
   el.style.height = `${smokeHeight}px`;
+  el.style.setProperty('--smoke-rise-distance', `${smokeRiseDistance}px`);
+  el.style.setProperty('--smoke-tail-height', `${ASHTRAY_SMOKE_TAIL_HEIGHT}px`);
+
+  const wisps = [
+    {
+      className: 'ashtray-smoke-wisp',
+      vars: {
+        '--smoke-start-x': '-8px',
+        '--smoke-curl-a': '16px',
+        '--smoke-curl-b': '-22px',
+        '--smoke-drift-x': '34px',
+        '--smoke-curl-angle': '24deg',
+        '--smoke-duration': '10.6s',
+        '--smoke-delay': '0s'
+      }
+    },
+    {
+      className: 'ashtray-smoke-wisp ashtray-smoke-wisp-swirl',
+      vars: {
+        '--smoke-start-x': '4px',
+        '--smoke-curl-a': '-18px',
+        '--smoke-curl-b': '24px',
+        '--smoke-drift-x': '-28px',
+        '--smoke-curl-angle': '-28deg',
+        '--smoke-duration': '11.4s',
+        '--smoke-delay': '1.3s'
+      }
+    },
+    {
+      className: 'ashtray-smoke-wisp ashtray-smoke-wisp-depth',
+      vars: {
+        '--smoke-start-x': '14px',
+        '--smoke-curl-a': '22px',
+        '--smoke-curl-b': '-18px',
+        '--smoke-drift-x': '18px',
+        '--smoke-curl-angle': '20deg',
+        '--smoke-duration': '12.8s',
+        '--smoke-delay': '2.2s'
+      }
+    }
+  ];
+  wisps.forEach(({ className, vars }) => {
+    const wisp = document.createElement('span');
+    wisp.className = className;
+    Object.entries(vars).forEach(([name, value]) => {
+      wisp.style.setProperty(name, value);
+    });
+    el.appendChild(wisp);
+  });
   dom.effectsLayer.appendChild(el);
   state.overlayElementsById.set(ASHTRAY_SMOKE_EFFECT_ID, el);
 }
@@ -105,6 +154,12 @@ function createAshtrayCigaretteEffect() {
   el.style.top = `${Math.round(spot?.y ?? ASHTRAY_CIGARETTE_DEFAULT_BOUNDS.y)}px`;
   el.style.width = `${Math.max(MIN_HOTSPOT_SIZE, Math.round(spot?.w ?? ASHTRAY_CIGARETTE_DEFAULT_BOUNDS.w))}px`;
   el.style.height = `${Math.max(MIN_HOTSPOT_SIZE, Math.round(spot?.h ?? ASHTRAY_CIGARETTE_DEFAULT_BOUNDS.h))}px`;
+  const cigarette = document.createElement('span');
+  cigarette.className = 'ashtray-cigarette';
+  const ember = document.createElement('span');
+  ember.className = 'ashtray-cigarette-ember';
+  cigarette.appendChild(ember);
+  el.appendChild(cigarette);
   dom.effectsLayer.appendChild(el);
   state.overlayElementsById.set(ASHTRAY_CIGARETTE_EFFECT_ID, el);
 }
