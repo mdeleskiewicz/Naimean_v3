@@ -59,7 +59,9 @@ export const WHITEBOARD_HOTSPOT_URLS = Object.freeze({
   whiteboard: MICROSOFT_WHITEBOARD_URL,
   'rca-board': MICROSOFT_WHITEBOARD_URL,
   'rca-apps': 'https://www.naimean.com',
+  rca_apps: 'https://www.naimean.com',
   'cap-ex': 'https://app.smartsheet.com/b/form/70b07591b76a4289bc6f5d5e1aabac91',
+  'cap-ex_totals': 'https://app.smartsheet.com/b/form/70b07591b76a4289bc6f5d5e1aabac91',
   'snow-tickets': SERVICE_NOW_ASSIGNED_WORK_URL,
   'ntst-cases':
     'https://support.netsmartconnect.com/solutionsupport?id=ntst_csm_cases&table=sn_customerservice_case&view=app_support&fixed_query=active%3Dtrue%5Econtact%3Djavascript%3Ags.getUserID()&o=sys_updated_on&d=desc',
@@ -70,6 +72,7 @@ export const WHITEBOARD_HOTSPOT_URLS = Object.freeze({
 });
 export const WHITEBOARD_TASK_HOTSPOTS = [
   { id: 'cap-ex', label: 'Cap-Ex', x: 772, y: 462, w: 402, h: 120 },
+  { id: 'cap-ex_totals', label: 'Cap-Ex Totals', x: 772, y: 462, w: 402, h: 120 },
   { id: 'snow-tickets', label: 'SNOW Tickets', x: 772, y: 614, w: 402, h: 120 },
   { id: 'ntst-cases', label: 'NTST Cases', x: 772, y: 766, w: 402, h: 120 },
   { id: 'jira-board', label: 'JIRA Board', x: 772, y: 918, w: 402, h: 120 },
@@ -79,6 +82,7 @@ export const WHITEBOARD_TASK_HOTSPOTS = [
 export const WHITEBOARD_HOTSPOT_IDS = new Set([
   'rca-board',
   'rca-apps',
+  'rca_apps',
   'whiteboard',
   ...WHITEBOARD_TASK_HOTSPOTS.map((spot) => spot.id)
 ]);
@@ -378,6 +382,7 @@ export const defaultHotspots = [
   { id: NOAHS_ARCADE_HOTSPOT_ID, x: 880, y: 320, w: 2050, h: 1280 },
   { id: 'aquarium', x: 2680, y: 445, w: 455, h: 729 },
   { id: 'rca-board', x: 738, y: 380, w: 470, h: 1060 },
+  { id: 'rca_apps', x: 145, y: 195, w: 145, h: 145 },
   { id: WHITEBOARD_CORNER_SCORE_CONTROL_ID, x: 785, y: 456, w: 355, h: 260 },
   { id: 'chapel', x: 3840, y: 0, w: 3840, h: 2160 },
   ...WHITEBOARD_TASK_HOTSPOTS.map(({ id, x, y, w, h }) => ({ id, x, y, w, h })),
