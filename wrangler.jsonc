@@ -21,6 +21,7 @@
     "DISCORD_CLIENT_ID": "1495879141638275213",
     "DISCORD_GUILD_ID": "REQUIRED_SET_DISCORD_GUILD_ID",
     "DISCORD_ALLOWED_ROLE_IDS": "comma-separated-role-ids-or-leave-empty-for-members-only"
+    "CLOUDFLARE_API_TOKEN": "INSERTTOKENCODEHERE"
   },
   "durable_objects": {
     "bindings": [
