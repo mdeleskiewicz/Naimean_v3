@@ -553,8 +553,10 @@ function createOverlays() {
       windowEl.className = 'monitor-screen-window right-monitor-screen-window';
       state.rightMonitorScreenWindowEl = windowEl;
       state.discordJoinButtonEl = document.createElement('button');
+      state.discordJoinButtonEl.className = 'join-discord-button';
       state.discordJoinButtonEl.type = 'button';
       state.discordButtonImgEl = document.createElement('img');
+      state.discordButtonImgEl.className = 'join-discord-button-image';
       state.discordButtonImgEl.src = DISCORD_BUTTON_IMAGE_URL;
       state.discordJoinButtonEl.appendChild(state.discordButtonImgEl);
       windowEl.appendChild(state.discordJoinButtonEl);
