@@ -553,8 +553,10 @@ function createOverlays() {
       windowEl.className = 'monitor-screen-window right-monitor-screen-window';
       state.rightMonitorScreenWindowEl = windowEl;
       state.discordJoinButtonEl = document.createElement('button');
+      state.discordJoinButtonEl.className = 'join-discord-button';
       state.discordJoinButtonEl.type = 'button';
       state.discordButtonImgEl = document.createElement('img');
+      state.discordButtonImgEl.className = 'join-discord-button-image';
       state.discordButtonImgEl.src = DISCORD_BUTTON_IMAGE_URL;
       state.discordJoinButtonEl.appendChild(state.discordButtonImgEl);
       windowEl.appendChild(state.discordJoinButtonEl);
@@ -587,6 +589,7 @@ function createOverlays() {
       state.rightMonitorShrimpLogoOverlayEl = document.createElement('div');
       state.rightMonitorShrimpLogoOverlayEl.className = 'right-monitor-shrimp-logo-overlay';
       const shrimpLogoImg = document.createElement('img');
+      shrimpLogoImg.className = 'right-monitor-shrimp-logo-image';
       shrimpLogoImg.src = STARSHRIMP_LOGO_IMAGE_URL;
       state.rightMonitorShrimpLogoOverlayEl.appendChild(shrimpLogoImg);
       windowEl.appendChild(state.rightMonitorShrimpLogoOverlayEl);
