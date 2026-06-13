@@ -595,6 +595,7 @@ function createOverlays() {
       state.rightMonitorShrimpLogoOverlayEl = document.createElement('div');
       state.rightMonitorShrimpLogoOverlayEl.className = 'right-monitor-shrimp-logo-overlay';
       const shrimpLogoImg = document.createElement('img');
+      shrimpLogoImg.className = 'right-monitor-shrimp-logo-image';
       shrimpLogoImg.src = STARSHRIMP_LOGO_IMAGE_URL;
       state.rightMonitorShrimpLogoOverlayEl.appendChild(shrimpLogoImg);
       windowEl.appendChild(state.rightMonitorShrimpLogoOverlayEl);
