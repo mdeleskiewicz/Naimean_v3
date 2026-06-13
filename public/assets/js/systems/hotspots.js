@@ -41,6 +41,7 @@ import {
   WHITEBOARD_HOTSPOT_URLS,
   LEFT_MONITOR_SIDE_FRAME_CONTROL_ID,
   RIGHT_MONITOR_SIDE_FRAME_CONTROL_ID,
+  RIGHT_MONITOR_OVERLAY_CONTROL_ID,
   defaultHotspots,
   overlayDefaults
 } from '../core/constants.js';
@@ -53,6 +54,12 @@ import { fetchDiscordAuthState, syncDiscordAuthBodyClass, syncDiscordButtonUi } 
 
 const DEBUG_SAVE_PASSWORD_KEY = 'naimean-debug';
 const DEBUG_SAVE_PASSWORD_CIPHER = [90, 87, 91, 84, 85];
+const DEN_URL_OVERRIDE_ALIAS_IDS = new Map([
+  ['rca-apps', ['rca_apps']],
+  ['rca_apps', ['rca-apps']],
+  ['cap-ex', ['cap-ex_totals']],
+  ['cap-ex_totals', ['cap-ex']]
+]);
 
 function isFiniteNumber(value) {
   return typeof value === 'number' && Number.isFinite(value);
@@ -555,7 +562,12 @@ function saveDenUrlOverride(hotspotId, url) {
 }
 
 function getHotspotEffectiveUrl(hotspotId) {
-  return state.denUrlOverrides[hotspotId] || getHotspotDefaultUrl(hotspotId);
+  if (state.denUrlOverrides[hotspotId]) return state.denUrlOverrides[hotspotId];
+  const aliasIds = DEN_URL_OVERRIDE_ALIAS_IDS.get(hotspotId) || [];
+  for (const aliasId of aliasIds) {
+    if (state.denUrlOverrides[aliasId]) return state.denUrlOverrides[aliasId];
+  }
+  return getHotspotDefaultUrl(hotspotId);
 }
 
 function refreshDebugObjectActions() {
@@ -702,7 +714,7 @@ function createHotspots(hotspotList) {
       if (WHITEBOARD_HOTSPOT_IDS.has(spot.id)) return void window.open(getHotspotEffectiveUrl(spot.id) || WHITEBOARD_HOTSPOT_URLS[spot.id] || WHITEBOARD_HOTSPOT_URLS.whiteboard, '_blank', 'noopener,noreferrer');
       if (AQUARIUM_HOTSPOT_IDS.has(spot.id)) return void state._cb.playAquariumHotspotSequence?.();
       if (NEDRY_GATE_TRIGGER_HOTSPOT_IDS.has(spot.id)) {
-        if (spot.id === 'right-monitor' && state._cb.isRightMonitorShrimpLogoActive?.()) return void state._cb.transitionAquariumToDvdCornerScoreFromRightMonitor?.();
+        if (spot.id === RIGHT_MONITOR_OVERLAY_CONTROL_ID && state._cb.isRightMonitorShrimpLogoActive?.()) return void state._cb.transitionAquariumToDvdCornerScoreFromRightMonitor?.();
         if (state._cb.isAquariumPlaybackSequenceActive?.()) {
           const didReplay = state._cb.replayAquariumPlaybackSequenceFromStatic?.();
           if (didReplay) return;

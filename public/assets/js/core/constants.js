@@ -59,7 +59,9 @@ export const WHITEBOARD_HOTSPOT_URLS = Object.freeze({
   whiteboard: MICROSOFT_WHITEBOARD_URL,
   'rca-board': MICROSOFT_WHITEBOARD_URL,
   'rca-apps': 'https://www.naimean.com',
+  rca_apps: 'https://www.naimean.com',
   'cap-ex': 'https://app.smartsheet.com/b/form/70b07591b76a4289bc6f5d5e1aabac91',
+  'cap-ex_totals': 'https://app.smartsheet.com/b/form/70b07591b76a4289bc6f5d5e1aabac91',
   'snow-tickets': SERVICE_NOW_ASSIGNED_WORK_URL,
   'ntst-cases':
     'https://support.netsmartconnect.com/solutionsupport?id=ntst_csm_cases&table=sn_customerservice_case&view=app_support&fixed_query=active%3Dtrue%5Econtact%3Djavascript%3Ags.getUserID()&o=sys_updated_on&d=desc',
@@ -69,7 +71,9 @@ export const WHITEBOARD_HOTSPOT_URLS = Object.freeze({
     'https://recoverycoa.service-now.com/now/nav/ui/classic/params/target/change_request_list.do%3Fsysparm_userpref_module%3Dcd579a82c0a8016400aa77d97a4d70a8%26sysparm_query%3Dactive%253Dtrue%255EEQ%26active%3Dtrue'
 });
 export const WHITEBOARD_TASK_HOTSPOTS = [
+  { id: 'rca_apps', label: 'RCA Apps', x: 145, y: 195, w: 145, h: 145 },
   { id: 'cap-ex', label: 'Cap-Ex', x: 772, y: 462, w: 402, h: 120 },
+  { id: 'cap-ex_totals', label: 'Cap-Ex Totals', x: 772, y: 462, w: 402, h: 120 },
   { id: 'snow-tickets', label: 'SNOW Tickets', x: 772, y: 614, w: 402, h: 120 },
   { id: 'ntst-cases', label: 'NTST Cases', x: 772, y: 766, w: 402, h: 120 },
   { id: 'jira-board', label: 'JIRA Board', x: 772, y: 918, w: 402, h: 120 },
@@ -79,6 +83,7 @@ export const WHITEBOARD_TASK_HOTSPOTS = [
 export const WHITEBOARD_HOTSPOT_IDS = new Set([
   'rca-board',
   'rca-apps',
+  'rca_apps',
   'whiteboard',
   ...WHITEBOARD_TASK_HOTSPOTS.map((spot) => spot.id)
 ]);
@@ -89,7 +94,7 @@ export const HOTSPOT_READABLE_LABELS = new Map([
 export const AQUARIUM_HOTSPOT_IDS = new Set(['aquarium']);
 export const NEDRY_GATE_TRIGGER_HOTSPOT_IDS = new Set([
   'overlay-big-tv-control',
-  'right-monitor'
+  'overlay-right-monitor-control'
 ]);
 export const DEFAULT_BIG_TV_RIGHT_MONITOR_OVERLAY_STATE = 'blue_discord';
 export const BIG_TV_RIGHT_MONITOR_OVERLAY_CORNER_SCORE_STATE = 'corner_score';
