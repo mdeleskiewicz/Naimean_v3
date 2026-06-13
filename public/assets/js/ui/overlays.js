@@ -643,6 +643,7 @@ function createOverlays() {
       const m1 = createFlipCard(false); m1.dataset.key = 'm1';
       const m2 = createFlipCard(false); m2.dataset.key = 'm2';
       const dateBadge = document.createElement('div');
+      dateBadge.className = 'rc-date-badge';
       dateBadge.dataset.key = 'date-badge';
       digits.append(h1, h2, m1, m2, dateBadge);
       el.appendChild(digits);
