@@ -71,6 +71,7 @@ export const WHITEBOARD_HOTSPOT_URLS = Object.freeze({
     'https://recoverycoa.service-now.com/now/nav/ui/classic/params/target/change_request_list.do%3Fsysparm_userpref_module%3Dcd579a82c0a8016400aa77d97a4d70a8%26sysparm_query%3Dactive%253Dtrue%255EEQ%26active%3Dtrue'
 });
 export const WHITEBOARD_TASK_HOTSPOTS = [
+  { id: 'rca_apps', label: 'RCA Apps', x: 145, y: 195, w: 145, h: 145 },
   { id: 'cap-ex', label: 'Cap-Ex', x: 772, y: 462, w: 402, h: 120 },
   { id: 'cap-ex_totals', label: 'Cap-Ex Totals', x: 772, y: 462, w: 402, h: 120 },
   { id: 'snow-tickets', label: 'SNOW Tickets', x: 772, y: 614, w: 402, h: 120 },
@@ -93,7 +94,7 @@ export const HOTSPOT_READABLE_LABELS = new Map([
 export const AQUARIUM_HOTSPOT_IDS = new Set(['aquarium']);
 export const NEDRY_GATE_TRIGGER_HOTSPOT_IDS = new Set([
   'overlay-big-tv-control',
-  'right-monitor'
+  'overlay-right-monitor-control'
 ]);
 export const DEFAULT_BIG_TV_RIGHT_MONITOR_OVERLAY_STATE = 'blue_discord';
 export const BIG_TV_RIGHT_MONITOR_OVERLAY_CORNER_SCORE_STATE = 'corner_score';
@@ -382,7 +383,6 @@ export const defaultHotspots = [
   { id: NOAHS_ARCADE_HOTSPOT_ID, x: 880, y: 320, w: 2050, h: 1280 },
   { id: 'aquarium', x: 2680, y: 445, w: 455, h: 729 },
   { id: 'rca-board', x: 738, y: 380, w: 470, h: 1060 },
-  { id: 'rca_apps', x: 145, y: 195, w: 145, h: 145 },
   { id: WHITEBOARD_CORNER_SCORE_CONTROL_ID, x: 785, y: 456, w: 355, h: 260 },
   { id: 'chapel', x: 3840, y: 0, w: 3840, h: 2160 },
   ...WHITEBOARD_TASK_HOTSPOTS.map(({ id, x, y, w, h }) => ({ id, x, y, w, h })),

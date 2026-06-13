@@ -553,24 +553,44 @@ function createOverlays() {
       windowEl.className = 'monitor-screen-window right-monitor-screen-window';
       state.rightMonitorScreenWindowEl = windowEl;
       state.discordJoinButtonEl = document.createElement('button');
+      state.discordJoinButtonEl.className = 'join-discord-button';
       state.discordJoinButtonEl.type = 'button';
       state.discordButtonImgEl = document.createElement('img');
+      state.discordButtonImgEl.className = 'join-discord-button-image';
       state.discordButtonImgEl.src = DISCORD_BUTTON_IMAGE_URL;
       state.discordJoinButtonEl.appendChild(state.discordButtonImgEl);
       windowEl.appendChild(state.discordJoinButtonEl);
       state.rightMonitorCornerScoreOverlayEl = document.createElement('div');
       state.rightMonitorCornerScoreOverlayEl.className = 'right-monitor-corner-score-overlay';
+      const rightMonitorCornerScoreLabelEl = document.createElement('p');
+      rightMonitorCornerScoreLabelEl.className = 'right-monitor-corner-score-label';
+      rightMonitorCornerScoreLabelEl.textContent = 'Corner Score';
       state.rightMonitorCornerScoreValueEl = document.createElement('p');
-      state.rightMonitorCornerScoreOverlayEl.appendChild(state.rightMonitorCornerScoreValueEl);
+      state.rightMonitorCornerScoreValueEl.className = 'right-monitor-corner-score-value';
       state.bigTvCornerScoreInitialsPromptEl = document.createElement('form');
+      state.bigTvCornerScoreInitialsPromptEl.className = 'big-tv-corner-score-initials-prompt';
+      state.bigTvCornerScoreInitialsPromptEl.setAttribute('aria-hidden', 'true');
+      const initialsLabelEl = document.createElement('label');
+      initialsLabelEl.className = 'big-tv-corner-score-initials-label';
+      initialsLabelEl.textContent = 'Initials';
       state.bigTvCornerScoreInitialsInputEl = document.createElement('input');
+      state.bigTvCornerScoreInitialsInputEl.className = 'big-tv-corner-score-initials-input';
+      state.bigTvCornerScoreInitialsInputEl.type = 'text';
+      state.bigTvCornerScoreInitialsInputEl.autocomplete = 'off';
+      state.bigTvCornerScoreInitialsInputEl.autocapitalize = 'characters';
+      state.bigTvCornerScoreInitialsInputEl.maxLength = 3;
+      state.bigTvCornerScoreInitialsInputEl.setAttribute('aria-label', 'Corner score initials');
       state.bigTvCornerScoreInitialsInputEl.addEventListener('input', () => {
         state.bigTvCornerScoreInitialsInputEl.value = sanitizeCornerScoreInitialsInput(state.bigTvCornerScoreInitialsInputEl.value);
         syncCornerScoreInitialsSubmitState();
       });
       state.bigTvCornerScoreInitialsSubmitButtonEl = document.createElement('button');
       state.bigTvCornerScoreInitialsSubmitButtonEl.type = 'submit';
-      state.bigTvCornerScoreInitialsPromptEl.append(state.bigTvCornerScoreInitialsInputEl, state.bigTvCornerScoreInitialsSubmitButtonEl);
+      state.bigTvCornerScoreInitialsSubmitButtonEl.className = 'big-tv-corner-score-initials-submit';
+      state.bigTvCornerScoreInitialsSubmitButtonEl.textContent = 'Save';
+      initialsLabelEl.appendChild(state.bigTvCornerScoreInitialsInputEl);
+      state.bigTvCornerScoreInitialsPromptEl.append(initialsLabelEl, state.bigTvCornerScoreInitialsSubmitButtonEl);
+      state.rightMonitorCornerScoreOverlayEl.append(rightMonitorCornerScoreLabelEl, state.rightMonitorCornerScoreValueEl);
       state.rightMonitorCornerScoreOverlayEl.appendChild(state.bigTvCornerScoreInitialsPromptEl);
       renderCornerScore();
       syncCornerScoreInitialsPromptVisibility();
@@ -587,6 +607,7 @@ function createOverlays() {
       state.rightMonitorShrimpLogoOverlayEl = document.createElement('div');
       state.rightMonitorShrimpLogoOverlayEl.className = 'right-monitor-shrimp-logo-overlay';
       const shrimpLogoImg = document.createElement('img');
+      shrimpLogoImg.className = 'right-monitor-shrimp-logo-image';
       shrimpLogoImg.src = STARSHRIMP_LOGO_IMAGE_URL;
       state.rightMonitorShrimpLogoOverlayEl.appendChild(shrimpLogoImg);
       windowEl.appendChild(state.rightMonitorShrimpLogoOverlayEl);
@@ -604,15 +625,37 @@ function createOverlays() {
     }
 
     if (overlay.id === WHITEBOARD_CORNER_SCORE_OVERLAY_ID) {
+      el.classList.add('whiteboard-corner-score-overlay');
+      const whiteboardStackEl = document.createElement('div');
+      whiteboardStackEl.className = 'whiteboard-corner-score-stack';
+      const whiteboardLineTopEl = document.createElement('p');
+      whiteboardLineTopEl.className = 'whiteboard-corner-score-line';
+      whiteboardLineTopEl.textContent = 'High';
+      const whiteboardLineBottomEl = document.createElement('p');
+      whiteboardLineBottomEl.className = 'whiteboard-corner-score-line';
+      whiteboardLineBottomEl.textContent = 'Score';
       state.whiteboardCornerScoreValueEl = document.createElement('p');
+      state.whiteboardCornerScoreValueEl.className = 'whiteboard-corner-score-value';
       state.whiteboardCornerScoreInitialsGroupEl = document.createElement('div');
+      state.whiteboardCornerScoreInitialsGroupEl.className = 'whiteboard-corner-score-initials-group';
+      const whiteboardCornerScoreInitialsTitleEl = document.createElement('p');
+      whiteboardCornerScoreInitialsTitleEl.className = 'whiteboard-corner-score-initials-title';
+      whiteboardCornerScoreInitialsTitleEl.textContent = 'Initials';
       state.whiteboardCornerScoreInitialsEl = document.createElement('p');
-      state.whiteboardCornerScoreInitialsGroupEl.appendChild(state.whiteboardCornerScoreInitialsEl);
-      el.append(state.whiteboardCornerScoreValueEl, state.whiteboardCornerScoreInitialsGroupEl);
+      state.whiteboardCornerScoreInitialsEl.className = 'whiteboard-corner-score-initials';
+      state.whiteboardCornerScoreInitialsGroupEl.append(whiteboardCornerScoreInitialsTitleEl, state.whiteboardCornerScoreInitialsEl);
+      whiteboardStackEl.append(
+        whiteboardLineTopEl,
+        whiteboardLineBottomEl,
+        state.whiteboardCornerScoreValueEl,
+        state.whiteboardCornerScoreInitialsGroupEl
+      );
+      el.appendChild(whiteboardStackEl);
       renderCornerScore();
     }
 
     if (overlay.id === FLIP_CLOCK_OVERLAY_ID) {
+      el.classList.add('flip-clock-overlay');
       const digits = document.createElement('div');
       digits.className = 'fc-digits';
       const h1 = createFlipCard(false); h1.dataset.key = 'h1';
@@ -620,6 +663,7 @@ function createOverlays() {
       const m1 = createFlipCard(false); m1.dataset.key = 'm1';
       const m2 = createFlipCard(false); m2.dataset.key = 'm2';
       const dateBadge = document.createElement('div');
+      dateBadge.className = 'rc-date-badge';
       dateBadge.dataset.key = 'date-badge';
       digits.append(h1, h2, m1, m2, dateBadge);
       el.appendChild(digits);

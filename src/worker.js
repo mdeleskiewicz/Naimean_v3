@@ -261,15 +261,22 @@ const DEFAULT_HOTSPOTS = [
   { id: 'noahs-arcade', x: 880, y: 320, w: 2050, h: 1280 },
   { id: 'aquarium', x: 2680, y: 445, w: 455, h: 729 },
   { id: 'rca-board', x: 738, y: 380, w: 470, h: 1060 },
-  { id: 'rca_apps', x: 145, y: 195, w: 145, h: 145 },
   { id: 'overlay-whiteboard-corner-score-control', x: 785, y: 456, w: 355, h: 260 },
   { id: 'chapel', x: 3840, y: 0, w: 3840, h: 2160 },
-  { id: 'cap-ex_totals', x: 772, y: 462, w: 402, h: 120 },
   { id: 'pencil-sharpener', x: 2562, y: 1220, w: 221, h: 245 },
   { id: 'overlay-big-tv-control', x: 1469, y: 330, w: 1000, h: 572 },
   { id: 'overlay-flip-clock-control', x: 990, y: 1740, w: 360, h: 156 },
   { id: 'overlay-left-monitor-control', x: 1322, y: 1028, w: 298, h: 206 },
-  { id: 'overlay-right-monitor-control', x: 1758, y: 1014, w: 288, h: 228 }
+  { id: 'overlay-right-monitor-control', x: 1758, y: 1014, w: 288, h: 228 },
+  { id: 'rca-apps', x: 145, y: 195, w: 145, h: 145 },
+  { id: 'rca_apps', x: 145, y: 195, w: 145, h: 145 },
+  { id: 'cap-ex', x: 772, y: 462, w: 402, h: 120 },
+  { id: 'cap-ex_totals', x: 772, y: 462, w: 402, h: 120 },
+  { id: 'snow-tickets', x: 772, y: 614, w: 402, h: 120 },
+  { id: 'ntst-cases', x: 772, y: 766, w: 402, h: 120 },
+  { id: 'jira-board', x: 772, y: 918, w: 402, h: 120 },
+  { id: 'change-mgmt', x: 772, y: 1070, w: 402, h: 120 },
+  { id: 'change-mgmt-open', x: 772, y: 1222, w: 402, h: 120 }
 ];
 
 const HOTSPOT_LIMITS = {
