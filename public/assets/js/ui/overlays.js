@@ -12,15 +12,20 @@ import {
   CALENDAR_MONTH_IMAGE_END,
   CALENDAR_MONTH_IMAGE_START,
   CALENDAR_MONTH_NAME_FORMATTER,
+  COMMODORE_DESK_IMAGE_URL,
   DEFAULT_LEFT_MONITOR_STATE,
   DISCORD_BUTTON_IMAGE_URL,
   DISCORD_OVERLAY_ID,
   DISCORD_WIDGET_URL,
+  LEFT_MONITOR_SIDE_FRAME_IMAGE_URL,
   LEFT_MONITOR_IMAGE_URLS,
+  LEFT_MONITOR_SIDE_FRAME_OVERLAY_ID,
   LEFT_MONITOR_SEGMENTS,
   LEFT_MONITOR_STATES,
   LOGIN_LOGO_URL,
   NEDRY_GATE_VIDEO_URL,
+  RIGHT_MONITOR_SIDE_FRAME_IMAGE_URL,
+  RIGHT_MONITOR_SIDE_FRAME_OVERLAY_ID,
   STARSHRIMP_LOGO_IMAGE_URL,
   WHITEBOARD_CORNER_SCORE_OVERLAY_ID,
   FLIP_CLOCK_OVERLAY_ID,
@@ -526,6 +531,23 @@ function createOverlays() {
       setLeftMonitorState(state.leftMonitorSelectedState);
     }
 
+    if (overlay.id === LEFT_MONITOR_SIDE_FRAME_OVERLAY_ID) {
+      el.classList.add('monitor-side-frame-overlay');
+      const imageEl = document.createElement('img');
+      imageEl.className = 'monitor-side-frame-image';
+      imageEl.src = LEFT_MONITOR_SIDE_FRAME_IMAGE_URL;
+      imageEl.alt = '';
+      el.appendChild(imageEl);
+    }
+
+    if (overlay.id === 'overlay-commodore-screen') {
+      const imageEl = document.createElement('img');
+      imageEl.className = 'commodore-desk-image';
+      imageEl.src = COMMODORE_DESK_IMAGE_URL;
+      imageEl.alt = '';
+      el.appendChild(imageEl);
+    }
+
     if (overlay.id === 'overlay-right-monitor') {
       const windowEl = document.createElement('div');
       windowEl.className = 'monitor-screen-window right-monitor-screen-window';
@@ -570,6 +592,15 @@ function createOverlays() {
       windowEl.appendChild(state.rightMonitorShrimpLogoOverlayEl);
       el.appendChild(windowEl);
       applyDvdColorStep();
+    }
+
+    if (overlay.id === RIGHT_MONITOR_SIDE_FRAME_OVERLAY_ID) {
+      el.classList.add('monitor-side-frame-overlay');
+      const imageEl = document.createElement('img');
+      imageEl.className = 'monitor-side-frame-image';
+      imageEl.src = RIGHT_MONITOR_SIDE_FRAME_IMAGE_URL;
+      imageEl.alt = '';
+      el.appendChild(imageEl);
     }
 
     if (overlay.id === WHITEBOARD_CORNER_SCORE_OVERLAY_ID) {
