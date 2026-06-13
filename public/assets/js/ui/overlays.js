@@ -561,15 +561,21 @@ function createOverlays() {
       state.rightMonitorCornerScoreOverlayEl = document.createElement('div');
       state.rightMonitorCornerScoreOverlayEl.className = 'right-monitor-corner-score-overlay';
       state.rightMonitorCornerScoreValueEl = document.createElement('p');
+      state.rightMonitorCornerScoreValueEl.className = 'right-monitor-corner-score-value';
       state.rightMonitorCornerScoreOverlayEl.appendChild(state.rightMonitorCornerScoreValueEl);
       state.bigTvCornerScoreInitialsPromptEl = document.createElement('form');
+      state.bigTvCornerScoreInitialsPromptEl.className = 'big-tv-corner-score-initials-prompt';
+      state.bigTvCornerScoreInitialsPromptEl.setAttribute('aria-hidden', 'true');
       state.bigTvCornerScoreInitialsInputEl = document.createElement('input');
+      state.bigTvCornerScoreInitialsInputEl.className = 'big-tv-corner-score-initials-input';
       state.bigTvCornerScoreInitialsInputEl.addEventListener('input', () => {
         state.bigTvCornerScoreInitialsInputEl.value = sanitizeCornerScoreInitialsInput(state.bigTvCornerScoreInitialsInputEl.value);
         syncCornerScoreInitialsSubmitState();
       });
       state.bigTvCornerScoreInitialsSubmitButtonEl = document.createElement('button');
       state.bigTvCornerScoreInitialsSubmitButtonEl.type = 'submit';
+      state.bigTvCornerScoreInitialsSubmitButtonEl.className = 'big-tv-corner-score-initials-submit';
+      state.bigTvCornerScoreInitialsSubmitButtonEl.textContent = 'Save';
       state.bigTvCornerScoreInitialsPromptEl.append(state.bigTvCornerScoreInitialsInputEl, state.bigTvCornerScoreInitialsSubmitButtonEl);
       state.rightMonitorCornerScoreOverlayEl.appendChild(state.bigTvCornerScoreInitialsPromptEl);
       renderCornerScore();
@@ -604,11 +610,24 @@ function createOverlays() {
     }
 
     if (overlay.id === WHITEBOARD_CORNER_SCORE_OVERLAY_ID) {
+      el.classList.add('whiteboard-corner-score-overlay');
+      const stackEl = document.createElement('div');
+      stackEl.className = 'whiteboard-corner-score-stack';
+      const highScoreLabelEl = document.createElement('p');
+      highScoreLabelEl.className = 'whiteboard-corner-score-line';
+      highScoreLabelEl.textContent = 'HI-SCORE';
       state.whiteboardCornerScoreValueEl = document.createElement('p');
+      state.whiteboardCornerScoreValueEl.className = 'whiteboard-corner-score-value';
       state.whiteboardCornerScoreInitialsGroupEl = document.createElement('div');
+      state.whiteboardCornerScoreInitialsGroupEl.className = 'whiteboard-corner-score-initials-group';
+      const initialsLabelEl = document.createElement('p');
+      initialsLabelEl.className = 'whiteboard-corner-score-initials-title';
+      initialsLabelEl.textContent = 'Initials';
       state.whiteboardCornerScoreInitialsEl = document.createElement('p');
-      state.whiteboardCornerScoreInitialsGroupEl.appendChild(state.whiteboardCornerScoreInitialsEl);
-      el.append(state.whiteboardCornerScoreValueEl, state.whiteboardCornerScoreInitialsGroupEl);
+      state.whiteboardCornerScoreInitialsEl.className = 'whiteboard-corner-score-initials';
+      state.whiteboardCornerScoreInitialsGroupEl.append(initialsLabelEl, state.whiteboardCornerScoreInitialsEl);
+      stackEl.append(highScoreLabelEl, state.whiteboardCornerScoreValueEl, state.whiteboardCornerScoreInitialsGroupEl);
+      el.appendChild(stackEl);
       renderCornerScore();
     }
 
