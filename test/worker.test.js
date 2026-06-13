@@ -55,7 +55,6 @@ function makeKeyedState(initialEntries = {}) {
 }
 
 function makeSqlState() {
-  const calendarEvents = new Map();
   const userPreferences = new Map();
   const roomState = new Map();
   let userVersion = 0;
@@ -73,40 +72,6 @@ function makeSqlState() {
       return rows([]);
     }
     if (normalized.startsWith('create table if not exists')) return rows([]);
-
-    if (normalized.startsWith('select id, user_id, title, start_at, end_at, data, updated_at from calendar_events where user_id = ?')) {
-      const [userId] = params;
-      return rows(
-        [...calendarEvents.values()]
-          .filter((row) => row.user_id === userId)
-          .sort((a, b) => (a.updated_at < b.updated_at ? 1 : -1))
-      );
-    }
-    if (normalized.startsWith('insert into calendar_events')) {
-      const [id, user_id, title, start_at, end_at, data, updated_at] = params;
-      if (calendarEvents.has(id)) throw new Error('UNIQUE constraint failed: calendar_events.id');
-      calendarEvents.set(id, { id, user_id, title, start_at, end_at, data, updated_at });
-      return rows([]);
-    }
-    if (normalized.startsWith('select id from calendar_events where id = ? and user_id = ?')) {
-      const [id, userId] = params;
-      const row = calendarEvents.get(id);
-      return row && row.user_id === userId ? rows([{ id }]) : rows([]);
-    }
-    if (normalized.startsWith('update calendar_events set title = ?, start_at = ?, end_at = ?, data = ?, updated_at = ? where id = ? and user_id = ?')) {
-      const [title, start_at, end_at, data, updated_at, id, userId] = params;
-      const row = calendarEvents.get(id);
-      if (row && row.user_id === userId) {
-        calendarEvents.set(id, { ...row, title, start_at, end_at, data, updated_at });
-      }
-      return rows([]);
-    }
-    if (normalized.startsWith('delete from calendar_events where id = ? and user_id = ?')) {
-      const [id, userId] = params;
-      const row = calendarEvents.get(id);
-      if (row && row.user_id === userId) calendarEvents.delete(id);
-      return rows([]);
-    }
 
     if (normalized.startsWith('select key, value, updated_at from user_preferences where user_id = ?')) {
       const [userId] = params;
@@ -503,71 +468,6 @@ test('HotspotStore POST preserves null note color sentinel', async () => {
   assert.deepEqual(getStored('notes'), calls.put[0].value);
 });
 
-test('HotspotStore calendar events CRUD uses SQLite tables', async () => {
-  const { state } = makeSqlState();
-  const store = new HotspotStore(state);
-  const headers = {
-    'content-type': 'application/json',
-    'x-naimean-user-id': 'user-1'
-  };
-
-  const postResponse = await store.fetch(
-    new Request('https://example.com/api/calendar-events', {
-      method: 'POST',
-      headers,
-      body: JSON.stringify({
-        id: 'evt-1',
-        title: 'Standup',
-        startAt: '2026-06-03T09:00:00Z',
-        endAt: '2026-06-03T09:15:00Z',
-        data: { source: 'test' }
-      })
-    })
-  );
-  assert.equal(postResponse.status, 200);
-  const postBody = await postResponse.json();
-  assert.equal(postBody.ok, true);
-  assert.equal(postBody.id, 'evt-1');
-  assert.equal(typeof postBody.updatedAt, 'string');
-
-  const getResponse = await store.fetch(
-    new Request('https://example.com/api/calendar-events', {
-      method: 'GET',
-      headers: { 'x-naimean-user-id': 'user-1' }
-    })
-  );
-  assert.equal(getResponse.status, 200);
-  const getBody = await getResponse.json();
-  assert.equal(getBody.events.length, 1);
-  assert.equal(getBody.events[0].id, 'evt-1');
-  assert.equal(getBody.events[0].title, 'Standup');
-  assert.deepEqual(getBody.events[0].data, { source: 'test' });
-
-  const putResponse = await store.fetch(
-    new Request('https://example.com/api/calendar-events', {
-      method: 'PUT',
-      headers,
-      body: JSON.stringify({
-        id: 'evt-1',
-        title: 'Updated Standup',
-        startAt: '2026-06-03T09:05:00Z',
-        endAt: '2026-06-03T09:20:00Z',
-        data: { source: 'updated' }
-      })
-    })
-  );
-  assert.equal(putResponse.status, 200);
-
-  const deleteResponse = await store.fetch(
-    new Request('https://example.com/api/calendar-events?id=evt-1', {
-      method: 'DELETE',
-      headers: { 'x-naimean-user-id': 'user-1' }
-    })
-  );
-  assert.equal(deleteResponse.status, 200);
-  assert.deepEqual(await deleteResponse.json(), { ok: true, id: 'evt-1' });
-});
-
 test('HotspotStore user preferences endpoint stores per-user values in SQLite', async () => {
   const { state } = makeSqlState();
   const store = new HotspotStore(state);
@@ -859,83 +759,6 @@ test('worker rejects unauthenticated /api/notes requests', async () => {
 
   const response = await router.fetch(new Request('https://example.com/api/notes', { method: 'GET' }), env);
 
-  assert.equal(response.status, 401);
-  assert.deepEqual(await response.json(), { error: 'Unauthorized' });
-});
-
-test('worker routes authenticated /api/calendar-events through HOTSPOT_STORE with user header', async () => {
-  const calls = { idFromName: [], get: [], stubFetch: 0 };
-  const token = await createSessionToken(TEST_SESSION_SECRET, {
-    userId: 'calendar-user',
-    username: 'test',
-    avatar: null,
-    isMember: true,
-    hasRole: true
-  });
-  const expectedResponse = new Response(JSON.stringify({ ok: true }), {
-    status: 200,
-    headers: { 'content-type': 'application/json' }
-  });
-
-  const env = {
-    SESSION_SECRET: TEST_SESSION_SECRET,
-    HOTSPOT_STORE: {
-      idFromName(name) {
-        calls.idFromName.push(name);
-        return `id:${name}`;
-      },
-      get(id) {
-        calls.get.push(id);
-        return {
-          async fetch(request) {
-            calls.stubFetch += 1;
-            assert.equal(new URL(request.url).pathname, '/api/calendar-events');
-            assert.equal(request.headers.get('x-naimean-user-id'), 'calendar-user');
-            return expectedResponse;
-          }
-        };
-      }
-    },
-    ASSETS: {
-      async fetch() {
-        throw new Error('should not use ASSETS for /api/calendar-events');
-      }
-    }
-  };
-
-  const response = await router.fetch(
-    new Request('https://example.com/api/calendar-events', {
-      method: 'GET',
-      headers: { cookie: `naimean_session=${token}` }
-    }),
-    env
-  );
-
-  assert.equal(response, expectedResponse);
-  assert.deepEqual(calls.idFromName, ['calendar-events']);
-  assert.deepEqual(calls.get, ['id:calendar-events']);
-  assert.equal(calls.stubFetch, 1);
-});
-
-test('worker rejects unauthenticated /api/calendar-events requests', async () => {
-  const env = {
-    SESSION_SECRET: TEST_SESSION_SECRET,
-    HOTSPOT_STORE: {
-      idFromName() {
-        throw new Error('should not resolve durable object for unauthenticated requests');
-      },
-      get() {
-        throw new Error('should not resolve durable object for unauthenticated requests');
-      }
-    },
-    ASSETS: {
-      async fetch() {
-        throw new Error('should not hit assets for /api/calendar-events');
-      }
-    }
-  };
-
-  const response = await router.fetch(new Request('https://example.com/api/calendar-events', { method: 'GET' }), env);
   assert.equal(response.status, 401);
   assert.deepEqual(await response.json(), { error: 'Unauthorized' });
 });
@@ -1307,7 +1130,7 @@ test('worker serves protected page requests when session cookie is valid', async
   };
 
   const response = await router.fetch(
-    new Request('https://example.com/calendar.html', {
+    new Request('https://example.com/notes.html', {
       headers: { Cookie: `naimean_session=${token}` }
     }),
     env
@@ -1315,7 +1138,7 @@ test('worker serves protected page requests when session cookie is valid', async
 
   assert.equal(response.status, 200);
   assert.equal(await response.text(), 'calendar page');
-  assert.deepEqual(calls.assetsFetch, ['/calendar.html']);
+  assert.deepEqual(calls.assetsFetch, ['/notes.html']);
 });
 
 test('functions/api/hotspots onRequest delegates to HOTSPOT_STORE durable object', async () => {
@@ -2448,7 +2271,7 @@ test('worker /api/discord/callback redirects to protected page requested in auth
     ASSETS: { async fetch() { return new Response(''); } }
   };
   const authResponse = await router.fetch(
-    new Request('https://naimean.com/api/discord/auth?state=%2Fcalendar.html'),
+    new Request('https://naimean.com/api/discord/auth?state=%2Fnotes.html'),
     authEnv
   );
   const stateCookie = authResponse.headers.get('Set-Cookie');
@@ -2487,7 +2310,7 @@ test('worker /api/discord/callback redirects to protected page requested in auth
     );
 
     assert.equal(callbackResponse.status, 302);
-    assert.equal(callbackResponse.headers.get('Location'), '/calendar.html');
+    assert.equal(callbackResponse.headers.get('Location'), '/notes.html');
   } finally {
     globalThis.fetch = originalFetch;
   }

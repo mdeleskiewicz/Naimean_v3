@@ -138,9 +138,7 @@ const PROTECTED_PAGE_PATHS = new Set([
   '/notes',
   '/notes.html',
   '/mame-gui',
-  '/mame-gui.html',
-  '/calendar',
-  '/calendar.html'
+  '/mame-gui.html'
 ]);
 
 function isHtmlPath(pathname) {
@@ -696,15 +694,6 @@ const HOTSPOT_SQL_MIGRATIONS = [
   {
     version: 2,
     statements: [
-      `CREATE TABLE IF NOT EXISTS calendar_events (
-        id TEXT PRIMARY KEY,
-        user_id TEXT,
-        title TEXT,
-        start_at TEXT,
-        end_at TEXT,
-        data TEXT,
-        updated_at TEXT
-      )`,
       `CREATE TABLE IF NOT EXISTS user_preferences (
         user_id TEXT,
         key TEXT,
@@ -789,106 +778,6 @@ export class HotspotStore {
   userIdFromRequest(request) {
     const userId = request.headers.get('x-naimean-user-id');
     return typeof userId === 'string' && userId.trim() ? userId.trim() : null;
-  }
-
-  handleCalendarEventsGet(userId) {
-    this.ensureSqlSchema();
-    const sql = this.state.storage.sql;
-    const rows = this.ensureSqlCursorRows(
-      sql.exec(
-        `SELECT id, user_id, title, start_at, end_at, data, updated_at
-         FROM calendar_events
-         WHERE user_id = ?
-         ORDER BY updated_at DESC`,
-        userId
-      )
-    );
-    return hotspotJson({
-      events: rows.map((row) => ({
-        id: row.id,
-        userId: row.user_id,
-        title: row.title ?? '',
-        startAt: row.start_at ?? null,
-        endAt: row.end_at ?? null,
-        data: parseJsonText(row.data),
-        updatedAt: row.updated_at ?? null
-      }))
-    });
-  }
-
-  handleCalendarEventsPost(userId, body) {
-    this.ensureSqlSchema();
-    const sql = this.state.storage.sql;
-    const id = typeof body?.id === 'string' && body.id.trim() ? body.id.trim() : crypto.randomUUID();
-    const updatedAt = new Date().toISOString();
-    try {
-      sql.exec(
-        `INSERT INTO calendar_events (id, user_id, title, start_at, end_at, data, updated_at)
-         VALUES (?, ?, ?, ?, ?, ?, ?)`,
-        id,
-        userId,
-        typeof body?.title === 'string' ? body.title : '',
-        typeof body?.startAt === 'string' ? body.startAt : null,
-        typeof body?.endAt === 'string' ? body.endAt : null,
-        toStoredText(body?.data),
-        updatedAt
-      );
-    } catch (err) {
-      if (String(err?.message || '').toLowerCase().includes('unique')) {
-        return hotspotJson({ error: 'Calendar event id already exists.' }, 409);
-      }
-      return hotspotJson({ error: `Failed to save calendar event: ${err?.message || 'Unknown error'}` }, 500);
-    }
-    return hotspotJson({ ok: true, id, updatedAt });
-  }
-
-  handleCalendarEventsPut(userId, body) {
-    this.ensureSqlSchema();
-    const sql = this.state.storage.sql;
-    const id = typeof body?.id === 'string' ? body.id.trim() : '';
-    if (!id) return hotspotJson({ error: 'Calendar event id is required.' }, 400);
-    const existing = this.ensureSqlCursorRows(
-      sql.exec(
-        'SELECT id FROM calendar_events WHERE id = ? AND user_id = ?',
-        id,
-        userId
-      )
-    );
-    if (existing.length === 0) return hotspotJson({ error: 'Calendar event not found.' }, 404);
-    const updatedAt = new Date().toISOString();
-    sql.exec(
-      `UPDATE calendar_events
-       SET title = ?, start_at = ?, end_at = ?, data = ?, updated_at = ?
-       WHERE id = ? AND user_id = ?`,
-      typeof body?.title === 'string' ? body.title : '',
-      typeof body?.startAt === 'string' ? body.startAt : null,
-      typeof body?.endAt === 'string' ? body.endAt : null,
-      toStoredText(body?.data),
-      updatedAt,
-      id,
-      userId
-    );
-    return hotspotJson({ ok: true, id, updatedAt });
-  }
-
-  handleCalendarEventsDelete(request, userId, body) {
-    this.ensureSqlSchema();
-    const sql = this.state.storage.sql;
-    const url = new URL(request.url);
-    const idFromQuery = url.searchParams.get('id');
-    const idFromBody = typeof body?.id === 'string' ? body.id.trim() : '';
-    const id = (idFromQuery && idFromQuery.trim()) || idFromBody;
-    if (!id) return hotspotJson({ error: 'Calendar event id is required.' }, 400);
-    const existing = this.ensureSqlCursorRows(
-      sql.exec(
-        'SELECT id FROM calendar_events WHERE id = ? AND user_id = ?',
-        id,
-        userId
-      )
-    );
-    if (existing.length === 0) return hotspotJson({ error: 'Calendar event not found.' }, 404);
-    sql.exec('DELETE FROM calendar_events WHERE id = ? AND user_id = ?', id, userId);
-    return hotspotJson({ ok: true, id });
   }
 
   readUserPreferences(userId) {
@@ -999,47 +888,17 @@ export class HotspotStore {
 
   async fetch(request) {
     const pathname = new URL(request.url).pathname;
-    const isCalendarEvents = pathname === '/api/calendar-events';
     const isUserPreferences = pathname === '/api/user-preferences';
     const roomStateMatch = pathname.match(/^\/api\/room-state\/([^/]+)$/);
 
-    if (request.method === 'OPTIONS' && (isCalendarEvents || isUserPreferences || roomStateMatch)) {
-      const methods = isCalendarEvents
-        ? 'GET, POST, PUT, DELETE, OPTIONS'
-        : 'GET, PUT, OPTIONS';
+    if (request.method === 'OPTIONS' && (isUserPreferences || roomStateMatch)) {
       return new Response(null, {
         status: 204,
         headers: {
           ...HOTSPOT_JSON_HEADERS,
-          'access-control-allow-methods': methods
+          'access-control-allow-methods': 'GET, PUT, OPTIONS'
         }
       });
-    }
-
-    if (isCalendarEvents) {
-      const userId = this.userIdFromRequest(request);
-      if (!userId) return hotspotJson({ error: 'Unauthorized' }, 401);
-      if (request.method === 'GET') return this.handleCalendarEventsGet(userId);
-      if (request.method === 'POST') {
-        const { body, error } = await this.parseJsonBody(request);
-        if (error) return error;
-        return this.handleCalendarEventsPost(userId, body);
-      }
-      if (request.method === 'PUT') {
-        const { body, error } = await this.parseJsonBody(request);
-        if (error) return error;
-        return this.handleCalendarEventsPut(userId, body);
-      }
-      if (request.method === 'DELETE') {
-        let body = null;
-        if (request.headers.get('content-type')?.toLowerCase().includes('application/json')) {
-          const parsed = await this.parseJsonBody(request);
-          if (parsed.error) return parsed.error;
-          body = parsed.body;
-        }
-        return this.handleCalendarEventsDelete(request, userId, body);
-      }
-      return hotspotJson({ error: 'Method not allowed.' }, 405);
     }
 
     if (isUserPreferences) {
@@ -1315,7 +1174,6 @@ export default {
 
     // Per-user notes store
     if (pathname === '/api/notes') return handleNotes(request, env);
-    if (pathname === '/api/calendar-events') return handleAuthenticatedHotspotRoute(request, env, 'calendar-events');
     if (pathname === '/api/user-preferences') return handleAuthenticatedHotspotRoute(request, env, 'user-preferences');
     if (pathname.startsWith('/api/room-state/')) return handleRoomStateRoute(request, env);
 
