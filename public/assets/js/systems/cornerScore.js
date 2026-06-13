@@ -195,6 +195,7 @@ async function loadCornerScoreFromServer() {
     }
     const payload = await response.json();
     setCornerScoreHighScore(payload?.score, payload?.initials);
+    activateRightMonitorCornerScoreMode();
   } catch (_) {}
 }
 
