@@ -267,7 +267,16 @@ const DEFAULT_HOTSPOTS = [
   { id: 'overlay-big-tv-control', x: 1469, y: 330, w: 1000, h: 572 },
   { id: 'overlay-flip-clock-control', x: 990, y: 1740, w: 360, h: 156 },
   { id: 'overlay-left-monitor-control', x: 1322, y: 1028, w: 298, h: 206 },
-  { id: 'overlay-right-monitor-control', x: 1758, y: 1014, w: 288, h: 228 }
+  { id: 'overlay-right-monitor-control', x: 1758, y: 1014, w: 288, h: 228 },
+  { id: 'rca-apps', x: 145, y: 195, w: 145, h: 145 },
+  { id: 'rca_apps', x: 145, y: 195, w: 145, h: 145 },
+  { id: 'cap-ex', x: 772, y: 462, w: 402, h: 120 },
+  { id: 'cap-ex_totals', x: 772, y: 462, w: 402, h: 120 },
+  { id: 'snow-tickets', x: 772, y: 614, w: 402, h: 120 },
+  { id: 'ntst-cases', x: 772, y: 766, w: 402, h: 120 },
+  { id: 'jira-board', x: 772, y: 918, w: 402, h: 120 },
+  { id: 'change-mgmt', x: 772, y: 1070, w: 402, h: 120 },
+  { id: 'change-mgmt-open', x: 772, y: 1222, w: 402, h: 120 }
 ];
 
 const HOTSPOT_LIMITS = {

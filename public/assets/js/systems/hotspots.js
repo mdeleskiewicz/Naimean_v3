@@ -53,6 +53,12 @@ import { fetchDiscordAuthState, syncDiscordAuthBodyClass, syncDiscordButtonUi } 
 
 const DEBUG_SAVE_PASSWORD_KEY = 'naimean-debug';
 const DEBUG_SAVE_PASSWORD_CIPHER = [90, 87, 91, 84, 85];
+const DEN_URL_OVERRIDE_ALIAS_IDS = new Map([
+  ['rca-apps', ['rca_apps']],
+  ['rca_apps', ['rca-apps']],
+  ['cap-ex', ['cap-ex_totals']],
+  ['cap-ex_totals', ['cap-ex']]
+]);
 
 function isFiniteNumber(value) {
   return typeof value === 'number' && Number.isFinite(value);
@@ -555,7 +561,12 @@ function saveDenUrlOverride(hotspotId, url) {
 }
 
 function getHotspotEffectiveUrl(hotspotId) {
-  return state.denUrlOverrides[hotspotId] || getHotspotDefaultUrl(hotspotId);
+  if (state.denUrlOverrides[hotspotId]) return state.denUrlOverrides[hotspotId];
+  const aliasIds = DEN_URL_OVERRIDE_ALIAS_IDS.get(hotspotId) || [];
+  for (const aliasId of aliasIds) {
+    if (state.denUrlOverrides[aliasId]) return state.denUrlOverrides[aliasId];
+  }
+  return getHotspotDefaultUrl(hotspotId);
 }
 
 function refreshDebugObjectActions() {
