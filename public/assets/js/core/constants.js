@@ -89,7 +89,7 @@ export const HOTSPOT_READABLE_LABELS = new Map([
 export const AQUARIUM_HOTSPOT_IDS = new Set(['aquarium']);
 export const NEDRY_GATE_TRIGGER_HOTSPOT_IDS = new Set([
   'overlay-big-tv-control',
-  'right-monitor'
+  'overlay-right-monitor-control'
 ]);
 export const DEFAULT_BIG_TV_RIGHT_MONITOR_OVERLAY_STATE = 'blue_discord';
 export const BIG_TV_RIGHT_MONITOR_OVERLAY_CORNER_SCORE_STATE = 'corner_score';
