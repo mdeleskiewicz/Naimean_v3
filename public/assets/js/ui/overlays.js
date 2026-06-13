@@ -33,7 +33,7 @@ import {
 } from '../core/constants.js';
 import { state } from '../core/state.js';
 import { applyDvdColorStep } from '../systems/dvd.js';
-import { renderCornerScore, sanitizeCornerScoreInitialsInput, syncCornerScoreInitialsPromptVisibility, syncCornerScoreInitialsSubmitState } from '../systems/cornerScore.js';
+import { renderCornerScore, sanitizeCornerScoreInitialsInput, submitCornerScoreInitials, syncCornerScoreInitialsPromptVisibility, syncCornerScoreInitialsSubmitState } from '../systems/cornerScore.js';
 import { createFlipCard, startFlipClock } from '../systems/flipClock.js';
 import { isBigTvMonitorInteractive, isLeftMonitorInteractive, isRightMonitorInteractive } from '../systems/monitors.js';
 import { getOverlayRect, syncControlledOverlaysFromHotspots } from '../systems/hotspots.js';
@@ -590,6 +590,10 @@ function createOverlays() {
       state.bigTvCornerScoreInitialsSubmitButtonEl.textContent = 'Save';
       initialsLabelEl.appendChild(state.bigTvCornerScoreInitialsInputEl);
       state.bigTvCornerScoreInitialsPromptEl.append(initialsLabelEl, state.bigTvCornerScoreInitialsSubmitButtonEl);
+      state.bigTvCornerScoreInitialsPromptEl.addEventListener('submit', (event) => {
+        event.preventDefault();
+        submitCornerScoreInitials();
+      });
       state.rightMonitorCornerScoreOverlayEl.append(rightMonitorCornerScoreLabelEl, state.rightMonitorCornerScoreValueEl);
       state.rightMonitorCornerScoreOverlayEl.appendChild(state.bigTvCornerScoreInitialsPromptEl);
       renderCornerScore();
