@@ -86,13 +86,15 @@ export function frameBoundsToScreenBounds(frameBounds, insets) {
   };
 }
 
+let performanceMeasureToken = 0;
+
 export function measureSyncSection(name, callback) {
   const perfApi = window.performance;
   if (!perfApi?.mark || !perfApi?.measure) {
     return callback();
   }
-  window.__NAIMEAN_MEASURE_TOKEN__ = (window.__NAIMEAN_MEASURE_TOKEN__ || 0) + 1;
-  const token = window.__NAIMEAN_MEASURE_TOKEN__;
+  performanceMeasureToken += 1;
+  const token = performanceMeasureToken;
   const startMark = `${name}-start-${token}`;
   const endMark = `${name}-end-${token}`;
   perfApi.mark(startMark);

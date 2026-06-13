@@ -621,9 +621,9 @@ state._cb.enterBigTvFullscreen = enterBigTvFullscreen;
 state._cb.exitBigTvFullscreen = exitBigTvFullscreen;
 state._cb.syncBigTvFullscreenUi = syncBigTvFullscreenUi;
 state._cb.setRightMonitorOverlayImageUrl = setRightMonitorOverlayImageUrl;
-state._cb.syncDiscordAuthBodyClass = state._cb.syncDiscordAuthBodyClass;
 state._cb.isBigTvFullscreenTarget = isBigTvFullscreenTarget;
 state._cb.hideCalendarBigTvOverlay = hideCalendarBigTvOverlay;
+state._cb.activateCalendarMode = activateCalendarMode;
 
 export {
   syncBigTvContentVisibility,

@@ -2,6 +2,7 @@ import { AQUARIUM_STATIC_VIDEO_URL, BIG_TV_PROMPT_ACCEPTED_VALUE, BIG_TV_PROMPT_
 import { state } from '../core/state.js';
 import { wait } from '../core/utils.js';
 import { waitForMediaPlaybackToEnd } from '../core/media.js';
+import { ensureDebugSaveAccess } from './hotspots.js';
 
 function loadBigTvToolsEntries() {
   try {
@@ -633,6 +634,8 @@ state._cb.playBigTvStaticPass = playBigTvStaticPass;
 state._cb.getZeldaSecretAudioElement = getZeldaSecretAudioElement;
 state._cb.stopZeldaSecretAudioPlayback = stopZeldaSecretAudioPlayback;
 state._cb.stopMonitorFlickerLoops = stopMonitorFlickerLoops;
-state._cb.openClockApp = () => window.open(NOTES_URL, '_blank', 'noopener,noreferrer');
+state._cb.handleBigTvPromptTyping = handleBigTvPromptTyping;
+state._cb.updateBigTvPromptInput = updateBigTvPromptInput;
+state._cb.submitBigTvPrompt = submitBigTvPrompt;
 
 export { loadBigTvToolsEntries, normalizeBigTvToolEntry, saveBigTvToolsEntries, updateBigTvToolEntry, renderBigTvToolsMenuEntries, renderBigTvToolsEntries, syncBigTvToolsUiMode, showBigTvToolsMenu, showBigTvToolsEditor, addBigTvToolEntry, showBigTvToolsOverlay, hideBigTvToolsOverlay, activateBigTvToolsMode, showBigTvPromptOverlay, hideBigTvPromptOverlay, setBigTvPromptSecretRevealed, updateBigTvPromptInput, activateBigTvPromptMode, playBigTvStaticPass, playBigTvVideoPass, getZeldaSecretAudioElement, stopZeldaSecretAudioPlayback, playBigTvPromptIntroSequence, playBigTvPromptSuccessSequence, submitBigTvPrompt, handleBigTvPromptTyping, getRandomMonitorStaticDurationMs, getRandomMonitorContentDurationMs, clearMonitorFlickerTimeouts, setMonitorStaticVisibility, scheduleRightMonitorFlicker, scheduleLeftMonitorFlicker, startMonitorFlickerLoops, stopMonitorFlickerLoops };
