@@ -1829,9 +1829,9 @@ test('functions HotspotStore GET returns default hotspots when storage is empty'
   const body = await response.json();
 
   assert.equal(response.status, 200);
-  assert.equal(body.hotspots.length, 7);
+  assert.equal(body.hotspots.length, 8);
   assert.deepEqual(body.hotspots[0], { id: 'noahs-arcade', x: 880, y: 320, w: 2050, h: 1280 });
-  assert.deepEqual(body.hotspots[3], { id: 'chapel', x: 3840, y: 0, w: 3840, h: 2160 });
+  assert.deepEqual(body.hotspots[4], { id: 'chapel', x: 3840, y: 0, w: 3840, h: 2160 });
 });
 
 test('functions HotspotStore GET returns saved hotspots when storage has data', async () => {
@@ -1888,7 +1888,7 @@ test('functions HotspotStore POST sanitizes and stores hotspot payloads', async 
 
   assert.equal(response.status, 200);
   assert.equal(body.ok, true);
-  assert.equal(body.hotspots.length, 7);
+  assert.equal(body.hotspots.length, 8);
   assert.deepEqual(body.hotspots[0], { id: 'noahs-arcade', x: 50, y: 60, w: 500, h: 600 });
   assert.equal(calls.put.length, 1);
   assert.equal(calls.put[0].key, 'hotspots');
@@ -2169,7 +2169,7 @@ test('FunctionsHotspotStore POST uses defaults when hotspots payload is not an a
   const body = await response.json();
 
   assert.equal(response.status, 200);
-  assert.equal(body.hotspots.length, 7);
+  assert.equal(body.hotspots.length, 8);
   assert.deepEqual(body.hotspots[0], { id: 'noahs-arcade', x: 880, y: 320, w: 2050, h: 1280 });
   assert.deepEqual(body.hotspots[1], { id: 'aquarium', x: 2680, y: 445, w: 455, h: 729 });
   assert.equal(body.hotspots.find((hotspot) => hotspot.id === 'overlay-left-monitor-control'), undefined);
