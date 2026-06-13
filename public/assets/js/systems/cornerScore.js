@@ -128,13 +128,13 @@ function syncCornerScoreInitialsPromptVisibility() {
   if (!state.bigTvCornerScoreInitialsPromptEl) {
     return;
   }
-  const shouldShowPrompt = state.cornerScoreValue >= state.cornerScoreHighScoreValue && !state.cornerScoreHighScoreInitials;
+  const shouldShowPrompt = state.cornerScoreValue > state.cornerScoreHighScoreValue;
   if (shouldShowPrompt) {
     if (
       !state.bigTvCornerScoreInitialsPromptEl.classList.contains('is-active') ||
-      state.cornerScoreInitialsTargetScore !== state.cornerScoreHighScoreValue
+      state.cornerScoreInitialsTargetScore !== state.cornerScoreValue
     ) {
-      showCornerScoreInitialsPrompt(state.cornerScoreHighScoreValue);
+      showCornerScoreInitialsPrompt(state.cornerScoreValue);
     }
     return;
   }

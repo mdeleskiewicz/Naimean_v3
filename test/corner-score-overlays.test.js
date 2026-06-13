@@ -34,6 +34,11 @@ test('right monitor corner score overlay applies expected classes and initials p
     /bigTvCornerScoreInitialsSubmitButtonEl\.className = 'big-tv-corner-score-initials-submit';/,
     'Expected initials submit class to be applied',
   );
+  assert.match(
+    source,
+    /bigTvCornerScoreInitialsPromptEl\.addEventListener\('submit', \(event\) => \{\s*event\.preventDefault\(\);\s*submitCornerScoreInitials\(\);\s*\}\);/s,
+    'Expected initials form submit handler to submit corner score initials',
+  );
 });
 
 test('whiteboard corner score overlay uses styled stack/value/initials classes', () => {
