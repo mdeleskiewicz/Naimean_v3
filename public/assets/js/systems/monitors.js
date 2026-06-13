@@ -85,7 +85,7 @@ function resetMonitorsToOffState() {
   state._cb.hideNedryGateOverlay?.();
   state._cb.hideAquariumStaticOverlay?.();
   state._cb.stopZeldaSecretAudioPlayback?.();
-  stopBigTvDvdAnimation();
+  state._cb.stopBigTvDvdAnimation?.();
   state._cb.stopMonitorFlickerLoops?.();
   if (state.rightMonitorShrimpLogoOverlayEl) {
     state.rightMonitorShrimpLogoOverlayEl.classList.remove('is-active');
