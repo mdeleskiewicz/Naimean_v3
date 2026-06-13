@@ -726,13 +726,13 @@
     }
 
     .right-monitor-screen-window > .join-discord-button {
-      top: 5%;
-      right: 5%;
-      bottom: 5%;
-      left: 5%;
+      top: 1px;
+      right: 1px;
+      bottom: 1px;
+      left: 1px;
       width: auto;
       height: auto;
-      padding: 20px;
+      padding: 0;
       box-sizing: border-box;
       transition: opacity 120ms ease;
     }
