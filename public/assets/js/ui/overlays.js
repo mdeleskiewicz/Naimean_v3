@@ -23,7 +23,6 @@ import {
   LEFT_MONITOR_SEGMENTS,
   LEFT_MONITOR_STATES,
   LOGIN_LOGO_URL,
-  NEDRY_GATE_VIDEO_URL,
   RIGHT_MONITOR_SIDE_FRAME_IMAGE_URL,
   RIGHT_MONITOR_SIDE_FRAME_OVERLAY_ID,
   STARSHRIMP_LOGO_IMAGE_URL,
@@ -384,7 +383,7 @@ function createOverlays() {
       state.nedryGateOverlayEl.className = 'nedry-gate-overlay';
       state.nedryGateVideoEl = document.createElement('video');
       state.nedryGateVideoEl.className = 'nedry-gate-video';
-      state.nedryGateVideoEl.src = NEDRY_GATE_VIDEO_URL;
+      state.nedryGateVideoEl.preload = 'none';
       state.nedryGateVideoEl.playsInline = true;
       state.nedryGateVideoEl.addEventListener('loadedmetadata', () => state._cb.updateBigTvDebugWatermarkPlacement?.());
       state.nedryGateOverlayEl.appendChild(state.nedryGateVideoEl);

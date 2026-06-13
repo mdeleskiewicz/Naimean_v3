@@ -77,3 +77,24 @@ test('flip clock overlay includes required style classes', () => {
     'Expected flip clock date badge to include the rc-date-badge class',
   );
 });
+
+test('Nedry gate video is lazy-loaded in aquarium overlay setup', () => {
+  const overlaysJsPath = path.join(repoRoot, 'public', 'assets', 'js', 'ui', 'overlays.js');
+  const source = fs.readFileSync(overlaysJsPath, 'utf8');
+  const aquariumBlock = getOverlayBlock(
+    source,
+    "if (overlay.id === AQUARIUM_OVERLAY_ID) {",
+    "if (BIG_TV_FULLSCREEN_OVERLAY_IDS.has(overlay.id)) {",
+  );
+
+  assert.match(
+    aquariumBlock,
+    /state\.nedryGateVideoEl\.preload = 'none';/,
+    'Expected the Nedry gate video element to opt out of eager preloading',
+  );
+  assert.doesNotMatch(
+    aquariumBlock,
+    /state\.nedryGateVideoEl\.src = NEDRY_GATE_VIDEO_URL;/,
+    'Expected aquarium overlay setup to avoid assigning Nedry gate src during initial page load',
+  );
+});
