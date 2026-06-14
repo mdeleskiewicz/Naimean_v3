@@ -31,3 +31,13 @@ test('dvd scoring flow does not preemptively overwrite high score before initial
     'Expected new high-score path to show initials prompt',
   );
 });
+
+test('corner score mode activates after successful server score hydration', () => {
+  const source = fs.readFileSync(cornerScoreJsPath, 'utf8');
+
+  assert.match(
+    source,
+    /const payload = await response\.json\(\);\s*setCornerScoreHighScore\(payload\?\.score, payload\?\.initials\);\s*activateRightMonitorCornerScoreMode\(\);/s,
+    'Expected successful server hydration to activate right monitor corner score mode',
+  );
+});
