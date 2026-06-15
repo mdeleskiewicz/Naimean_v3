@@ -252,6 +252,7 @@ function tickBigTvDvdAnimation(timestamp) {
     } else {
       syncDvdScreensaverState();
     }
+    void state._cb.triggerMiddleMonitorCornerScoreStatsTransition?.();
   } else {
     const missCorner = getCornerCollisionName({
       hitHorizontalEdge,

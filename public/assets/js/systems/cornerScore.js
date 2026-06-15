@@ -203,18 +203,20 @@ function renderPersonalBestStats() {
 }
 
 function renderServerStats() {
-  if (!state.whiteboardCornerScoreServerStatsEl) return;
   const stats = state.cornerScoreServerStats;
-  const totalScoresEl = state.whiteboardCornerScoreServerStatsEl.querySelector('.whiteboard-cs-total-scores');
-  const totalBouncesEl = state.whiteboardCornerScoreServerStatsEl.querySelector('.whiteboard-cs-total-bounces');
-  const totalNearMissesEl = state.whiteboardCornerScoreServerStatsEl.querySelector('.whiteboard-cs-total-near-misses');
-  const totalTimeEl = state.whiteboardCornerScoreServerStatsEl.querySelector('.whiteboard-cs-total-time');
-  const totalRunsEl = state.whiteboardCornerScoreServerStatsEl.querySelector('.whiteboard-cs-total-runs');
-  if (totalScoresEl) totalScoresEl.textContent = stats ? String(stats.totalScores) : '—';
-  if (totalBouncesEl) totalBouncesEl.textContent = stats ? String(stats.totalBounces) : '—';
-  if (totalNearMissesEl) totalNearMissesEl.textContent = stats ? String(stats.totalNearMisses) : '—';
-  if (totalTimeEl) totalTimeEl.textContent = stats ? formatElapsedMs(stats.totalTimeMs) : '—';
-  if (totalRunsEl) totalRunsEl.textContent = stats ? String(stats.totalRuns) : '—';
+  const statsContainers = [state.whiteboardCornerScoreServerStatsEl, state.middleMonitorCornerScoreServerStatsEl].filter(Boolean);
+  statsContainers.forEach((statsContainerEl) => {
+    const totalScoresEl = statsContainerEl.querySelector('.whiteboard-cs-total-scores');
+    const totalBouncesEl = statsContainerEl.querySelector('.whiteboard-cs-total-bounces');
+    const totalNearMissesEl = statsContainerEl.querySelector('.whiteboard-cs-total-near-misses');
+    const totalTimeEl = statsContainerEl.querySelector('.whiteboard-cs-total-time');
+    const totalRunsEl = statsContainerEl.querySelector('.whiteboard-cs-total-runs');
+    if (totalScoresEl) totalScoresEl.textContent = stats ? String(stats.totalScores) : '—';
+    if (totalBouncesEl) totalBouncesEl.textContent = stats ? String(stats.totalBounces) : '—';
+    if (totalNearMissesEl) totalNearMissesEl.textContent = stats ? String(stats.totalNearMisses) : '—';
+    if (totalTimeEl) totalTimeEl.textContent = stats ? formatElapsedMs(stats.totalTimeMs) : '—';
+    if (totalRunsEl) totalRunsEl.textContent = stats ? String(stats.totalRuns) : '—';
+  });
 }
 
 function startRunStats() {
