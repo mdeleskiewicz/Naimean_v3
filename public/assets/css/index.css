@@ -767,10 +767,10 @@
     }
 
     .left-monitor-screen-window {
-      --left-monitor-inner-boundary-top: 3%;
-      --left-monitor-inner-boundary-right: 2.4%;
-      --left-monitor-inner-boundary-bottom: 5%;
-      --left-monitor-inner-boundary-left: 3.2%;
+      --left-monitor-inner-boundary-top: 4%;
+      --left-monitor-inner-boundary-right: 2.8%;
+      --left-monitor-inner-boundary-bottom: 4%;
+      --left-monitor-inner-boundary-left: 2.8%;
       background: transparent;
     }
 
@@ -893,7 +893,7 @@
 
     .left-monitor-screen-window > .left-monitor-selector {
       height: auto;
-      transform: translate(0, 8px);
+      transform: none;
     }
 
     .left-monitor-selector.is-hidden {
