@@ -434,6 +434,7 @@ async function playAquariumHotspotSequence() {
 
 state._cb.stopAquariumPlaybackSequence = stopAquariumPlaybackSequence;
 state._cb.playAquariumHotspotSequence = playAquariumHotspotSequence;
+state._cb.playRightMonitorStaticPass = playRightMonitorStaticPass;
 state._cb.hideAquariumStaticOverlay = hideAquariumStaticOverlay;
 state._cb.hideNedryGateOverlay = hideNedryGateOverlay;
 state._cb.transitionAquariumToDvdCornerScoreFromRightMonitor = transitionAquariumToDvdCornerScoreFromRightMonitor;

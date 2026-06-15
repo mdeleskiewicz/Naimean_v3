@@ -24,8 +24,6 @@ export const DOM_DELTA_PAGE = 2;
 export const DRAG_START_THRESHOLD_PX = 8;
 export const CAMERA_SMOOTHING_FACTOR = 0.22;
 export const CAMERA_SETTLE_EPSILON = 0.05;
-export const CAMERA_MOTION_IDLE_TIMEOUT_MS = 140;
-export const CAMERA_MOTION_PERFORMANCE_MODE_ENABLED = false;
 export const HOTSPOT_CLICK_SUPPRESSION_MS = 400;
 export const HOTSPOT_API_PATH = '/api/hotspots';
 export const SAVE_RESULT_FLASH_KEY = 'den_hotspot_save_result';
@@ -172,7 +170,7 @@ export const RADIO_TUNING_VOLUME_MIN = 0.08;
 export const NEDRY_GATE_VIDEO_URL = 'assets/video/nedrygate.mp4';
 export const BIG_TV_RICKROLL_VIDEO_URL = 'assets/video/notarickroll-piece-1.v20260424.mp4';
 export const ZELDA_SECRET_AUDIO_URL = 'assets/audio/zelda-secret.v20260424.mp3';
-export const DISCORD_GUEST_INVITE_URL = 'https://discord.gg/kTkD7N3JN';
+export const DISCORD_GUEST_INVITE_URL = 'https://discord.gg/8EdWyPGVRB';
 export const DISCORD_GUILD_ID = '';
 export const DISCORD_WIDGET_URL = DISCORD_GUILD_ID
   ? `https://discord.com/widget?id=${DISCORD_GUILD_ID}&theme=dark`

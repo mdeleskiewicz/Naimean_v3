@@ -8,8 +8,6 @@ import {
   ASHTRAY_SMOKE_SOURCE_X,
   ASHTRAY_SMOKE_TAIL_HEIGHT,
   ASHTRAY_SMOKE_Y,
-  CAMERA_MOTION_IDLE_TIMEOUT_MS,
-  CAMERA_MOTION_PERFORMANCE_MODE_ENABLED,
   CAMERA_SETTLE_EPSILON,
   CAMERA_SMOOTHING_FACTOR,
   DESIGN_HEIGHT,
@@ -129,8 +127,23 @@ function createAshtraySmokeEffect() {
         '--smoke-duration': '12.8s',
         '--smoke-delay': '2.2s'
       }
+    },
+    {
+      className: 'ashtray-smoke-wisp ashtray-smoke-wisp-extra',
+      vars: {
+        '--smoke-start-x': '-4px',
+        '--smoke-curl-a': '-14px',
+        '--smoke-curl-b': '19px',
+        '--smoke-drift-x': '-22px',
+        '--smoke-curl-angle': '-18deg',
+        '--smoke-duration': '9.8s',
+        '--smoke-delay': '3.6s'
+      }
     }
   ];
+  const stem = document.createElement('span');
+  stem.className = 'ashtray-smoke-stem';
+  el.appendChild(stem);
   wisps.forEach(({ className, vars }) => {
     const wisp = document.createElement('span');
     wisp.className = className;
@@ -176,33 +189,11 @@ function applyTransforms() {
   dom.world.style.transform = `translate3d(${-state.cameraX}px, 0, 0)`;
 }
 
-function setCameraMotionPerformanceMode(enabled) {
-  if (!CAMERA_MOTION_PERFORMANCE_MODE_ENABLED) {
-    document.body.classList.remove('camera-motion-active');
-    return;
-  }
-  document.body.classList.toggle('camera-motion-active', enabled);
-}
-
-function markCameraMotionActivity() {
-  if (!CAMERA_MOTION_PERFORMANCE_MODE_ENABLED) return;
-  if (!state.hasInitializedCamera) return;
-  setCameraMotionPerformanceMode(true);
-  if (state.cameraMotionIdleTimeoutId !== null) {
-    window.clearTimeout(state.cameraMotionIdleTimeoutId);
-  }
-  state.cameraMotionIdleTimeoutId = window.setTimeout(() => {
-    state.cameraMotionIdleTimeoutId = null;
-    setCameraMotionPerformanceMode(false);
-  }, CAMERA_MOTION_IDLE_TIMEOUT_MS);
-}
-
 function setCameraX(nextCameraX) {
   const previousCameraX = state.cameraX;
   state.cameraX = clamp(nextCameraX, 0, state.maxCameraX);
   if (state.cameraX === previousCameraX) return;
   applyTransforms();
-  markCameraMotionActivity();
 }
 
 function setTargetCameraX(nextCameraX) {
@@ -454,11 +445,6 @@ function onDebugButtonClick() {
 
 function cleanup() {
   state._cb.hideBigTvPromptOverlay?.();
-  if (state.cameraMotionIdleTimeoutId !== null) {
-    window.clearTimeout(state.cameraMotionIdleTimeoutId);
-    state.cameraMotionIdleTimeoutId = null;
-  }
-  setCameraMotionPerformanceMode(false);
   stopBigTvDvdAnimation();
   if (state.cameraAnimationFrameId !== null) {
     window.cancelAnimationFrame(state.cameraAnimationFrameId);
@@ -573,8 +559,6 @@ state._cb.resize = resize;
 
 export {
   applyTransforms,
-  setCameraMotionPerformanceMode,
-  markCameraMotionActivity,
   setCameraX,
   setTargetCameraX,
   startCameraAnimation,

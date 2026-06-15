@@ -9,7 +9,6 @@ import {
   COMMODORE_MIN_SOURCE_HITBOX_WIDTH,
   COMMODORE_OVERLAY_CONTROL_ID,
   COMMODORE_POWER_BUTTON_CONTROL_ID,
-  DEFAULT_LEFT_MONITOR_STATE,
   DEN_URL_OVERRIDES_STORAGE_KEY,
   DISCORD_OVERLAY_CONTROL_ID,
   DISCORD_OVERLAY_ID,
@@ -718,17 +717,25 @@ function createHotspots(hotspotList) {
           btn?.click();
           return;
         }
-        const wasDvdScreensaverActive = state.bigTvDvdOverlayEl?.classList.contains('is-active');
-        state._cb.interruptBigTvDvdLoop?.();
-        if (wasDvdScreensaverActive) state._cb.activateRightMonitorCornerScoreMode?.();
-        state._cb.setLeftMonitorState?.(DEFAULT_LEFT_MONITOR_STATE);
+        state._cb.toggleBigTvCornerScoreWidgetMode?.();
+        return;
+      }
+      if (spot.id === RIGHT_MONITOR_OVERLAY_CONTROL_ID) {
+        if (state._cb.isRightMonitorShrimpLogoActive?.()) {
+          return void state._cb.transitionAquariumToDvdCornerScoreFromRightMonitor?.();
+        }
+        if (!state._cb.isRightMonitorInteractive?.()) return;
+        state._cb.toggleRightMonitorDisplayMode?.();
         return;
       }
       if (spot.id === FLIP_CLOCK_OVERLAY_CONTROL_ID) return void state._cb.openClockApp?.();
       if (WHITEBOARD_HOTSPOT_IDS.has(spot.id)) return void window.open(getHotspotEffectiveUrl(spot.id) || WHITEBOARD_HOTSPOT_URLS[spot.id] || WHITEBOARD_HOTSPOT_URLS.whiteboard, '_blank', 'noopener,noreferrer');
       if (AQUARIUM_HOTSPOT_IDS.has(spot.id)) return void state._cb.playAquariumHotspotSequence?.();
-      if (NEDRY_GATE_TRIGGER_HOTSPOT_IDS.has(spot.id)) {
-        if (spot.id === RIGHT_MONITOR_OVERLAY_CONTROL_ID && state._cb.isRightMonitorShrimpLogoActive?.()) return void state._cb.transitionAquariumToDvdCornerScoreFromRightMonitor?.();
+      if (
+        NEDRY_GATE_TRIGGER_HOTSPOT_IDS.has(spot.id) &&
+        spot.id !== RIGHT_MONITOR_OVERLAY_CONTROL_ID &&
+        spot.id !== DISCORD_OVERLAY_CONTROL_ID
+      ) {
         if (state._cb.isAquariumPlaybackSequenceActive?.()) {
           const didReplay = state._cb.replayAquariumPlaybackSequenceFromStatic?.();
           if (didReplay) return;
