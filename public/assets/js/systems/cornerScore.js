@@ -255,6 +255,7 @@ function submitCornerScoreInitials() {
   // so the UI responds instantly regardless of API success or failure.
   setCornerScoreHighScore(highestKnownScore, submittedInitials);
   hideCornerScoreInitialsPrompt();
+  hideCornerScoreStatus();
   // Persist to server in the background; a successful response will reconcile
   // any server-authoritative score/initials via setCornerScoreHighScore.
   void queueCornerScoreUpdate(highestKnownScore, {

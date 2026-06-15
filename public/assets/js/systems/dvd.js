@@ -227,7 +227,7 @@ function tickBigTvDvdAnimation(timestamp) {
         showCornerScoreStatus('Tied for high-score!', nextCornerScore);
         void queueCornerScoreUpdate(nextCornerScore, { force: true });
       } else if (nextCornerScore > previousHighScore) {
-        showCornerScoreStatus('New high-score!', nextCornerScore);
+        showCornerScoreStatus('New High-Score', nextCornerScore);
         showCornerScoreInitialsPrompt(nextCornerScore);
       }
     }

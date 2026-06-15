@@ -27,7 +27,7 @@ test('dvd scoring flow does not preemptively overwrite high score before initial
   );
   assert.match(
     source,
-    /else if \(nextCornerScore > previousHighScore\) \{\s*showCornerScoreStatus\('New high-score!', nextCornerScore\);\s*showCornerScoreInitialsPrompt\(nextCornerScore\);/s,
+    /else if \(nextCornerScore > previousHighScore\) \{\s*showCornerScoreStatus\('New High-Score', nextCornerScore\);\s*showCornerScoreInitialsPrompt\(nextCornerScore\);/s,
     'Expected new high-score path to show initials prompt',
   );
 });
@@ -39,5 +39,15 @@ test('corner score mode activates after successful server score hydration', () =
     source,
     /const payload = await response\.json\(\);\s*setCornerScoreHighScore\(payload\?\.score, payload\?\.initials\);\s*activateRightMonitorCornerScoreMode\(\);/s,
     'Expected successful server hydration to activate right monitor corner score mode',
+  );
+});
+
+test('submitting corner score initials clears the temporary new-high-score status', () => {
+  const source = fs.readFileSync(cornerScoreJsPath, 'utf8');
+
+  assert.match(
+    source,
+    /setCornerScoreHighScore\(highestKnownScore, submittedInitials\);\s*hideCornerScoreInitialsPrompt\(\);\s*hideCornerScoreStatus\(\);/s,
+    'Expected initials submit flow to hide the temporary new-high-score status text',
   );
 });
