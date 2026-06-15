@@ -37,7 +37,7 @@ test('corner score mode activates after successful server score hydration', () =
 
   assert.match(
     source,
-    /const payload = await response\.json\(\);\s*setCornerScoreHighScore\(payload\?\.score, payload\?\.initials\);\s*activateRightMonitorCornerScoreMode\(\);/s,
+    /const payload = await response\.json\(\);\s*setCornerScoreHighScore\(payload\?\.score, payload\?\.initials\);[\s\S]*?activateRightMonitorCornerScoreMode\(\);/s,
     'Expected successful server hydration to activate right monitor corner score mode',
   );
 });

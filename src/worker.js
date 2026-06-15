@@ -618,18 +618,36 @@ function sanitizeCornerScoreIncrement(input) {
   return Math.max(0, Math.min(1000, floored));
 }
 
+const CORNER_SCORE_AGGREGATE_MAX = 2 ** 40; // ~1 trillion, safe upper bound for aggregate counters
+
+function sanitizeCornerScoreAggregateDelta(input) {
+  const parsed = Number(input);
+  if (!Number.isFinite(parsed) || parsed < 0) return 0;
+  return Math.min(Math.floor(parsed), CORNER_SCORE_AGGREGATE_MAX);
+}
+
 const CORNER_SCORE_BASELINE = 0;
 
 function getStoredCornerScoreRecord(input) {
   if (input && typeof input === 'object' && !Array.isArray(input)) {
     return {
       score: Math.max(CORNER_SCORE_BASELINE, sanitizeCornerScore(input.score)),
-      initials: sanitizeCornerScoreInitials(input.initials)
+      initials: sanitizeCornerScoreInitials(input.initials),
+      totalBounces: sanitizeCornerScoreAggregateDelta(input.totalBounces),
+      totalNearMisses: sanitizeCornerScoreAggregateDelta(input.totalNearMisses),
+      totalScores: sanitizeCornerScoreAggregateDelta(input.totalScores),
+      totalTimeMs: sanitizeCornerScoreAggregateDelta(input.totalTimeMs),
+      totalRuns: sanitizeCornerScoreAggregateDelta(input.totalRuns)
     };
   }
   return {
     score: Math.max(CORNER_SCORE_BASELINE, sanitizeCornerScore(input)),
-    initials: ''
+    initials: '',
+    totalBounces: 0,
+    totalNearMisses: 0,
+    totalScores: 0,
+    totalTimeMs: 0,
+    totalRuns: 0
   };
 }
 
@@ -1160,11 +1178,28 @@ export class HotspotStore {
           nextInitials = '';
         }
         const shouldUpdateInitials = nextInitials !== storedRecord.initials;
+        // Accumulate run stats (add-only)
+        const runBounces = sanitizeCornerScoreAggregateDelta(body?.runBounces);
+        const runNearMisses = sanitizeCornerScoreAggregateDelta(body?.runNearMisses);
+        const runScores = sanitizeCornerScoreAggregateDelta(body?.runScores);
+        const runTimeMs = sanitizeCornerScoreAggregateDelta(body?.runTimeMs);
+        const hasRunStats = runBounces > 0 || runNearMisses > 0 || runScores > 0 || runTimeMs > 0;
+        const nextTotalBounces = storedRecord.totalBounces + runBounces;
+        const nextTotalNearMisses = storedRecord.totalNearMisses + runNearMisses;
+        const nextTotalScores = storedRecord.totalScores + runScores;
+        const nextTotalTimeMs = storedRecord.totalTimeMs + runTimeMs;
+        const nextTotalRuns = storedRecord.totalRuns + (hasRunStats ? 1 : 0);
         const nextRecord = {
           score: nextScore,
-          initials: nextInitials
+          initials: nextInitials,
+          totalBounces: nextTotalBounces,
+          totalNearMisses: nextTotalNearMisses,
+          totalScores: nextTotalScores,
+          totalTimeMs: nextTotalTimeMs,
+          totalRuns: nextTotalRuns
         };
-        if (shouldUpdateScore || shouldUpdateInitials) {
+        const shouldUpdate = shouldUpdateScore || shouldUpdateInitials || hasRunStats;
+        if (shouldUpdate) {
           try {
             await this.state.storage.put(storageKey, nextRecord);
           } catch (err) {
@@ -1175,7 +1210,12 @@ export class HotspotStore {
           ok: true,
           score: nextRecord.score,
           initials: nextRecord.initials,
-          updated: shouldUpdateScore || shouldUpdateInitials
+          totalBounces: nextRecord.totalBounces,
+          totalNearMisses: nextRecord.totalNearMisses,
+          totalScores: nextRecord.totalScores,
+          totalTimeMs: nextRecord.totalTimeMs,
+          totalRuns: nextRecord.totalRuns,
+          updated: shouldUpdate
         });
       }
       try {

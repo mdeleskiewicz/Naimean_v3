@@ -311,9 +311,11 @@ test('HotspotStore GET returns corner score when storage is empty', async () => 
   const body = await response.json();
 
   assert.equal(response.status, 200);
-  assert.deepEqual(body, { score: 0, initials: '' });
+  assert.deepEqual(body, { score: 0, initials: '', totalBounces: 0, totalNearMisses: 0, totalScores: 0, totalTimeMs: 0, totalRuns: 0 });
   assert.deepEqual(calls.get, ['corner-score']);
 });
+
+const ZERO_AGGREGATES = { totalBounces: 0, totalNearMisses: 0, totalScores: 0, totalTimeMs: 0, totalRuns: 0 };
 
 test('HotspotStore POST increments and stores corner score', async () => {
   const { state, calls, getStored } = makeKeyedState({ 'corner-score': 7 });
@@ -329,10 +331,10 @@ test('HotspotStore POST increments and stores corner score', async () => {
   const body = await response.json();
 
   assert.equal(response.status, 200);
-  assert.deepEqual(body, { ok: true, score: 10, initials: '', updated: true });
+  assert.deepEqual(body, { ok: true, score: 10, initials: '', ...ZERO_AGGREGATES, updated: true });
   assert.equal(calls.put.length, 1);
-  assert.deepEqual(calls.put[0], { key: 'corner-score', value: { score: 10, initials: '' } });
-  assert.deepEqual(getStored('corner-score'), { score: 10, initials: '' });
+  assert.deepEqual(calls.put[0], { key: 'corner-score', value: { score: 10, initials: '', ...ZERO_AGGREGATES } });
+  assert.deepEqual(getStored('corner-score'), { score: 10, initials: '', ...ZERO_AGGREGATES });
 });
 
 test('HotspotStore POST keeps existing corner high score when submitted score is lower', async () => {
@@ -349,7 +351,7 @@ test('HotspotStore POST keeps existing corner high score when submitted score is
   const body = await response.json();
 
   assert.equal(response.status, 200);
-  assert.deepEqual(body, { ok: true, score: 9, initials: '', updated: false });
+  assert.deepEqual(body, { ok: true, score: 9, initials: '', ...ZERO_AGGREGATES, updated: false });
   assert.equal(calls.put.length, 0);
   assert.equal(getStored('corner-score'), 9);
 });
@@ -368,10 +370,10 @@ test('HotspotStore POST accepts initials for existing score when client score is
   const body = await response.json();
 
   assert.equal(response.status, 200);
-  assert.deepEqual(body, { ok: true, score: 9, initials: 'ABC', updated: true });
+  assert.deepEqual(body, { ok: true, score: 9, initials: 'ABC', ...ZERO_AGGREGATES, updated: true });
   assert.equal(calls.put.length, 1);
-  assert.deepEqual(calls.put[0], { key: 'corner-score', value: { score: 9, initials: 'ABC' } });
-  assert.deepEqual(getStored('corner-score'), { score: 9, initials: 'ABC' });
+  assert.deepEqual(calls.put[0], { key: 'corner-score', value: { score: 9, initials: 'ABC', ...ZERO_AGGREGATES } });
+  assert.deepEqual(getStored('corner-score'), { score: 9, initials: 'ABC', ...ZERO_AGGREGATES });
 });
 
 test('HotspotStore POST stores corner score initials when submitted score equals server high score', async () => {
@@ -388,10 +390,10 @@ test('HotspotStore POST stores corner score initials when submitted score equals
   const body = await response.json();
 
   assert.equal(response.status, 200);
-  assert.deepEqual(body, { ok: true, score: 11, initials: 'ABC', updated: true });
+  assert.deepEqual(body, { ok: true, score: 11, initials: 'ABC', ...ZERO_AGGREGATES, updated: true });
   assert.equal(calls.put.length, 1);
-  assert.deepEqual(calls.put[0], { key: 'corner-score', value: { score: 11, initials: 'ABC' } });
-  assert.deepEqual(getStored('corner-score'), { score: 11, initials: 'ABC' });
+  assert.deepEqual(calls.put[0], { key: 'corner-score', value: { score: 11, initials: 'ABC', ...ZERO_AGGREGATES } });
+  assert.deepEqual(getStored('corner-score'), { score: 11, initials: 'ABC', ...ZERO_AGGREGATES });
 });
 
 test('HotspotStore POST stores new corner high score and initials together', async () => {
@@ -408,10 +410,10 @@ test('HotspotStore POST stores new corner high score and initials together', asy
   const body = await response.json();
 
   assert.equal(response.status, 200);
-  assert.deepEqual(body, { ok: true, score: 14, initials: 'ABC', updated: true });
+  assert.deepEqual(body, { ok: true, score: 14, initials: 'ABC', ...ZERO_AGGREGATES, updated: true });
   assert.equal(calls.put.length, 1);
-  assert.deepEqual(calls.put[0], { key: 'corner-score', value: { score: 14, initials: 'ABC' } });
-  assert.deepEqual(getStored('corner-score'), { score: 14, initials: 'ABC' });
+  assert.deepEqual(calls.put[0], { key: 'corner-score', value: { score: 14, initials: 'ABC', ...ZERO_AGGREGATES } });
+  assert.deepEqual(getStored('corner-score'), { score: 14, initials: 'ABC', ...ZERO_AGGREGATES });
 });
 
 test('HotspotStore POST stores initials when explicit score is omitted', async () => {
@@ -428,10 +430,10 @@ test('HotspotStore POST stores initials when explicit score is omitted', async (
   const body = await response.json();
 
   assert.equal(response.status, 200);
-  assert.deepEqual(body, { ok: true, score: 11, initials: 'ABC', updated: true });
+  assert.deepEqual(body, { ok: true, score: 11, initials: 'ABC', ...ZERO_AGGREGATES, updated: true });
   assert.equal(calls.put.length, 1);
-  assert.deepEqual(calls.put[0], { key: 'corner-score', value: { score: 11, initials: 'ABC' } });
-  assert.deepEqual(getStored('corner-score'), { score: 11, initials: 'ABC' });
+  assert.deepEqual(calls.put[0], { key: 'corner-score', value: { score: 11, initials: 'ABC', ...ZERO_AGGREGATES } });
+  assert.deepEqual(getStored('corner-score'), { score: 11, initials: 'ABC', ...ZERO_AGGREGATES });
 });
 
 test('HotspotStore POST does not apply initials from increment-only submissions', async () => {
@@ -448,10 +450,10 @@ test('HotspotStore POST does not apply initials from increment-only submissions'
   const body = await response.json();
 
   assert.equal(response.status, 200);
-  assert.deepEqual(body, { ok: true, score: 13, initials: '', updated: true });
+  assert.deepEqual(body, { ok: true, score: 13, initials: '', ...ZERO_AGGREGATES, updated: true });
   assert.equal(calls.put.length, 1);
-  assert.deepEqual(calls.put[0], { key: 'corner-score', value: { score: 13, initials: '' } });
-  assert.deepEqual(getStored('corner-score'), { score: 13, initials: '' });
+  assert.deepEqual(calls.put[0], { key: 'corner-score', value: { score: 13, initials: '', ...ZERO_AGGREGATES } });
+  assert.deepEqual(getStored('corner-score'), { score: 13, initials: '', ...ZERO_AGGREGATES });
 });
 
 test('HotspotStore GET returns default notes payload when storage is empty', async () => {

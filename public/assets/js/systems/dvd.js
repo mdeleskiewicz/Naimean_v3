@@ -1,7 +1,7 @@
 import { BIG_TV_RIGHT_MONITOR_OVERLAY_BLUE_IMAGE_URL, BIG_TV_RIGHT_MONITOR_OVERLAY_CORNER_SCORE_IMAGE_URL, BIG_TV_RIGHT_MONITOR_OVERLAY_CORNER_SCORE_STATE, BIG_TV_RIGHT_MONITOR_OVERLAY_STATE_UNKNOWN, CORNER_SCORE_SERVER_BASELINE, DEFAULT_BIG_TV_RIGHT_MONITOR_OVERLAY_STATE, DEFAULT_LEFT_MONITOR_STATE, DVD_BOUNCE_SPEED_PX_PER_SECOND, DVD_COLOR_STEPS, DVD_CORNER_GOAL_TOLERANCE_PX, DVD_CORNER_MISS_MAX_TOLERANCE_PX, DVD_CORNER_MISS_MIN_TOLERANCE_PX, DVD_FRAME_DELTA_MAX_SECONDS, DVD_SPEED_ADJUSTMENT_STEP, DVD_SPEED_MULTIPLIER_MAX, DVD_SPEED_MULTIPLIER_MIN } from '../core/constants.js';
 import { state } from '../core/state.js';
 import { clamp } from '../core/utils.js';
-import { activateRightMonitorCornerScoreMode, hideAllDvdMissIndicators, playRightMonitorScoringNoise, queueCornerScoreUpdate, setCornerScore, showCornerScoreInitialsPrompt, showCornerScoreStatus, showDvdMissIndicator } from './cornerScore.js';
+import { activateRightMonitorCornerScoreMode, hideAllDvdMissIndicators, playRightMonitorScoringNoise, queueCornerScoreUpdate, recordBounce, resetRunStats, savePersonalBestIfImproved, setCornerScore, showCornerScoreInitialsPrompt, showCornerScoreStatus, showDvdMissIndicator, startRunStats, stopRunStats } from './cornerScore.js';
 import { isRightMonitorInteractive, wakeRightMonitorForCornerScore } from './monitors.js';
 
 const RIGHT_MONITOR_DISPLAY_MODE_CORNER_SCORE = 'corner-score';
@@ -111,6 +111,8 @@ function stopBigTvDvdAnimation() {
     window.cancelAnimationFrame(state.dvdAnimationFrameId);
     state.dvdAnimationFrameId = null;
   }
+  stopRunStats();
+  savePersonalBestIfImproved();
   hideAllDvdMissIndicators();
 }
 
@@ -210,6 +212,7 @@ function tickBigTvDvdAnimation(timestamp) {
   if (hitHorizontalEdge || hitVerticalEdge) {
     state.dvdColorStepIndex = (state.dvdColorStepIndex + 1) % DVD_COLOR_STEPS.length;
     applyDvdColorStep();
+    recordBounce();
   }
 
   const goalCorner = getCornerCollisionName({
@@ -271,6 +274,9 @@ function startBigTvDvdAnimation() {
   }
   state.isDvdAnimationActive = true;
   state.dvdLastFrameTime = 0;
+  if (state.isDvdCornerCountEnabled) {
+    startRunStats();
+  }
   state.dvdAnimationFrameId = window.requestAnimationFrame(tickBigTvDvdAnimation);
 }
 
@@ -314,6 +320,11 @@ function syncDvdScreensaverState() {
   if (state.bigTvDvdOverlayEl) {
     state.bigTvDvdOverlayEl.setAttribute('aria-label', 'CornerScore screensaver');
   }
+  const isCornerScoreEnabled = isScreensaverActive && state.isDvdCornerCountEnabled;
+  if (state.leftMonitorCornerScoreOverlayEl) {
+    state.leftMonitorCornerScoreOverlayEl.classList.toggle('is-active', isCornerScoreEnabled);
+    state.leftMonitorCornerScoreOverlayEl.setAttribute('aria-hidden', isCornerScoreEnabled ? 'false' : 'true');
+  }
   if (isScreensaverActive) {
     startBigTvDvdAnimation();
     return;
@@ -340,6 +351,7 @@ function restoreBigTvDvdLoop({ enableCornerScore = false } = {}) {
   if (enableCornerScore) {
     state.isDvdCornerCountEnabled = true;
   }
+  resetRunStats();
   if (state.bigTvDvdOverlayEl) {
     state.bigTvDvdOverlayEl.classList.add('is-active');
     state.bigTvDvdOverlayEl.setAttribute('aria-hidden', 'false');

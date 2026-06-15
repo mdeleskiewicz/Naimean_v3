@@ -1,4 +1,4 @@
-import { API_TIMEOUT_MS, CORNER_SCORE_API_URL, CORNER_SCORE_INITIALS_LENGTH, CORNER_SCORE_INITIALS_PLACEHOLDER, CORNER_SCORE_SERVER_BASELINE, DVD_MISS_INDICATOR_DURATION_MS, WRONG_AUDIO_URL } from '../core/constants.js';
+import { API_TIMEOUT_MS, CORNER_SCORE_API_URL, CORNER_SCORE_INITIALS_LENGTH, CORNER_SCORE_INITIALS_PLACEHOLDER, CORNER_SCORE_MEDAL_THRESHOLDS, CORNER_SCORE_MIN_RUN_TIME_MS, CORNER_SCORE_PERSONAL_BEST_STORAGE_KEY, CORNER_SCORE_SERVER_BASELINE, DVD_MISS_INDICATOR_DURATION_MS, WRONG_AUDIO_URL } from '../core/constants.js';
 import { state } from '../core/state.js';
 import { isRightMonitorInteractive, wakeRightMonitorForCornerScore } from './monitors.js';
 
@@ -67,6 +67,7 @@ function showDvdMissIndicator(corner) {
     return;
   }
   clearDvdMissIndicatorTimeout(corner);
+  recordNearMiss();
   indicatorEl.classList.add('is-active');
   indicatorEl.setAttribute('aria-hidden', 'false');
   const timeoutId = window.setTimeout(() => {
@@ -143,6 +144,159 @@ function syncCornerScoreInitialsPromptVisibility() {
   }
 }
 
+function getMedalForScore(score) {
+  if (score >= CORNER_SCORE_MEDAL_THRESHOLDS.gold) return 'gold';
+  if (score >= CORNER_SCORE_MEDAL_THRESHOLDS.silver) return 'silver';
+  if (score >= CORNER_SCORE_MEDAL_THRESHOLDS.bronze) return 'bronze';
+  return null;
+}
+
+function formatElapsedMs(ms) {
+  const totalSeconds = Math.floor(ms / 1000);
+  const h = Math.floor(totalSeconds / 3600);
+  const m = Math.floor((totalSeconds % 3600) / 60);
+  const s = totalSeconds % 60;
+  const mm = String(m).padStart(2, '0');
+  const ss = String(s).padStart(2, '0');
+  return h > 0 ? `${h}:${mm}:${ss}` : `${m}:${ss}`;
+}
+
+function renderRunStats() {
+  const elapsed = state.cornerScoreRunElapsedMs;
+  const bounces = state.cornerScoreRunBounces;
+  const nearMisses = state.cornerScoreRunNearMisses;
+  const medal = getMedalForScore(state.cornerScoreValue);
+  if (state.rightMonitorCornerScoreElapsedEl) {
+    state.rightMonitorCornerScoreElapsedEl.textContent = formatElapsedMs(elapsed);
+  }
+  if (state.rightMonitorCornerScoreBouncesEl) {
+    state.rightMonitorCornerScoreBouncesEl.textContent = String(bounces);
+  }
+  if (state.rightMonitorCornerScoreNearMissesEl) {
+    state.rightMonitorCornerScoreNearMissesEl.textContent = String(nearMisses);
+  }
+  if (state.rightMonitorCornerScoreMedalEl) {
+    state.rightMonitorCornerScoreMedalEl.dataset.medal = medal ?? '';
+    state.rightMonitorCornerScoreMedalEl.textContent = medal ? medal.charAt(0).toUpperCase() + medal.slice(1) : '—';
+  }
+}
+
+function renderPersonalBestStats() {
+  if (!state.leftMonitorCornerScoreOverlayEl) return;
+  const pb = state.cornerScorePersonalBest;
+  const pbScoreEl = state.leftMonitorCornerScoreOverlayEl.querySelector('.left-monitor-cs-pb-score');
+  const pbTimeEl = state.leftMonitorCornerScoreOverlayEl.querySelector('.left-monitor-cs-pb-time');
+  const pbBouncesEl = state.leftMonitorCornerScoreOverlayEl.querySelector('.left-monitor-cs-pb-bounces');
+  const pbNearMissesEl = state.leftMonitorCornerScoreOverlayEl.querySelector('.left-monitor-cs-pb-near-misses');
+  const pbMedalEl = state.leftMonitorCornerScoreOverlayEl.querySelector('.left-monitor-cs-pb-medal');
+  if (pbScoreEl) pbScoreEl.textContent = pb ? String(pb.score) : '—';
+  if (pbTimeEl) pbTimeEl.textContent = pb ? formatElapsedMs(pb.timeMs) : '—';
+  if (pbBouncesEl) pbBouncesEl.textContent = pb ? String(pb.bounces) : '—';
+  if (pbNearMissesEl) pbNearMissesEl.textContent = pb ? String(pb.nearMisses) : '—';
+  if (pbMedalEl) {
+    const medal = pb ? getMedalForScore(pb.score) : null;
+    pbMedalEl.dataset.medal = medal ?? '';
+    pbMedalEl.textContent = medal ? medal.charAt(0).toUpperCase() + medal.slice(1) : '—';
+  }
+}
+
+function renderServerStats() {
+  if (!state.whiteboardCornerScoreServerStatsEl) return;
+  const stats = state.cornerScoreServerStats;
+  const totalScoresEl = state.whiteboardCornerScoreServerStatsEl.querySelector('.whiteboard-cs-total-scores');
+  const totalBouncesEl = state.whiteboardCornerScoreServerStatsEl.querySelector('.whiteboard-cs-total-bounces');
+  const totalNearMissesEl = state.whiteboardCornerScoreServerStatsEl.querySelector('.whiteboard-cs-total-near-misses');
+  const totalTimeEl = state.whiteboardCornerScoreServerStatsEl.querySelector('.whiteboard-cs-total-time');
+  const totalRunsEl = state.whiteboardCornerScoreServerStatsEl.querySelector('.whiteboard-cs-total-runs');
+  if (totalScoresEl) totalScoresEl.textContent = stats ? String(stats.totalScores) : '—';
+  if (totalBouncesEl) totalBouncesEl.textContent = stats ? String(stats.totalBounces) : '—';
+  if (totalNearMissesEl) totalNearMissesEl.textContent = stats ? String(stats.totalNearMisses) : '—';
+  if (totalTimeEl) totalTimeEl.textContent = stats ? formatElapsedMs(stats.totalTimeMs) : '—';
+  if (totalRunsEl) totalRunsEl.textContent = stats ? String(stats.totalRuns) : '—';
+}
+
+function startRunStats() {
+  if (state.cornerScoreRunStartTime !== null) return;
+  state.cornerScoreRunStartTime = Date.now() - state.cornerScoreRunElapsedMs;
+  state.cornerScoreElapsedIntervalId = window.setInterval(() => {
+    state.cornerScoreRunElapsedMs = Date.now() - state.cornerScoreRunStartTime;
+    renderRunStats();
+  }, 1000);
+}
+
+function stopRunStats() {
+  if (state.cornerScoreRunStartTime !== null) {
+    state.cornerScoreRunElapsedMs = Date.now() - state.cornerScoreRunStartTime;
+    state.cornerScoreRunStartTime = null;
+  }
+  if (state.cornerScoreElapsedIntervalId !== null) {
+    window.clearInterval(state.cornerScoreElapsedIntervalId);
+    state.cornerScoreElapsedIntervalId = null;
+  }
+  renderRunStats();
+}
+
+function resetRunStats() {
+  stopRunStats();
+  state.cornerScoreRunElapsedMs = 0;
+  state.cornerScoreRunBounces = 0;
+  state.cornerScoreRunNearMisses = 0;
+  renderRunStats();
+}
+
+function recordBounce() {
+  state.cornerScoreRunBounces += 1;
+  renderRunStats();
+}
+
+function recordNearMiss() {
+  state.cornerScoreRunNearMisses += 1;
+  renderRunStats();
+}
+
+function loadPersonalBestFromStorage() {
+  try {
+    const raw = window.localStorage.getItem(CORNER_SCORE_PERSONAL_BEST_STORAGE_KEY);
+    if (!raw) return;
+    const parsed = JSON.parse(raw);
+    if (parsed && typeof parsed === 'object') {
+      state.cornerScorePersonalBest = {
+        score: Number.isFinite(parsed.score) ? Math.max(0, Math.floor(parsed.score)) : 0,
+        timeMs: Number.isFinite(parsed.timeMs) ? Math.max(0, Math.floor(parsed.timeMs)) : 0,
+        bounces: Number.isFinite(parsed.bounces) ? Math.max(0, Math.floor(parsed.bounces)) : 0,
+        nearMisses: Number.isFinite(parsed.nearMisses) ? Math.max(0, Math.floor(parsed.nearMisses)) : 0
+      };
+    }
+  } catch (_) {}
+}
+
+function savePersonalBestIfImproved() {
+  const score = state.cornerScoreValue;
+  const timeMs = state.cornerScoreRunElapsedMs;
+  const bounces = state.cornerScoreRunBounces;
+  const nearMisses = state.cornerScoreRunNearMisses;
+  if (score === 0 && timeMs < CORNER_SCORE_MIN_RUN_TIME_MS) return;
+  const pb = state.cornerScorePersonalBest;
+  const isImprovement =
+    !pb ||
+    score > pb.score ||
+    timeMs > pb.timeMs ||
+    bounces > pb.bounces ||
+    nearMisses > pb.nearMisses;
+  if (!isImprovement) return;
+  const next = {
+    score: pb ? Math.max(score, pb.score) : score,
+    timeMs: pb ? Math.max(timeMs, pb.timeMs) : timeMs,
+    bounces: pb ? Math.max(bounces, pb.bounces) : bounces,
+    nearMisses: pb ? Math.max(nearMisses, pb.nearMisses) : nearMisses
+  };
+  state.cornerScorePersonalBest = next;
+  try {
+    window.localStorage.setItem(CORNER_SCORE_PERSONAL_BEST_STORAGE_KEY, JSON.stringify(next));
+  } catch (_) {}
+  renderPersonalBestStats();
+}
+
 function renderCornerScore() {
   if (state.rightMonitorCornerScoreValueEl) {
     state.rightMonitorCornerScoreValueEl.textContent = String(state.cornerScoreValue);
@@ -156,6 +310,9 @@ function renderCornerScore() {
   if (state.whiteboardCornerScoreInitialsGroupEl) {
     state.whiteboardCornerScoreInitialsGroupEl.hidden = false;
   }
+  renderRunStats();
+  renderPersonalBestStats();
+  renderServerStats();
 }
 
 function setCornerScore(nextScore) {
@@ -195,13 +352,21 @@ async function loadCornerScoreFromServer() {
     }
     const payload = await response.json();
     setCornerScoreHighScore(payload?.score, payload?.initials);
+    state.cornerScoreServerStats = {
+      totalBounces: Number.isFinite(payload?.totalBounces) ? Math.max(0, Math.floor(payload.totalBounces)) : 0,
+      totalNearMisses: Number.isFinite(payload?.totalNearMisses) ? Math.max(0, Math.floor(payload.totalNearMisses)) : 0,
+      totalScores: Number.isFinite(payload?.totalScores) ? Math.max(0, Math.floor(payload.totalScores)) : 0,
+      totalTimeMs: Number.isFinite(payload?.totalTimeMs) ? Math.max(0, Math.floor(payload.totalTimeMs)) : 0,
+      totalRuns: Number.isFinite(payload?.totalRuns) ? Math.max(0, Math.floor(payload.totalRuns)) : 0
+    };
+    renderServerStats();
     activateRightMonitorCornerScoreMode();
   } catch (_) {}
 }
 
 function queueCornerScoreUpdate(
   candidateScore = state.cornerScoreValue,
-  { force = false, initials = null } = {}
+  { force = false, initials = null, sendRunStats = false } = {}
 ) {
   const sanitizedScore = Number.isFinite(candidateScore) ? Math.max(0, Math.floor(candidateScore)) : state.cornerScoreValue;
   const sanitizedInitials = initials === null ? null : sanitizeCornerScoreInitialsInput(initials);
@@ -212,6 +377,12 @@ function queueCornerScoreUpdate(
   if (!force && !shouldAttemptInitialsUpdate && sanitizedScore <= state.cornerScoreHighScoreValue) {
     return state.cornerScorePersistQueue;
   }
+  const runStats = sendRunStats ? {
+    runBounces: state.cornerScoreRunBounces,
+    runNearMisses: state.cornerScoreRunNearMisses,
+    runScores: state.cornerScoreValue,
+    runTimeMs: state.cornerScoreRunElapsedMs
+  } : null;
   state.cornerScorePersistQueue = state.cornerScorePersistQueue
     .then(async () => {
       if (!force && !shouldAttemptInitialsUpdate && sanitizedScore <= state.cornerScoreHighScoreValue) {
@@ -225,7 +396,8 @@ function queueCornerScoreUpdate(
         keepalive: true,
         body: JSON.stringify({
           score: sanitizedScore,
-          ...(sanitizedInitials !== null ? { initials: sanitizedInitials } : {})
+          ...(sanitizedInitials !== null ? { initials: sanitizedInitials } : {}),
+          ...(runStats !== null ? runStats : {})
         }),
         signal: controller.signal
       });
@@ -235,6 +407,17 @@ function queueCornerScoreUpdate(
       }
       const payload = await response.json();
       setCornerScoreHighScore(payload?.score, payload?.initials);
+      if (payload && typeof payload === 'object') {
+        const prev = state.cornerScoreServerStats ?? {};
+        state.cornerScoreServerStats = {
+          totalBounces: Number.isFinite(payload.totalBounces) ? Math.max(0, Math.floor(payload.totalBounces)) : (prev.totalBounces ?? 0),
+          totalNearMisses: Number.isFinite(payload.totalNearMisses) ? Math.max(0, Math.floor(payload.totalNearMisses)) : (prev.totalNearMisses ?? 0),
+          totalScores: Number.isFinite(payload.totalScores) ? Math.max(0, Math.floor(payload.totalScores)) : (prev.totalScores ?? 0),
+          totalTimeMs: Number.isFinite(payload.totalTimeMs) ? Math.max(0, Math.floor(payload.totalTimeMs)) : (prev.totalTimeMs ?? 0),
+          totalRuns: Number.isFinite(payload.totalRuns) ? Math.max(0, Math.floor(payload.totalRuns)) : (prev.totalRuns ?? 0)
+        };
+        renderServerStats();
+      }
     })
     .catch(() => {});
   return state.cornerScorePersistQueue;
@@ -260,7 +443,8 @@ function submitCornerScoreInitials() {
   // any server-authoritative score/initials via setCornerScoreHighScore.
   void queueCornerScoreUpdate(highestKnownScore, {
     force: true,
-    initials: submittedInitials
+    initials: submittedInitials,
+    sendRunStats: true
   });
 }
 
@@ -328,8 +512,10 @@ function playRightMonitorScoringNoise() {
 }
 
 function activateRightMonitorCornerScoreMode() {
+  loadPersonalBestFromStorage();
+  renderPersonalBestStats();
   state.isDvdCornerCountEnabled = true;
   state._cb.syncDvdScreensaverState?.();
 }
 
-export { sanitizeCornerScoreInitialsInput, playWrongAudio, hideCornerScoreStatus, showCornerScoreStatus, clearDvdMissIndicatorTimeout, hideDvdMissIndicator, hideAllDvdMissIndicators, showDvdMissIndicator, syncCornerScoreInitialsSubmitState, hideCornerScoreInitialsPrompt, showCornerScoreInitialsPrompt, syncCornerScoreInitialsPromptVisibility, renderCornerScore, setCornerScore, setCornerScoreHighScore, loadCornerScoreFromServer, queueCornerScoreUpdate, submitCornerScoreInitials, unlockCornerScoreScoringAudioFromGesture, playRightMonitorScoringNoise, activateRightMonitorCornerScoreMode };
+export { sanitizeCornerScoreInitialsInput, playWrongAudio, hideCornerScoreStatus, showCornerScoreStatus, clearDvdMissIndicatorTimeout, hideDvdMissIndicator, hideAllDvdMissIndicators, showDvdMissIndicator, syncCornerScoreInitialsSubmitState, hideCornerScoreInitialsPrompt, showCornerScoreInitialsPrompt, syncCornerScoreInitialsPromptVisibility, renderCornerScore, setCornerScore, setCornerScoreHighScore, loadCornerScoreFromServer, queueCornerScoreUpdate, submitCornerScoreInitials, unlockCornerScoreScoringAudioFromGesture, playRightMonitorScoringNoise, activateRightMonitorCornerScoreMode, getMedalForScore, formatElapsedMs, renderRunStats, renderPersonalBestStats, renderServerStats, startRunStats, stopRunStats, resetRunStats, recordBounce, recordNearMiss, loadPersonalBestFromStorage, savePersonalBestIfImproved };

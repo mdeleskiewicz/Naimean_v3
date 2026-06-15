@@ -105,6 +105,9 @@ export const CORNER_SCORE_API_URL = '/api/corner-score';
 export const CORNER_SCORE_SERVER_BASELINE = 0;
 export const CORNER_SCORE_INITIALS_LENGTH = 3;
 export const CORNER_SCORE_INITIALS_PLACEHOLDER = '__ __ __';
+export const CORNER_SCORE_PERSONAL_BEST_STORAGE_KEY = 'naimean.cornerScore.personalBest';
+export const CORNER_SCORE_MEDAL_THRESHOLDS = Object.freeze({ bronze: 3, silver: 7, gold: 15 });
+export const CORNER_SCORE_MIN_RUN_TIME_MS = 5000;
 export const WRONG_AUDIO_URL = 'assets/audio/wrong.v20260424.mp3';
 export const DVD_COLOR_STEPS = Object.freeze([
   { color: '#ff4d4d', hue: 0 },
