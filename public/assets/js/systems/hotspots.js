@@ -714,6 +714,7 @@ function createHotspots(hotspotList) {
           const relY = (event.clientY - hotspotRect.top) / hotspotRect.height;
           const pos = `${relY < 0.5 ? 'top' : 'bottom'}-${relX < 0.5 ? 'left' : 'right'}`;
           const btn = state.bigTvGithubQuadrantEl.querySelector(`.github-quadrant-btn-${pos}`);
+          if (!btn) console.warn(`GitHub quadrant button not found for position: ${pos}`);
           btn?.click();
           return;
         }
