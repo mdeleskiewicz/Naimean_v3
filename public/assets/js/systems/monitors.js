@@ -1,4 +1,4 @@
-import { COMMODORE_MONITOR_TURN_ON_MS, COMMODORE_NAV_SOURCE_DEN, COMMODORE_NAV_SOURCE_STORAGE_KEY, COMMODORE_POWER_STATE_STORAGE_KEY, COMMODORE_URL, DEFAULT_LEFT_MONITOR_STATE, MONITOR_POWER_CASCADE_MS } from '../core/constants.js';
+import { BIG_TV_MONITOR_INTERACTIVE_WAIT_TIMEOUT_MS, COMMODORE_MONITOR_TURN_ON_MS, COMMODORE_NAV_SOURCE_DEN, COMMODORE_NAV_SOURCE_STORAGE_KEY, COMMODORE_POWER_STATE_STORAGE_KEY, COMMODORE_URL, DEFAULT_LEFT_MONITOR_STATE, MONITOR_INTERACTIVE_POLL_INTERVAL_MS, MONITOR_POWER_CASCADE_MS } from '../core/constants.js';
 import { state } from '../core/state.js';
 import { waitForRightMonitorInteractive } from '../core/media.js';
 import { playRightMonitorStaticPass } from './aquarium.js';
@@ -144,6 +144,39 @@ function navigateToCommodoreFromDen() {
   window.location.assign(COMMODORE_URL);
 }
 
+function waitForLeftMonitorInteractive(timeoutMs = BIG_TV_MONITOR_INTERACTIVE_WAIT_TIMEOUT_MS) {
+  if (isLeftMonitorInteractive()) {
+    return Promise.resolve(true);
+  }
+  return new Promise((resolve) => {
+    const deadline = Date.now() + timeoutMs;
+    const checkInteractiveState = () => {
+      if (isLeftMonitorInteractive()) {
+        resolve(true);
+        return;
+      }
+      if (Date.now() >= deadline) {
+        resolve(false);
+        return;
+      }
+      window.setTimeout(checkInteractiveState, MONITOR_INTERACTIVE_POLL_INTERVAL_MS);
+    };
+    checkInteractiveState();
+  });
+}
+
+async function powerOnLeftMonitorWithStatic() {
+  if (isLeftMonitorInteractive()) return;
+  animateMonitorShadowOn(state.leftMonitorShadowOverlayEl);
+  const isReady = await waitForLeftMonitorInteractive();
+  if (!isReady) {
+    console.warn('Left monitor did not become interactive during power-on sequence.');
+    return;
+  }
+  if (!state.isCommodorePoweringOn) return;
+  await state._cb.activateLeftMonitorQuadrant?.('none');
+}
+
 function triggerCommodorePowerOnSequence() {
   if (state.isCommodorePoweringOn) {
     state.isCommodorePoweringOn = false;
@@ -162,12 +195,25 @@ function triggerCommodorePowerOnSequence() {
     state.commodorePowerButtonEl.classList.add('on');
   }
   animateMonitorShadowOn(state.commodoreShadowOverlayEl);
-  [state.leftMonitorShadowOverlayEl, state.rightMonitorShadowOverlayEl].forEach((el) => {
-    if (!el) return;
-    const delay = COMMODORE_MONITOR_TURN_ON_MS + Math.floor(Math.random() * MONITOR_POWER_CASCADE_MS);
-    const id = window.setTimeout(() => animateMonitorShadowOn(el), delay);
+
+  // When corner score has been played, ensure the right monitor shows the scoreboard.
+  if (state.isDvdCornerCountEnabled) {
+    state.rightMonitorDisplayMode = 'corner-score';
+  }
+
+  // Right monitor: skip if already on, otherwise animate on and play static.
+  if (!isRightMonitorInteractive()) {
+    const rightDelay = COMMODORE_MONITOR_TURN_ON_MS + Math.floor(Math.random() * MONITOR_POWER_CASCADE_MS);
+    const id = window.setTimeout(() => { void wakeRightMonitorForCornerScore(); }, rightDelay);
     state.monitorPowerTimeoutIds.push(id);
-  });
+  }
+
+  // Left monitor: skip if already on, otherwise animate on with static and show quadrant overlay.
+  if (!isLeftMonitorInteractive()) {
+    const leftDelay = COMMODORE_MONITOR_TURN_ON_MS + Math.floor(Math.random() * MONITOR_POWER_CASCADE_MS);
+    const id = window.setTimeout(() => { void powerOnLeftMonitorWithStatic(); }, leftDelay);
+    state.monitorPowerTimeoutIds.push(id);
+  }
 }
 
 function hideAllMonitorShadows() {
@@ -203,4 +249,4 @@ async function wakeRightMonitorForCornerScore() {
 state._cb.triggerCommodorePowerOnSequence = triggerCommodorePowerOnSequence;
 state._cb.isRightMonitorInteractive = isRightMonitorInteractive;
 
-export { loadCommodorePowerState, saveCommodorePowerState, syncStoredCommodorePowerState, handlePageShow, cancelMonitorPowerTimeouts, isMonitorPoweredOn, isLeftMonitorInteractive, isRightMonitorInteractive, hasActiveMonitorPowerState, reconcileCommodorePowerStateOnLoad, resetMonitorsToOffState, animateMonitorShadowOn, animateMonitorShadowOff, navigateToCommodoreFromDen, triggerCommodorePowerOnSequence, hideAllMonitorShadows, wakeRightMonitorForCornerScore };
+export { loadCommodorePowerState, saveCommodorePowerState, syncStoredCommodorePowerState, handlePageShow, cancelMonitorPowerTimeouts, isMonitorPoweredOn, isLeftMonitorInteractive, isRightMonitorInteractive, hasActiveMonitorPowerState, reconcileCommodorePowerStateOnLoad, resetMonitorsToOffState, animateMonitorShadowOn, animateMonitorShadowOff, navigateToCommodoreFromDen, triggerCommodorePowerOnSequence, hideAllMonitorShadows, wakeRightMonitorForCornerScore, waitForLeftMonitorInteractive, powerOnLeftMonitorWithStatic };
