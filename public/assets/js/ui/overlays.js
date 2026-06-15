@@ -14,7 +14,6 @@ import {
   CALENDAR_MONTH_NAME_FORMATTER,
   COMMODORE_POWER_BUTTON_OVERLAY_ID,
   COMMODORE_DESK_IMAGE_URL,
-  COMMODORE_SHADOW_OVERLAY_ID,
   DEFAULT_LEFT_MONITOR_STATE,
   DISCORD_BUTTON_IMAGE_URL,
   DISCORD_OVERLAY_ID,
@@ -32,15 +31,13 @@ import {
   GITHUB_V3_ACTIONS_URL,
   LEFT_MONITOR_SIDE_FRAME_IMAGE_URL,
   LEFT_MONITOR_IMAGE_URLS,
-  MIDDLE_MONITOR_CORNER_SCORE_OVERLAY_ID,
-  LEFT_MONITOR_SHADOW_LAYER_ID,
-  LEFT_MONITOR_SIDE_FRAME_OVERLAY_ID,
+  MONITOR_GROUP_LEFT_ID,
+  MONITOR_GROUP_RIGHT_ID,
+  MONITOR_GROUP_MIDDLE_ID,
   LEFT_MONITOR_SEGMENTS,
   LEFT_MONITOR_STATES,
   LOGIN_LOGO_URL,
-  RIGHT_MONITOR_SHADOW_LAYER_ID,
   RIGHT_MONITOR_SIDE_FRAME_IMAGE_URL,
-  RIGHT_MONITOR_SIDE_FRAME_OVERLAY_ID,
   STARSHRIMP_LOGO_IMAGE_URL,
   WHITEBOARD_CORNER_SCORE_OVERLAY_ID,
   FLIP_CLOCK_OVERLAY_ID,
@@ -659,24 +656,28 @@ function createOverlays() {
       el.appendChild(state.calendarBigTvOverlayEl);
     }
 
-    if (overlay.id === COMMODORE_SHADOW_OVERLAY_ID) {
-      el.classList.add('commodore-shadow-overlay');
-      state.commodoreShadowOverlayEl = el;
-    }
+    if (overlay.id === MONITOR_GROUP_LEFT_ID) {
+      el.classList.add('monitor-group', 'monitor-group-left');
 
-    if (overlay.id === LEFT_MONITOR_SHADOW_LAYER_ID) {
-      el.classList.add('monitor-shadow-overlay');
-      state.leftMonitorShadowOverlayEl = el;
-    }
+      // Layer 3 (topmost): L_Frame.png bezel — drawn above shadow and content
+      const frameLayer = document.createElement('div');
+      frameLayer.className = 'monitor-frame-layer';
+      const frameImg = document.createElement('img');
+      frameImg.className = 'monitor-frame-image';
+      frameImg.src = LEFT_MONITOR_SIDE_FRAME_IMAGE_URL;
+      frameImg.alt = '';
+      frameLayer.appendChild(frameImg);
+      el.appendChild(frameLayer);
 
-    if (overlay.id === RIGHT_MONITOR_SHADOW_LAYER_ID) {
-      el.classList.add('monitor-shadow-overlay');
-      state.rightMonitorShadowOverlayEl = el;
-    }
+      // Layer 2: power-on/off black overlay
+      const shadowLayer = document.createElement('div');
+      shadowLayer.className = 'monitor-shadow-layer';
+      state.leftMonitorShadowOverlayEl = shadowLayer;
+      el.appendChild(shadowLayer);
 
-    if (overlay.id === 'overlay-left-monitor') {
+      // Layer 1: interactive screen content
       const windowEl = document.createElement('div');
-      windowEl.className = 'monitor-screen-window left-monitor-screen-window';
+      windowEl.className = 'monitor-overlay-layer monitor-screen-window left-monitor-screen-window';
       state.leftMonitorContentImageEl = document.createElement('img');
       windowEl.appendChild(state.leftMonitorContentImageEl);
       const selector = document.createElement('div');
@@ -771,15 +772,6 @@ function createOverlays() {
       setLeftMonitorState(state.leftMonitorSelectedState);
     }
 
-    if (overlay.id === LEFT_MONITOR_SIDE_FRAME_OVERLAY_ID) {
-      el.classList.add('monitor-side-frame-overlay');
-      const imageEl = document.createElement('img');
-      imageEl.className = 'monitor-side-frame-image';
-      imageEl.src = LEFT_MONITOR_SIDE_FRAME_IMAGE_URL;
-      imageEl.alt = '';
-      el.appendChild(imageEl);
-    }
-
     if (overlay.id === 'overlay-commodore-screen') {
       el.classList.add('commodore-desk-overlay');
       const imageEl = document.createElement('img');
@@ -789,8 +781,19 @@ function createOverlays() {
       el.appendChild(imageEl);
     }
 
-    if (overlay.id === MIDDLE_MONITOR_CORNER_SCORE_OVERLAY_ID) {
-      state.middleMonitorCornerScoreOverlayEl = el;
+    if (overlay.id === MONITOR_GROUP_MIDDLE_ID) {
+      el.classList.add('monitor-group', 'monitor-group-middle');
+
+      // Layer 2: power-on/off black overlay (no frame PNG for middle — Commodore desk image provides bezel)
+      const shadowLayer = document.createElement('div');
+      shadowLayer.className = 'monitor-shadow-layer';
+      state.commodoreShadowOverlayEl = shadowLayer;
+      el.appendChild(shadowLayer);
+
+      // Layer 1: screen content
+      const middleWindowEl = document.createElement('div');
+      middleWindowEl.className = 'monitor-overlay-layer middle-monitor-screen-window';
+      state.middleMonitorCornerScoreOverlayEl = middleWindowEl;
       state.middleMonitorCornerScoreOverlayEl.classList.add('middle-monitor-corner-score-overlay');
       state.middleMonitorCornerScoreOverlayEl.setAttribute('aria-hidden', 'true');
       const middleMonitorTitleEl = document.createElement('p');
@@ -830,6 +833,7 @@ function createOverlays() {
       state.middleMonitorStaticVideoEl.setAttribute('webkit-playsinline', '');
       state.middleMonitorStaticOverlayEl.appendChild(state.middleMonitorStaticVideoEl);
       state.middleMonitorCornerScoreOverlayEl.appendChild(state.middleMonitorStaticOverlayEl);
+      el.appendChild(middleWindowEl);
     }
 
     if (overlay.id === COMMODORE_POWER_BUTTON_OVERLAY_ID) {
@@ -849,9 +853,28 @@ function createOverlays() {
       el.appendChild(buttonEl);
       state.commodorePowerButtonEl = buttonEl;
     }
-    if (overlay.id === 'overlay-right-monitor') {
+    if (overlay.id === MONITOR_GROUP_RIGHT_ID) {
+      el.classList.add('monitor-group', 'monitor-group-right');
+
+      // Layer 3 (topmost): R_Frame.png bezel
+      const frameLayer = document.createElement('div');
+      frameLayer.className = 'monitor-frame-layer';
+      const frameImg = document.createElement('img');
+      frameImg.className = 'monitor-frame-image';
+      frameImg.src = RIGHT_MONITOR_SIDE_FRAME_IMAGE_URL;
+      frameImg.alt = '';
+      frameLayer.appendChild(frameImg);
+      el.appendChild(frameLayer);
+
+      // Layer 2: power-on/off black overlay
+      const shadowLayer = document.createElement('div');
+      shadowLayer.className = 'monitor-shadow-layer';
+      state.rightMonitorShadowOverlayEl = shadowLayer;
+      el.appendChild(shadowLayer);
+
+      // Layer 1: interactive screen content
       const windowEl = document.createElement('div');
-      windowEl.className = 'monitor-screen-window right-monitor-screen-window';
+      windowEl.className = 'monitor-overlay-layer monitor-screen-window right-monitor-screen-window';
       state.rightMonitorScreenWindowEl = windowEl;
       state.discordJoinButtonEl = document.createElement('button');
       state.discordJoinButtonEl.className = 'join-discord-button';
@@ -980,15 +1003,6 @@ function createOverlays() {
       windowEl.appendChild(state.rightMonitorShrimpLogoOverlayEl);
       el.appendChild(windowEl);
       applyDvdColorStep();
-    }
-
-    if (overlay.id === RIGHT_MONITOR_SIDE_FRAME_OVERLAY_ID) {
-      el.classList.add('monitor-side-frame-overlay');
-      const imageEl = document.createElement('img');
-      imageEl.className = 'monitor-side-frame-image';
-      imageEl.src = RIGHT_MONITOR_SIDE_FRAME_IMAGE_URL;
-      imageEl.alt = '';
-      el.appendChild(imageEl);
     }
 
     if (overlay.id === WHITEBOARD_CORNER_SCORE_OVERLAY_ID) {

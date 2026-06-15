@@ -305,18 +305,13 @@ const DEFAULT_HOTSPOTS = [
   { id: 'pencil-sharpener', x: 2538, y: 1362, w: 153, h: 217 },
   { id: 'overlay-big-tv-control', x: 1316, y: 378, w: 886, h: 646 },
   { id: 'overlay-commodore-screen-control', x: 1323, y: 982, w: 923, h: 665 },
-  { id: 'overlay-middle-monitor-corner-score-control', x: 1720, y: 1004, w: 338, h: 226 },
-  { id: 'overlay-commodore-shadow-control', x: 1579, y: 1080, w: 423, h: 248 },
+  { id: 'monitor-group-middle-control', x: 1720, y: 1004, w: 338, h: 226 },
   { id: 'overlay-commodore-power-button-control', x: 1977, y: 1528, w: 55, h: 39 },
-  { id: 'overlay-right-monitor-control', x: 2044, y: 1077, w: 414, h: 266 },
-  { id: 'overlay-right-monitor-shadow-control', x: 2059, y: 1077, w: 388, h: 265 },
-  { id: 'overlay-right-monitor-side-frame-control', x: 1869, y: 990, w: 780, h: 495 },
+  { id: 'monitor-group-right-control', x: 1869, y: 990, w: 780, h: 495 },
   { id: 'overlay-flip-clock-control', x: 848, y: 1439, w: 329, h: 136 },
   { id: 'overlay-ashtray-smoke-control', x: 2925, y: 45, w: 280, h: 1680 },
   { id: 'overlay-ashtray-cigarette-control', x: 2922, y: 1682, w: 148, h: 44 },
-  { id: 'overlay-left-monitor-control', x: 1127, y: 1056, w: 386, h: 282 },
-  { id: 'overlay-left-monitor-shadow-control', x: 1130, y: 1062, w: 387, h: 281 },
-  { id: 'overlay-left-monitor-side-frame-control', x: 929, y: 987, w: 776, h: 495 },
+  { id: 'monitor-group-left-control', x: 929, y: 987, w: 776, h: 495 },
   { id: 'github-shelf-object-control', x: 2379, y: 497, w: 130, h: 130 }
 ];
 

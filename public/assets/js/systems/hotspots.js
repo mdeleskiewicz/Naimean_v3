@@ -21,15 +21,10 @@ import {
   INTERACTIVE_OVERLAY_CONTROL_IDS,
   LEGACY_HOTSPOT_API_PATH,
   LEGACY_HOTSPOT_RECORD_TITLE,
-  LEGACY_MONITOR_BOUNDS_TOLERANCE_PX,
-  LEFT_MONITOR_OVERLAY_CONTROL_ID,
   LOCKED_DEBUG_HOTSPOT_IDS,
   MIN_HOTSPOT_SIZE,
-  MIN_MONITOR_RATIO_DENOMINATOR,
-  MONITOR_FRAME_BOUNDS_BY_OVERLAY_CONTROL_ID,
-  MONITOR_SCREEN_INSETS_BY_CONTROL_ID,
-  MONITOR_SCREEN_INSETS_BY_OVERLAY_ID,
-  MONITOR_SCREEN_INSETS_BY_SIDE_FRAME_CONTROL_ID,
+  MONITOR_GROUP_LEFT_CONTROL_ID,
+  MONITOR_GROUP_RIGHT_CONTROL_ID,
   NEDRY_GATE_TRIGGER_HOTSPOT_IDS,
   NOAHS_ARCADE_HOTSPOT_ID,
   NOAHS_ARCADE_URL,
@@ -44,15 +39,12 @@ import {
   WHITEBOARD_HOTSPOT_IDS,
   WHITEBOARD_HOTSPOT_URLS,
   WHITEBOARD_CORNER_SCORE_CONTROL_ID,
-  LEFT_MONITOR_SIDE_FRAME_CONTROL_ID,
-  RIGHT_MONITOR_SIDE_FRAME_CONTROL_ID,
-  RIGHT_MONITOR_OVERLAY_CONTROL_ID,
   defaultHotspots,
   overlayDefaults
 } from '../core/constants.js';
 import { state } from '../core/state.js';
 import { dom } from '../core/domRefs.js';
-import { wait, sourceHotspotsToRuntime, runtimeHotspotXToSource, frameBoundsToScreenBounds } from '../core/utils.js';
+import { wait, sourceHotspotsToRuntime, runtimeHotspotXToSource } from '../core/utils.js';
 import { loadAquariumShrimpClipCatalog } from './aquarium.js';
 import { loadCornerScoreFromServer, toggleBigTvHighScoreStats } from './cornerScore.js';
 import { fetchDiscordAuthState, syncDiscordAuthBodyClass, syncDiscordButtonUi } from './login.js';
@@ -70,55 +62,6 @@ function isFiniteNumber(value) {
   return typeof value === 'number' && Number.isFinite(value);
 }
 
-function screenBoundsToFrameBounds(screenBounds, insets) {
-  const usableWidthRatio = Math.max(MIN_MONITOR_RATIO_DENOMINATOR, 1 - insets.left - insets.right);
-  const usableHeightRatio = Math.max(MIN_MONITOR_RATIO_DENOMINATOR, 1 - insets.top - insets.bottom);
-  const w = screenBounds.w / usableWidthRatio;
-  const h = screenBounds.h / usableHeightRatio;
-  const x = screenBounds.x - (w * insets.left);
-  const y = screenBounds.y - (h * insets.top);
-  return { x: Math.round(x), y: Math.round(y), w: Math.round(w), h: Math.round(h) };
-}
-
-function normalizeLegacyMonitorOverlayControlBounds(spot, fallback, { allowLegacyNormalization = true } = {}) {
-  if (!allowLegacyNormalization) return spot;
-  const insets = MONITOR_SCREEN_INSETS_BY_CONTROL_ID.get(spot.id);
-  const legacyFrameBounds = MONITOR_FRAME_BOUNDS_BY_OVERLAY_CONTROL_ID.get(spot.id);
-  if (!insets || !legacyFrameBounds) return spot;
-  const resemblesLegacyFrameBounds =
-    Math.abs(spot.x - legacyFrameBounds.x) <= LEGACY_MONITOR_BOUNDS_TOLERANCE_PX &&
-    Math.abs(spot.y - legacyFrameBounds.y) <= LEGACY_MONITOR_BOUNDS_TOLERANCE_PX &&
-    Math.abs(spot.w - legacyFrameBounds.w) <= LEGACY_MONITOR_BOUNDS_TOLERANCE_PX &&
-    Math.abs(spot.h - legacyFrameBounds.h) <= LEGACY_MONITOR_BOUNDS_TOLERANCE_PX;
-  if (!resemblesLegacyFrameBounds) return spot;
-  const normalizedScreenBounds = frameBoundsToScreenBounds(spot, insets);
-  return {
-    ...spot,
-    x: normalizedScreenBounds.x,
-    y: normalizedScreenBounds.y,
-    w: Math.max(MIN_HOTSPOT_SIZE, normalizedScreenBounds.w),
-    h: Math.max(MIN_HOTSPOT_SIZE, normalizedScreenBounds.h)
-  };
-}
-
-function normalizeLegacyMonitorSideFrameControlBounds(spot, fallback) {
-  const insets = MONITOR_SCREEN_INSETS_BY_SIDE_FRAME_CONTROL_ID.get(spot.id);
-  if (!insets) return spot;
-  const legacyScreenBounds = frameBoundsToScreenBounds(fallback, insets);
-  const resemblesLegacyScreenBounds =
-    Math.abs(spot.w - legacyScreenBounds.w) <= LEGACY_MONITOR_BOUNDS_TOLERANCE_PX &&
-    Math.abs(spot.h - legacyScreenBounds.h) <= LEGACY_MONITOR_BOUNDS_TOLERANCE_PX;
-  if (!resemblesLegacyScreenBounds) return spot;
-  const normalizedFrameBounds = screenBoundsToFrameBounds(spot, insets);
-  return {
-    ...spot,
-    x: normalizedFrameBounds.x,
-    y: normalizedFrameBounds.y,
-    w: Math.max(MIN_HOTSPOT_SIZE, normalizedFrameBounds.w),
-    h: Math.max(MIN_HOTSPOT_SIZE, normalizedFrameBounds.h)
-  };
-}
-
 function sanitizeSourceHotspots(input) {
   if (!Array.isArray(input)) return null;
   const entriesById = new Map();
@@ -126,16 +69,13 @@ function sanitizeSourceHotspots(input) {
     if (!entry || typeof entry !== 'object' || typeof entry.id !== 'string') return;
     entriesById.set(entry.id, entry);
   });
-  const hasModernMonitorSideFrameControls =
-    entriesById.has(LEFT_MONITOR_SIDE_FRAME_CONTROL_ID) ||
-    entriesById.has(RIGHT_MONITOR_SIDE_FRAME_CONTROL_ID);
 
   return defaultHotspots.map((fallback) => {
     const entry = entriesById.get(fallback.id);
     const minWidth = fallback.id === COMMODORE_OVERLAY_CONTROL_ID ? COMMODORE_MIN_SOURCE_HITBOX_WIDTH : MIN_HOTSPOT_SIZE;
     const minHeight = fallback.id === COMMODORE_OVERLAY_CONTROL_ID ? COMMODORE_MIN_SOURCE_HITBOX_HEIGHT : MIN_HOTSPOT_SIZE;
     if (!entry) return { ...fallback };
-    const sanitizedEntry = {
+    return {
       id: fallback.id,
       x: isFiniteNumber(entry.x) ? Math.round(entry.x) : fallback.x,
       y: isFiniteNumber(entry.y) ? Math.round(entry.y) : fallback.y,
@@ -143,10 +83,6 @@ function sanitizeSourceHotspots(input) {
       h: isFiniteNumber(entry.h) ? Math.max(minHeight, Math.round(entry.h)) : fallback.h,
       ...(entry.locked === true ? { locked: true } : {})
     };
-    const normalized = normalizeLegacyMonitorOverlayControlBounds(sanitizedEntry, fallback, {
-      allowLegacyNormalization: !hasModernMonitorSideFrameControls
-    });
-    return normalizeLegacyMonitorSideFrameControlBounds(normalized, fallback);
   });
 }
 
@@ -192,10 +128,6 @@ function getOverlayRect(overlayId) {
           h: controlledSpot.h + (COMMODORE_HITBOX_VERTICAL_INSET * 2)
         };
       }
-      const monitorInsets = MONITOR_SCREEN_INSETS_BY_OVERLAY_ID.get(overlayId);
-      if (monitorInsets) {
-        return screenBoundsToFrameBounds(controlledSpot, monitorInsets);
-      }
       return rectFromBounds(controlledSpot);
     }
   }
@@ -217,20 +149,6 @@ function syncControlledOverlaysFromHotspots() {
       overlayEl.style.top = `${hotspotTop - COMMODORE_HITBOX_VERTICAL_INSET}px`;
       overlayEl.style.width = `${hotspotWidth + (COMMODORE_HITBOX_HORIZONTAL_INSET * 2)}px`;
       overlayEl.style.height = `${hotspotHeight + (COMMODORE_HITBOX_VERTICAL_INSET * 2)}px`;
-      return;
-    }
-    const monitorInsets = MONITOR_SCREEN_INSETS_BY_OVERLAY_ID.get(overlayId);
-    if (monitorInsets) {
-      const frameBounds = screenBoundsToFrameBounds({
-        x: parseFloat(hotspotEl.style.left),
-        y: parseFloat(hotspotEl.style.top),
-        w: parseFloat(hotspotEl.style.width),
-        h: parseFloat(hotspotEl.style.height)
-      }, monitorInsets);
-      overlayEl.style.left = `${frameBounds.x}px`;
-      overlayEl.style.top = `${frameBounds.y}px`;
-      overlayEl.style.width = `${frameBounds.w}px`;
-      overlayEl.style.height = `${frameBounds.h}px`;
       return;
     }
     overlayEl.style.left = hotspotEl.style.left;
@@ -717,7 +635,7 @@ function createHotspots(hotspotList) {
       if (spot.id === NOAHS_ARCADE_HOTSPOT_ID) return void window.location.assign(getHotspotEffectiveUrl(spot.id) || NOAHS_ARCADE_URL);
       if (spot.id === 'chapel') return void window.location.assign(getHotspotEffectiveUrl(spot.id) || CHAPEL_URL);
       if (spot.id === COMMODORE_POWER_BUTTON_CONTROL_ID) return void state._cb.triggerCommodorePowerOnSequence?.();
-      if (spot.id === LEFT_MONITOR_OVERLAY_CONTROL_ID) {
+      if (spot.id === MONITOR_GROUP_LEFT_CONTROL_ID) {
         const hotspotRect = el.getBoundingClientRect();
         const relX = (event.clientX - hotspotRect.left) / hotspotRect.width;
         const relY = (event.clientY - hotspotRect.top) / hotspotRect.height;
@@ -741,7 +659,7 @@ function createHotspots(hotspotList) {
         state._cb.toggleBigTvCornerScoreWidgetMode?.();
         return;
       }
-      if (spot.id === RIGHT_MONITOR_OVERLAY_CONTROL_ID) {
+      if (spot.id === MONITOR_GROUP_RIGHT_CONTROL_ID) {
         if (state._cb.isRightMonitorShrimpLogoActive?.()) {
           return void state._cb.transitionAquariumToDvdCornerScoreFromRightMonitor?.();
         }
@@ -755,7 +673,7 @@ function createHotspots(hotspotList) {
       if (AQUARIUM_HOTSPOT_IDS.has(spot.id)) return void state._cb.playAquariumHotspotSequence?.();
       if (
         NEDRY_GATE_TRIGGER_HOTSPOT_IDS.has(spot.id) &&
-        spot.id !== RIGHT_MONITOR_OVERLAY_CONTROL_ID &&
+        spot.id !== MONITOR_GROUP_RIGHT_CONTROL_ID &&
         spot.id !== DISCORD_OVERLAY_CONTROL_ID
       ) {
         if (state._cb.isAquariumPlaybackSequenceActive?.()) {
