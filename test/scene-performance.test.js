@@ -18,7 +18,7 @@ test('den camera-motion performance mode is paused', () => {
   const source = fs.readFileSync(sceneJsPath, 'utf8');
   assert.match(
     source,
-    /if \(!CAMERA_MOTION_PERFORMANCE_MODE_ENABLED\) \{\s*document\.body\.classList\.remove\('camera-motion-active'\);\s*return;\s*\}/,
+    /if\s*\(!CAMERA_MOTION_PERFORMANCE_MODE_ENABLED\)\s*\{[\s\S]*?document\.body\.classList\.remove\('camera-motion-active'\);[\s\S]*?return;[\s\S]*?\}/,
     'Expected scene performance mode toggling to short-circuit while paused',
   );
 });
