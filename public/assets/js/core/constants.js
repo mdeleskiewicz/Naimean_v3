@@ -70,14 +70,14 @@ export const WHITEBOARD_HOTSPOT_URLS = Object.freeze({
     'https://recoverycoa.service-now.com/now/nav/ui/classic/params/target/change_request_list.do%3Fsysparm_userpref_module%3Dcd579a82c0a8016400aa77d97a4d70a8%26sysparm_query%3Dactive%253Dtrue%255EEQ%26active%3Dtrue'
 });
 export const WHITEBOARD_TASK_HOTSPOTS = [
-  { id: 'rca_apps', label: 'RCA Apps', x: 145, y: 195, w: 145, h: 145 },
-  { id: 'cap-ex', label: 'Cap-Ex', x: 772, y: 462, w: 402, h: 120 },
-  { id: 'cap-ex_totals', label: 'Cap-Ex Totals', x: 772, y: 462, w: 402, h: 120 },
-  { id: 'snow-tickets', label: 'SNOW Tickets', x: 772, y: 614, w: 402, h: 120 },
-  { id: 'ntst-cases', label: 'NTST Cases', x: 772, y: 766, w: 402, h: 120 },
-  { id: 'jira-board', label: 'JIRA Board', x: 772, y: 918, w: 402, h: 120 },
-  { id: 'change-mgmt', label: 'Change Mgmt New', x: 772, y: 1070, w: 402, h: 120 },
-  { id: 'change-mgmt-open', label: 'Change Mgmt Open', x: 772, y: 1222, w: 402, h: 120 }
+  { id: 'rca_apps', label: 'RCA Apps', x: 392, y: 357, w: 436, h: 294 },
+  { id: 'cap-ex', label: 'Cap-Ex', x: 390, y: 774, w: 478, h: 85 },
+  { id: 'cap-ex_totals', label: 'Cap-Ex Totals', x: 868, y: 755, w: 402, h: 100 },
+  { id: 'snow-tickets', label: 'SNOW Tickets', x: 394, y: 1051, w: 666, h: 103 },
+  { id: 'ntst-cases', label: 'NTST Cases', x: 390, y: 1148, w: 468, h: 92 },
+  { id: 'jira-board', label: 'JIRA Board', x: 390, y: 1239, w: 470, h: 100 },
+  { id: 'change-mgmt', label: 'Change Mgmt New', x: 392, y: 856, w: 804, h: 105 },
+  { id: 'change-mgmt-open', label: 'Change Mgmt Open', x: 392, y: 958, w: 808, h: 94 }
 ];
 export const WHITEBOARD_HOTSPOT_IDS = new Set([
   'rca-board',
@@ -390,38 +390,26 @@ export const MONITOR_SCREEN_INSETS_BY_OVERLAY_ID = new Map([
 // Edit x/y/w/h values as artwork alignment is refined.
 export const defaultHotspots = [
   { id: NOAHS_ARCADE_HOTSPOT_ID, x: 880, y: 320, w: 2050, h: 1280 },
-  { id: 'aquarium', x: 2680, y: 445, w: 455, h: 729 },
-  { id: 'rca-board', x: 738, y: 380, w: 470, h: 1060 },
-  { id: WHITEBOARD_CORNER_SCORE_CONTROL_ID, x: 785, y: 456, w: 355, h: 260 },
+  { id: 'aquarium', x: 2652, y: 888, w: 492, h: 423 },
+  { id: 'rca-board', x: 386, y: 660, w: 483, h: 108 },
+  { id: WHITEBOARD_CORNER_SCORE_CONTROL_ID, x: 859, y: 329, w: 445, h: 400 },
   { id: 'chapel', x: 3840, y: 0, w: 3840, h: 2160 },
   ...WHITEBOARD_TASK_HOTSPOTS.map(({ id, x, y, w, h }) => ({ id, x, y, w, h })),
-  { id: 'pencil-sharpener', x: 2562, y: 1220, w: 221, h: 245 },
-  { id: DISCORD_OVERLAY_CONTROL_ID, x: 1469, y: 330, w: 1000, h: 572 },
-  { id: COMMODORE_OVERLAY_CONTROL_ID, x: 1703, y: 994, w: 372, h: 246 },
-  { id: COMMODORE_SHADOW_CONTROL_ID, x: 1682, y: 1095, w: 414, h: 198 },
-  { id: COMMODORE_POWER_BUTTON_CONTROL_ID, ...COMMODORE_POWER_BUTTON_BOUNDS },
-  { id: RIGHT_MONITOR_OVERLAY_CONTROL_ID, ...RIGHT_MONITOR_SCREEN_BOUNDS },
-  { id: RIGHT_MONITOR_SHADOW_LAYER_CONTROL_ID, ...RIGHT_MONITOR_FRAME_BOUNDS },
-  { id: RIGHT_MONITOR_SIDE_FRAME_CONTROL_ID, ...RIGHT_MONITOR_FRAME_BOUNDS },
-  { id: FLIP_CLOCK_OVERLAY_CONTROL_ID, x: 990, y: 1740, w: 360, h: 156 },
-  {
-    id: ASHTRAY_SMOKE_CONTROL_ID,
-    x: ASHTRAY_SMOKE_SOURCE_X - Math.round(ASHTRAY_SMOKE_DEFAULT_WIDTH / 2),
-    y: Math.round(ASHTRAY_SMOKE_Y - Math.max(
-      MIN_SMOKE_RISE_DISTANCE,
-      (ASHTRAY_SMOKE_Y - SMOKE_CEILING_Y) * SMOKE_FADE_TO_CEILING_RATIO
-    ) + SMOKE_SOURCE_VERTICAL_OFFSET),
-    w: ASHTRAY_SMOKE_DEFAULT_WIDTH,
-    h: Math.round(Math.max(
-      MIN_SMOKE_RISE_DISTANCE,
-      (ASHTRAY_SMOKE_Y - SMOKE_CEILING_Y) * SMOKE_FADE_TO_CEILING_RATIO
-    ) + ASHTRAY_SMOKE_TAIL_HEIGHT)
-  },
-  { id: ASHTRAY_CIGARETTE_CONTROL_ID, ...ASHTRAY_CIGARETTE_DEFAULT_BOUNDS },
-  { id: LEFT_MONITOR_OVERLAY_CONTROL_ID, ...LEFT_MONITOR_SCREEN_BOUNDS },
-  { id: LEFT_MONITOR_SHADOW_LAYER_CONTROL_ID, ...LEFT_MONITOR_FRAME_BOUNDS },
-  { id: LEFT_MONITOR_SIDE_FRAME_CONTROL_ID, ...LEFT_MONITOR_FRAME_BOUNDS },
-  { id: GITHUB_SHELF_OBJECT_CONTROL_ID, x: 2720, y: 980, w: 130, h: 130 }
+  { id: 'pencil-sharpener', x: 2538, y: 1362, w: 153, h: 217 },
+  { id: DISCORD_OVERLAY_CONTROL_ID, x: 1316, y: 378, w: 886, h: 646 },
+  { id: COMMODORE_OVERLAY_CONTROL_ID, x: 1323, y: 982, w: 923, h: 665 },
+  { id: COMMODORE_SHADOW_CONTROL_ID, x: 1579, y: 1093, w: 423, h: 235 },
+  { id: COMMODORE_POWER_BUTTON_CONTROL_ID, x: 1977, y: 1528, w: 55, h: 39 },
+  { id: RIGHT_MONITOR_OVERLAY_CONTROL_ID, x: 2044, y: 1077, w: 414, h: 266 },
+  { id: RIGHT_MONITOR_SHADOW_LAYER_CONTROL_ID, x: 2059, y: 1077, w: 388, h: 265 },
+  { id: RIGHT_MONITOR_SIDE_FRAME_CONTROL_ID, x: 1869, y: 990, w: 780, h: 495 },
+  { id: FLIP_CLOCK_OVERLAY_CONTROL_ID, x: 848, y: 1439, w: 329, h: 136 },
+  { id: ASHTRAY_SMOKE_CONTROL_ID, x: 2925, y: 45, w: 280, h: 1680 },
+  { id: ASHTRAY_CIGARETTE_CONTROL_ID, x: 2922, y: 1682, w: 148, h: 44 },
+  { id: LEFT_MONITOR_OVERLAY_CONTROL_ID, x: 1127, y: 1056, w: 386, h: 282 },
+  { id: LEFT_MONITOR_SHADOW_LAYER_CONTROL_ID, x: 1130, y: 1075, w: 387, h: 268 },
+  { id: LEFT_MONITOR_SIDE_FRAME_CONTROL_ID, x: 929, y: 987, w: 776, h: 495 },
+  { id: GITHUB_SHELF_OBJECT_CONTROL_ID, x: 2379, y: 497, w: 130, h: 130 }
 ];
 
 // Overlay placeholders over transparent screen cutouts.
