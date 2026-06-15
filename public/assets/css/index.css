@@ -1409,6 +1409,88 @@
       display: none;
     }
 
+    /* GitHub shelf object overlay */
+    .screen-overlay.github-shelf-object-overlay {
+      pointer-events: none;
+      z-index: 2;
+      overflow: visible;
+    }
+
+    .github-shelf-image {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      object-position: center;
+      pointer-events: none;
+      user-select: none;
+      -webkit-user-drag: none;
+      filter:
+        drop-shadow(0 2px 8px rgba(0, 0, 0, 0.72))
+        drop-shadow(0 0 14px rgba(0, 0, 0, 0.55));
+      opacity: 0.92;
+    }
+
+    /* GitHub screensaver quadrant overlay on the big TV */
+    .big-tv-github-quadrant-overlay {
+      position: absolute;
+      inset: 0;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      grid-template-rows: 1fr 1fr;
+      z-index: 4;
+      pointer-events: none;
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 180ms ease;
+    }
+
+    .big-tv-github-quadrant-overlay.is-active {
+      pointer-events: auto;
+      opacity: 1;
+      visibility: visible;
+    }
+
+    .github-quadrant-btn {
+      display: flex;
+      align-items: flex-end;
+      justify-content: flex-start;
+      padding: clamp(8px, 2.2%, 20px) clamp(10px, 2.8%, 26px);
+      background: transparent;
+      border: 0;
+      color: rgba(255, 255, 255, 0.55);
+      font: 700 clamp(12px, 2vw, 22px) / 1 "Trebuchet MS", "Arial Black", sans-serif;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: color 140ms ease, text-shadow 140ms ease;
+      text-shadow: 0 0 8px rgba(0, 0, 0, 0.8);
+    }
+
+    .github-quadrant-btn:hover,
+    .github-quadrant-btn:focus-visible {
+      color: rgba(255, 255, 255, 0.92);
+      text-shadow:
+        0 0 10px rgba(255, 255, 255, 0.5),
+        0 0 20px rgba(0, 0, 0, 0.9);
+    }
+
+    .github-quadrant-btn:focus-visible {
+      outline: 2px solid rgba(255, 255, 255, 0.7);
+      outline-offset: -2px;
+    }
+
+    .github-quadrant-btn-top-right,
+    .github-quadrant-btn-bottom-right {
+      justify-content: flex-end;
+    }
+
+    .github-quadrant-btn-top-left,
+    .github-quadrant-btn-top-right {
+      align-items: flex-start;
+    }
+
     .big-tv-tools-overlay {
       position: absolute;
       inset: 0;

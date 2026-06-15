@@ -14,9 +14,11 @@ import {
   DISCORD_OVERLAY_CONTROL_ID,
   DISCORD_OVERLAY_ID,
   FLIP_CLOCK_OVERLAY_CONTROL_ID,
+  GITHUB_SHELF_OBJECT_CONTROL_ID,
   HOTSPOT_API_PATH,
   HOTSPOT_CLICK_SUPPRESSION_MS,
   HOTSPOT_READABLE_LABELS,
+  INTERACTIVE_OVERLAY_CONTROL_IDS,
   LEGACY_HOTSPOT_API_PATH,
   LEGACY_HOTSPOT_RECORD_TITLE,
   LEGACY_MONITOR_BOUNDS_TOLERANCE_PX,
@@ -679,7 +681,7 @@ function createHotspots(hotspotList) {
     const el = document.createElement('button');
     el.type = 'button';
     el.className = 'hotspot';
-    if (OVERLAY_CONTROL_TO_OVERLAY_ID.has(spot.id) && spot.id !== COMMODORE_OVERLAY_CONTROL_ID) {
+    if (OVERLAY_CONTROL_TO_OVERLAY_ID.has(spot.id) && !INTERACTIVE_OVERLAY_CONTROL_IDS.has(spot.id)) {
       el.classList.add('overlay-control-hotspot');
     }
     if (LOCKED_DEBUG_HOTSPOT_IDS.has(spot.id) || spot.locked) {
@@ -724,6 +726,7 @@ function createHotspots(hotspotList) {
         return void state._cb.activateBigTvPromptMode?.();
       }
       if (spot.id === PENCIL_SHARPENER_HOTSPOT_ID) return void window.location.assign(getHotspotEffectiveUrl(spot.id) || NOTES_URL);
+      if (spot.id === GITHUB_SHELF_OBJECT_CONTROL_ID) return void state._cb.activateGithubScreensaverMode?.();
     });
     el.addEventListener('keydown', (event) => {
       if (event.key === 'Enter' || event.key === ' ') {

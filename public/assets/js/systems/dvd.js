@@ -294,6 +294,7 @@ function interruptBigTvDvdLoop() {
     state.bigTvDvdOverlayEl.classList.remove('is-active');
     state.bigTvDvdOverlayEl.setAttribute('aria-hidden', 'true');
   }
+  state._cb.deactivateGithubScreensaverMode?.();
   syncDvdScreensaverState();
 }
 

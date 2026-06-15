@@ -188,12 +188,18 @@ export const BIG_TV_PROMPT_MIN_LOCAL_SCORE = 10;
 export const BIG_TV_TOOLS_STORAGE_KEY = 'naimean.bigTvTools.entries';
 export const DEN_URL_OVERRIDES_STORAGE_KEY = 'naimean.den.urlOverrides';
 export const BIG_TV_TOOLS_LOGO_URL = 'assets/images/tools_logo.png';
+export const GITHUB_SCREENSAVER_LOGO_URL = 'assets/images/github-logo.svg';
+export const GITHUB_SHELF_OBJECT_IMAGE_URL = 'assets/images/github-logo.svg';
+export const GITHUB_V3_ISSUES_URL = 'https://github.com/naimean/Naimean_v3/issues';
+export const GITHUB_V3_AGENTS_URL = 'https://github.com/naimean/Naimean_v3/agents';
+export const GITHUB_V3_WIKI_URL = 'https://github.com/naimean/Naimean_v3/wiki';
+export const GITHUB_V3_ACTIONS_URL = 'https://github.com/naimean/Naimean_v3/actions';
 export const LOGIN_LOGO_URL = 'assets/images/login_logo.png';
 export const CALENDAR_MONTH_IMAGE_BASE_URL = 'assets/image/calendar';
 export const CALENDAR_MONTH_IMAGE_START = Object.freeze({ year: 2026, month: 4 }); // May 2026, zero-based month
 export const CALENDAR_MONTH_IMAGE_END = Object.freeze({ year: 2030, month: 4 }); // May 2030, zero-based month
 export const CALENDAR_MONTH_NAME_FORMATTER = new Intl.DateTimeFormat('en-US', { month: 'long' });
-export const BIG_TV_INTERACTIVE_UI_SELECTORS = '.big-tv-prompt-content, .big-tv-prompt-secret-box, .big-tv-tools-overlay, .login-overlay, .calendar-big-tv-overlay, .big-tv-corner-score-initials-prompt, .big-tv-fullscreen-exit-button';
+export const BIG_TV_INTERACTIVE_UI_SELECTORS = '.big-tv-prompt-content, .big-tv-prompt-secret-box, .big-tv-tools-overlay, .login-overlay, .calendar-big-tv-overlay, .big-tv-corner-score-initials-prompt, .big-tv-fullscreen-exit-button, .big-tv-github-quadrant-overlay';
 // Keep values comfortably within localStorage and the on-screen form layout.
 export const BIG_TV_TOOLS_MAX_NAME_LENGTH = 120;
 export const BIG_TV_TOOLS_MAX_URL_LENGTH = 2000;
@@ -299,6 +305,8 @@ export const RIGHT_MONITOR_SIDE_FRAME_CONTROL_ID = 'overlay-right-monitor-side-f
 export const WHITEBOARD_CORNER_SCORE_OVERLAY_ID = 'overlay-whiteboard-corner-score';
 export const WHITEBOARD_CORNER_SCORE_CONTROL_ID = 'overlay-whiteboard-corner-score-control';
 export const FLIP_CLOCK_OVERLAY_CONTROL_ID = 'overlay-flip-clock-control';
+export const GITHUB_SHELF_OBJECT_OVERLAY_ID = 'github-shelf-object';
+export const GITHUB_SHELF_OBJECT_CONTROL_ID = 'github-shelf-object-control';
 export const ASHTRAY_SMOKE_EFFECT_ID = 'ashtray-smoke-effect';
 export const ASHTRAY_SMOKE_CONTROL_ID = 'ashtray-smoke-effect-control';
 export const ASHTRAY_CIGARETTE_EFFECT_ID = 'ashtray-cigarette-effect';
@@ -333,10 +341,13 @@ HOTSPOT_READABLE_LABELS.set(RIGHT_MONITOR_SIDE_FRAME_CONTROL_ID, 'Right Monitor 
 HOTSPOT_READABLE_LABELS.set(WHITEBOARD_CORNER_SCORE_CONTROL_ID, 'Whiteboard CornerScore High Score');
 HOTSPOT_READABLE_LABELS.set(ASHTRAY_SMOKE_CONTROL_ID, 'Ashtray Smoke Effect');
 HOTSPOT_READABLE_LABELS.set(ASHTRAY_CIGARETTE_CONTROL_ID, 'Ashtray Cigarette Effect');
+HOTSPOT_READABLE_LABELS.set(GITHUB_SHELF_OBJECT_CONTROL_ID, 'GitHub');
 export const LOCKED_DEBUG_HOTSPOT_IDS = new Set([
   'overlay-monitor-screen-control', // Keep legacy monitor control id locked if present in persisted hotspot data.
   'overlaymonitorscreencontrol'
 ]);
+// Overlay control hotspots that keep pointer-events active in normal mode (not passthrough overlays).
+export const INTERACTIVE_OVERLAY_CONTROL_IDS = new Set([COMMODORE_OVERLAY_CONTROL_ID, GITHUB_SHELF_OBJECT_CONTROL_ID]);
 export const OVERLAY_CONTROL_BINDINGS = [
   { controlId: DISCORD_OVERLAY_CONTROL_ID, overlayId: DISCORD_OVERLAY_ID },
   { controlId: BIG_TV_SHADOW_LAYER_CONTROL_ID, overlayId: BIG_TV_SHADOW_LAYER_ID },
@@ -352,7 +363,8 @@ export const OVERLAY_CONTROL_BINDINGS = [
   { controlId: WHITEBOARD_CORNER_SCORE_CONTROL_ID, overlayId: WHITEBOARD_CORNER_SCORE_OVERLAY_ID },
   { controlId: FLIP_CLOCK_OVERLAY_CONTROL_ID, overlayId: FLIP_CLOCK_OVERLAY_ID },
   { controlId: ASHTRAY_SMOKE_CONTROL_ID, overlayId: ASHTRAY_SMOKE_EFFECT_ID },
-  { controlId: ASHTRAY_CIGARETTE_CONTROL_ID, overlayId: ASHTRAY_CIGARETTE_EFFECT_ID }
+  { controlId: ASHTRAY_CIGARETTE_CONTROL_ID, overlayId: ASHTRAY_CIGARETTE_EFFECT_ID },
+  { controlId: GITHUB_SHELF_OBJECT_CONTROL_ID, overlayId: GITHUB_SHELF_OBJECT_OVERLAY_ID }
 ];
 export const OVERLAY_CONTROL_TO_OVERLAY_ID = new Map(
   OVERLAY_CONTROL_BINDINGS.map(({ controlId, overlayId }) => [controlId, overlayId])
@@ -412,7 +424,8 @@ export const defaultHotspots = [
   { id: ASHTRAY_CIGARETTE_CONTROL_ID, ...ASHTRAY_CIGARETTE_DEFAULT_BOUNDS },
   { id: LEFT_MONITOR_OVERLAY_CONTROL_ID, ...LEFT_MONITOR_SCREEN_BOUNDS },
   { id: LEFT_MONITOR_SHADOW_LAYER_CONTROL_ID, ...LEFT_MONITOR_FRAME_BOUNDS },
-  { id: LEFT_MONITOR_SIDE_FRAME_CONTROL_ID, ...LEFT_MONITOR_FRAME_BOUNDS }
+  { id: LEFT_MONITOR_SIDE_FRAME_CONTROL_ID, ...LEFT_MONITOR_FRAME_BOUNDS },
+  { id: GITHUB_SHELF_OBJECT_CONTROL_ID, x: 2720, y: 980, w: 130, h: 130 }
 ];
 
 // Overlay placeholders over transparent screen cutouts.
@@ -430,7 +443,8 @@ export const overlayDefaults = [
   { id: RIGHT_MONITOR_SHADOW_LAYER_ID, ...RIGHT_MONITOR_FRAME_BOUNDS },
   { id: RIGHT_MONITOR_SIDE_FRAME_OVERLAY_ID, ...RIGHT_MONITOR_FRAME_BOUNDS },
   { id: WHITEBOARD_CORNER_SCORE_OVERLAY_ID, x: 785, y: 456, w: 355, h: 260 },
-  { id: FLIP_CLOCK_OVERLAY_ID, x: 990, y: 1740, w: 360, h: 156 }
+  { id: FLIP_CLOCK_OVERLAY_ID, x: 990, y: 1740, w: 360, h: 156 },
+  { id: GITHUB_SHELF_OBJECT_OVERLAY_ID, x: 2720, y: 980, w: 130, h: 130 }
 ].map((overlay) => {
   const adjustedOverlay = { ...overlay, x: overlay.x + SCENE_OFFSET_X };
   if (overlay.id === DISCORD_OVERLAY_ID || overlay.id === AQUARIUM_OVERLAY_ID) {
