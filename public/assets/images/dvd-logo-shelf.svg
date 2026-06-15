@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 300" role="img" aria-label="DVD">
+  <g fill="#ff4d4d" transform="translate(-128 -60) scale(1.4)">
+    <path d="M50 86h78c48 0 76 23 76 64s-28 64-76 64H50zm49 37v54h26c21 0 31-11 31-27s-10-27-31-27z"/>
+    <path d="M215 86h49l32 77 32-77h49l-58 128h-46z"/>
+    <path d="M390 86h78c48 0 76 23 76 64s-28 64-76 64h-78zm49 37v54h26c21 0 31-11 31-27s-10-27-31-27z"/>
+    <path d="M130 242c35 19 90 32 150 32s115-13 150-32h-61c-24 7-56 12-89 12s-65-5-89-12z"/>
+  </g>
+</svg>

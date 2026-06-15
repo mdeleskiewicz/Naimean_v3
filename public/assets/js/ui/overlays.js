@@ -25,6 +25,7 @@ import {
   DVD_ACCELEROMETER_MULTIPLIER_MAX,
   GITHUB_SCREENSAVER_LOGO_URL,
   GITHUB_SHELF_OBJECT_IMAGE_URL,
+  GITHUB_SHELF_OBJECT_DVD_IMAGE_URL,
   GITHUB_SHELF_OBJECT_OVERLAY_ID,
   GITHUB_V3_ISSUES_URL,
   GITHUB_V3_AGENTS_URL,
@@ -330,6 +331,7 @@ function deactivateGithubScreensaverMode() {
   if (state.bigTvDvdLogoEl) {
     state.bigTvDvdLogoEl.src = BIG_TV_SCREENSAVER_LOGO_URL;
   }
+  syncGithubShelfObjectImage();
   if (state.bigTvGithubQuadrantEl) {
     state.bigTvGithubQuadrantEl.classList.remove('is-active');
     state.bigTvGithubQuadrantEl.setAttribute('aria-hidden', 'true');
@@ -369,6 +371,7 @@ async function activateGithubScreensaverMode() {
   if (state.bigTvDvdLogoEl) {
     state.bigTvDvdLogoEl.src = GITHUB_SCREENSAVER_LOGO_URL;
   }
+  syncGithubShelfObjectImage();
   if (state.bigTvGithubQuadrantEl) {
     // Reset any previously-activated quadrant states each time mode is entered
     state.bigTvGithubQuadrantEl.querySelectorAll('.github-quadrant-btn').forEach((btn) => btn.classList.remove('is-active'));
@@ -376,6 +379,15 @@ async function activateGithubScreensaverMode() {
     state.bigTvGithubQuadrantEl.setAttribute('aria-hidden', 'false');
   }
   state._cb.restoreBigTvDvdLoop?.();
+}
+
+function syncGithubShelfObjectImage() {
+  if (!state.githubShelfImageEl) {
+    return;
+  }
+  state.githubShelfImageEl.src = state.isGithubScreensaverMode
+    ? GITHUB_SHELF_OBJECT_DVD_IMAGE_URL
+    : GITHUB_SHELF_OBJECT_IMAGE_URL;
 }
 
 function positionOverlay(overlayId) {
@@ -399,6 +411,7 @@ function createOverlays() {
   state.bigTvDvdMissTimeoutIdsByCorner.forEach((timeoutId) => window.clearTimeout(timeoutId));
   state.bigTvDvdMissTimeoutIdsByCorner.clear();
   state.bigTvDvdMissIndicatorsByCorner.clear();
+  state.githubShelfImageEl = null;
   state.aquariumOverlayEl = null;
   state.commodorePowerButtonEl = null;
   state.commodoreShadowOverlayEl = null;
@@ -1030,7 +1043,8 @@ function createOverlays() {
       el.classList.add('github-shelf-object-overlay');
       const imgEl = document.createElement('img');
       imgEl.className = 'github-shelf-image';
-      imgEl.src = GITHUB_SHELF_OBJECT_IMAGE_URL;
+      state.githubShelfImageEl = imgEl;
+      syncGithubShelfObjectImage();
       imgEl.alt = '';
       imgEl.setAttribute('aria-hidden', 'true');
       el.appendChild(imgEl);
