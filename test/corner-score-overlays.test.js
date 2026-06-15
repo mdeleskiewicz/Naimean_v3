@@ -89,10 +89,10 @@ test('whiteboard corner score overlay uses styled stack/value/initials classes',
 test('middle monitor static layer is mounted on CornerScore server overlay instead of Commodore desk overlay', () => {
   const source = fs.readFileSync(overlaysJsPath, 'utf8');
   const commodoreBlockStart = source.indexOf("if (overlay.id === 'overlay-commodore-screen') {");
-  const middleMonitorBlockStart = source.indexOf('if (overlay.id === MIDDLE_MONITOR_CORNER_SCORE_OVERLAY_ID) {');
+  const middleMonitorBlockStart = source.indexOf('if (overlay.id === MONITOR_GROUP_MIDDLE_ID) {');
 
   assert.notEqual(commodoreBlockStart, -1, 'Expected Commodore screen overlay block in overlays.js');
-  assert.notEqual(middleMonitorBlockStart, -1, 'Expected middle monitor corner score overlay block in overlays.js');
+  assert.notEqual(middleMonitorBlockStart, -1, 'Expected middle monitor group overlay block in overlays.js');
 
   const commodoreBlock = source.slice(commodoreBlockStart, middleMonitorBlockStart);
   const powerButtonBlockStart = source.indexOf('if (overlay.id === COMMODORE_POWER_BUTTON_OVERLAY_ID) {', middleMonitorBlockStart);
@@ -106,7 +106,7 @@ test('middle monitor static layer is mounted on CornerScore server overlay inste
   assert.match(
     middleMonitorBlock,
     /middleMonitorStaticOverlayEl\.className = 'overlay-static-layer middle-monitor-static-layer';/,
-    'Expected middle monitor CornerScore overlay block to create middle monitor static layer',
+    'Expected middle monitor group overlay block to create middle monitor static layer',
   );
   assert.match(
     middleMonitorBlock,

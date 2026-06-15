@@ -93,6 +93,67 @@ npx wrangler dev
 - Repository secrets required in GitHub Actions: `CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ACCOUNT_ID`.
 - Runtime secrets should be set in Cloudflare (for example `DISCORD_CLIENT_SECRET`, `SESSION_SECRET`, `GOOGLE_DRIVE_API_KEY`).
 
+## Monitor Overlay Architecture
+
+The Den scene (`public/index.html`) features three physical monitors: **Left**, **Middle**, and **Right**. Each monitor is represented by a single unified DOM group element that contains all three visual layers as children. This "group" approach makes the overlay stack easy to position, resize, and reason about.
+
+### Layer Hierarchy (per monitor)
+
+```
+.screen-overlay.monitor-group          ← positioned at full frame bounds
+  ├── .monitor-frame-layer   (z-index 3)  ← frame PNG (L_Frame.png or R_Frame.png)
+  ├── .monitor-shadow-layer  (z-index 2)  ← TV-off black curtain; animated on power on/off
+  └── .monitor-overlay-layer (z-index 1)  ← interactive screen content
+        ├── .monitor-screen-window        ← inset to the screen hole inside the frame
+        └── (all interactive UI)
+```
+
+### Element IDs
+
+| Monitor | Group ID | Control Hotspot ID |
+|---|---|---|
+| Left | `monitor-group-left` | `monitor-group-left-control` |
+| Middle (CornerScore) | `monitor-group-middle` | `monitor-group-middle-control` |
+| Right | `monitor-group-right` | `monitor-group-right-control` |
+
+Constants for these IDs live in `public/assets/js/core/constants.js`:
+- `MONITOR_GROUP_LEFT_ID`, `MONITOR_GROUP_MIDDLE_ID`, `MONITOR_GROUP_RIGHT_ID`
+- `MONITOR_GROUP_LEFT_CONTROL_ID`, `MONITOR_GROUP_MIDDLE_CONTROL_ID`, `MONITOR_GROUP_RIGHT_CONTROL_ID`
+- `MIDDLE_MONITOR_FRAME_BOUNDS` — design-space pixel bounds for the middle monitor group
+
+### CSS Conventions
+
+All layer classes are defined in `public/assets/css/index.css`:
+
+| Class | Role |
+|---|---|
+| `.monitor-group` | Top-level container; `overflow: visible`; `pointer-events: none` |
+| `.monitor-frame-layer` | Hosts the frame PNG image; `z-index: 3` within group |
+| `.monitor-shadow-layer` | Black curtain for TV-off state; `z-index: 2` within group |
+| `.monitor-overlay-layer` | Screen content container; `z-index: 1` within group |
+| `.left-monitor-screen-window` | Percentage insets aligning to L_Frame.png screen hole |
+| `.right-monitor-screen-window` | Percentage insets aligning to R_Frame.png screen hole |
+
+TV power-on/off animations use the `.tv-turning-on`, `.tv-turning-off`, and `.is-monitor-on` classes on `.monitor-shadow-layer`.
+
+### Frame Images
+
+- Left monitor: `public/assets/images/L_Frame.png`
+- Right monitor: `public/assets/images/R_Frame.png` (displayed with `transform: scaleY(-1)`)
+- Middle monitor: no separate frame PNG; the Commodore desk image (`overlay-commodore-screen`) provides the visual bezel
+
+### Adding a New Monitor
+
+1. Add `MONITOR_GROUP_<NAME>_ID` and `MONITOR_GROUP_<NAME>_CONTROL_ID` constants in `constants.js`
+2. Add a `MONITOR_GROUP_<NAME>_FRAME_BOUNDS` bounds constant (design-space pixels)
+3. Add the group to `overlayDefaults` and `defaultHotspots` in `constants.js`
+4. Add the binding to `OVERLAY_CONTROL_BINDINGS` and `HOTSPOT_READABLE_LABELS`
+5. Add a matching entry in `src/worker.js` `DEFAULT_HOTSPOTS` and `test/fixtures/hotspots.js`
+6. Implement the `if (overlay.id === MONITOR_GROUP_<NAME>_ID)` block in `public/assets/js/ui/overlays.js`
+7. Add inset CSS rules for `.your-monitor-screen-window` if the frame has a transparent screen hole
+8. Wire up any click handler in `public/assets/js/systems/hotspots.js`
+
+
 ## Docs
 
 - [System Overview](docs/System_Overview.md)

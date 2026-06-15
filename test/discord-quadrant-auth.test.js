@@ -25,7 +25,7 @@ test('DVD quadrant click paths require Discord auth before launching actions', (
   );
   assert.match(
     hotspotsSource,
-    /if \(spot\.id === LEFT_MONITOR_OVERLAY_CONTROL_ID\) \{[\s\S]*ensureDiscordAuthForQuadrantAction[\s\S]*githubBtn\.click\(\)[\s\S]*leftMonitorSegmentButtonsByState\.get/,
+    /if \(spot\.id === MONITOR_GROUP_LEFT_CONTROL_ID\) \{[\s\S]*ensureDiscordAuthForQuadrantAction[\s\S]*githubBtn\.click\(\)[\s\S]*leftMonitorSegmentButtonsByState\.get/,
     'Expected left monitor hotspot quadrant routing to require Discord auth',
   );
 });

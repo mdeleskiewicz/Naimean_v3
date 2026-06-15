@@ -4,7 +4,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import {
   NEDRY_GATE_TRIGGER_HOTSPOT_IDS,
-  RIGHT_MONITOR_OVERLAY_CONTROL_ID,
+  MONITOR_GROUP_RIGHT_CONTROL_ID,
 } from '../public/assets/js/core/constants.js';
 
 const repoRoot = path.resolve(import.meta.dirname, '..');
@@ -47,8 +47,8 @@ test('aquarium overlay owns the big-screen video overlay', () => {
 
 test('Nedry gate triggers include the right monitor overlay control hotspot id', () => {
   assert.ok(
-    NEDRY_GATE_TRIGGER_HOTSPOT_IDS.has(RIGHT_MONITOR_OVERLAY_CONTROL_ID),
-    `Expected NEDRY gate trigger hotspot set to include ${RIGHT_MONITOR_OVERLAY_CONTROL_ID}`,
+    NEDRY_GATE_TRIGGER_HOTSPOT_IDS.has(MONITOR_GROUP_RIGHT_CONTROL_ID),
+    `Expected NEDRY gate trigger hotspot set to include ${MONITOR_GROUP_RIGHT_CONTROL_ID}`,
   );
   assert.equal(
     NEDRY_GATE_TRIGGER_HOTSPOT_IDS.has('right-monitor'),

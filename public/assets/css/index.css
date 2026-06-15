@@ -296,23 +296,22 @@
       z-index: 1;
     }
 
-    .screen-overlay.commodore-shadow-overlay,
-    .screen-overlay.monitor-shadow-overlay {
+    /* Monitor group: unified container for frame, shadow, and content layers. */
+    .screen-overlay.monitor-group {
+      overflow: visible;
       pointer-events: none;
-      z-index: 2;
-      background: #000;
-      mix-blend-mode: normal;
-      opacity: 1;
     }
 
-    .screen-overlay.monitor-side-frame-overlay {
+    .monitor-frame-layer {
+      position: absolute;
+      inset: 0;
       overflow: hidden;
       pointer-events: none;
-      /* Frame art sits above the clipped screen content and its glass/reflection treatment. */
+      /* Frame art sits above shadow and screen content. */
       z-index: 3;
     }
 
-    .monitor-side-frame-image {
+    .monitor-frame-image {
       position: absolute;
       inset: 0;
       width: 100%;
@@ -324,8 +323,25 @@
       -webkit-user-drag: none;
     }
 
-    #overlay-right-monitor-side-frame .monitor-side-frame-image {
+    #monitor-group-right .monitor-frame-image {
       transform: scaleY(-1);
+    }
+
+    .monitor-shadow-layer {
+      position: absolute;
+      inset: 0;
+      z-index: 2;
+      pointer-events: none;
+      background: #000;
+      opacity: 1;
+    }
+
+    .monitor-overlay-layer {
+      position: absolute;
+      inset: 0;
+      z-index: 1;
+      pointer-events: auto;
+      overflow: hidden;
     }
 
     .screen-overlay.join-discord-overlay,
@@ -388,25 +404,17 @@
       transform: none;
     }
 
-    #overlay-left-monitor,
-    #overlay-commodore-screen,
-    #overlay-right-monitor {
+    #overlay-commodore-screen {
       z-index: 1;
     }
 
-    #overlay-middle-monitor-corner-score {
-      z-index: 1.5;
+    #monitor-group-left,
+    #monitor-group-right {
+      z-index: 1;
     }
 
-    #overlay-commodore-shadow,
-    #left_monitor_shadow_layer,
-    #right_monitor_shadow_layer {
+    #monitor-group-middle {
       z-index: 2;
-    }
-
-    #overlay-left-monitor-side-frame,
-    #overlay-right-monitor-side-frame {
-      z-index: 3;
     }
 
     .commodore-desk-image {
@@ -586,8 +594,7 @@
       }
     }
 
-    .commodore-shadow-overlay.tv-turning-on,
-    .monitor-shadow-overlay.tv-turning-on {
+    .monitor-shadow-layer.tv-turning-on {
       animation: commodore-tv-turn-on 1s ease-in forwards;
       pointer-events: none;
     }
@@ -649,22 +656,18 @@
       }
     }
 
-    .commodore-shadow-overlay.is-monitor-on,
-    .monitor-shadow-overlay.is-monitor-on {
+    .monitor-shadow-layer.is-monitor-on {
       opacity: 0;
       clip-path: inset(50%);
     }
 
-    .commodore-shadow-overlay.tv-turning-off,
-    .monitor-shadow-overlay.tv-turning-off {
+    .monitor-shadow-layer.tv-turning-off {
       animation: commodore-tv-shadow-takeover var(--commodore-tv-turn-off-duration) ease-out forwards;
       pointer-events: none;
     }
 
-    .commodore-shadow-overlay.tv-turning-off::before,
-    .monitor-shadow-overlay.tv-turning-off::before,
-    .commodore-shadow-overlay.tv-turning-off::after,
-    .monitor-shadow-overlay.tv-turning-off::after {
+    .monitor-shadow-layer.tv-turning-off::before,
+    .monitor-shadow-layer.tv-turning-off::after {
       content: '';
       position: absolute;
       top: 50%;
@@ -672,8 +675,7 @@
       pointer-events: none;
     }
 
-    .commodore-shadow-overlay.tv-turning-off::before,
-    .monitor-shadow-overlay.tv-turning-off::before {
+    .monitor-shadow-layer.tv-turning-off::before {
       width: 92%;
       height: 2px;
       border-radius: 999px;
@@ -683,8 +685,7 @@
       animation: commodore-tv-turn-off-line var(--commodore-tv-turn-off-duration) ease-out forwards;
     }
 
-    .commodore-shadow-overlay.tv-turning-off::after,
-    .monitor-shadow-overlay.tv-turning-off::after {
+    .monitor-shadow-layer.tv-turning-off::after {
       width: 8px;
       height: 8px;
       border-radius: 50%;
