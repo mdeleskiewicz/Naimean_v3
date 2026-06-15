@@ -1,6 +1,7 @@
 import {
   AQUARIUM_OVERLAY_ID,
   AQUARIUM_STATIC_VIDEO_URL,
+  BIG_TV_SHADOW_LAYER_ID,
   BIG_TV_FULLSCREEN_OVERLAY_IDS,
   BIG_TV_INTERACTIVE_UI_SELECTORS,
   BIG_TV_PROMPT_PREFIX,
@@ -12,18 +13,21 @@ import {
   CALENDAR_MONTH_IMAGE_END,
   CALENDAR_MONTH_IMAGE_START,
   CALENDAR_MONTH_NAME_FORMATTER,
-  COMMODORE_DESK_IMAGE_URL,
   COMMODORE_POWER_BUTTON_OVERLAY_ID,
+  COMMODORE_DESK_IMAGE_URL,
+  COMMODORE_SHADOW_OVERLAY_ID,
   DEFAULT_LEFT_MONITOR_STATE,
   DISCORD_BUTTON_IMAGE_URL,
   DISCORD_OVERLAY_ID,
   DISCORD_WIDGET_URL,
   LEFT_MONITOR_SIDE_FRAME_IMAGE_URL,
   LEFT_MONITOR_IMAGE_URLS,
+  LEFT_MONITOR_SHADOW_LAYER_ID,
   LEFT_MONITOR_SIDE_FRAME_OVERLAY_ID,
   LEFT_MONITOR_SEGMENTS,
   LEFT_MONITOR_STATES,
   LOGIN_LOGO_URL,
+  RIGHT_MONITOR_SHADOW_LAYER_ID,
   RIGHT_MONITOR_SIDE_FRAME_IMAGE_URL,
   RIGHT_MONITOR_SIDE_FRAME_OVERLAY_ID,
   STARSHRIMP_LOGO_IMAGE_URL,
@@ -326,8 +330,15 @@ function createOverlays() {
   state.overlayElementsById.clear();
   state.leftMonitorSegmentButtonsByState.clear();
   state.loginStepElsByKey.clear();
+  state.bigTvDvdMissTimeoutIdsByCorner.forEach((timeoutId) => window.clearTimeout(timeoutId));
+  state.bigTvDvdMissTimeoutIdsByCorner.clear();
+  state.bigTvDvdMissIndicatorsByCorner.clear();
   state.aquariumOverlayEl = null;
   state.commodorePowerButtonEl = null;
+  state.commodoreShadowOverlayEl = null;
+  state.bigTvShadowOverlayEl = null;
+  state.leftMonitorShadowOverlayEl = null;
+  state.rightMonitorShadowOverlayEl = null;
   overlayDefaults.forEach((overlay) => {
     const rect = getOverlayRect(overlay.id);
     if (!rect) return;
@@ -353,6 +364,14 @@ function createOverlays() {
       state.bigTvCornerScoreStatusLabelEl.className = 'big-tv-corner-score-status-label';
       state.bigTvCornerScoreStatusEl.appendChild(state.bigTvCornerScoreStatusLabelEl);
       state.bigTvDvdOverlayEl.appendChild(state.bigTvCornerScoreStatusEl);
+      ['top-left', 'top-right', 'bottom-left', 'bottom-right'].forEach((corner) => {
+        const missIndicatorEl = document.createElement('p');
+        missIndicatorEl.className = `big-tv-dvd-miss-indicator big-tv-dvd-miss-indicator-${corner}`;
+        missIndicatorEl.textContent = 'Near Miss';
+        missIndicatorEl.setAttribute('aria-hidden', 'true');
+        state.bigTvDvdMissIndicatorsByCorner.set(corner, missIndicatorEl);
+        state.bigTvDvdOverlayEl.appendChild(missIndicatorEl);
+      });
       el.appendChild(state.bigTvDvdOverlayEl);
       applyDvdColorStep();
       if (DISCORD_WIDGET_URL) {
@@ -496,6 +515,40 @@ function createOverlays() {
       state.calendarMonthImageEl.className = 'calendar-big-tv-image';
       state.calendarBigTvOverlayEl.appendChild(state.calendarMonthImageEl);
       el.appendChild(state.calendarBigTvOverlayEl);
+    }
+
+    if (overlay.id === COMMODORE_SHADOW_OVERLAY_ID) {
+      el.classList.add('commodore-shadow-overlay');
+      state.commodoreShadowOverlayEl = el;
+    }
+
+    if (overlay.id === BIG_TV_SHADOW_LAYER_ID) {
+      el.classList.add('monitor-shadow-overlay');
+      state.bigTvShadowOverlayEl = el;
+    }
+
+    if (overlay.id === LEFT_MONITOR_SHADOW_LAYER_ID) {
+      el.classList.add('monitor-shadow-overlay');
+      state.leftMonitorShadowOverlayEl = el;
+    }
+
+    if (overlay.id === RIGHT_MONITOR_SHADOW_LAYER_ID) {
+      el.classList.add('monitor-shadow-overlay');
+      state.rightMonitorShadowOverlayEl = el;
+    }
+
+    if (overlay.id === COMMODORE_POWER_BUTTON_OVERLAY_ID) {
+      el.classList.add('commodore-power-button-overlay');
+      state.commodorePowerButtonEl = document.createElement('button');
+      state.commodorePowerButtonEl.type = 'button';
+      state.commodorePowerButtonEl.className = 'commodore-power-button-button';
+      state.commodorePowerButtonEl.setAttribute('aria-label', 'Power on Commodore monitors');
+      state.commodorePowerButtonEl.addEventListener('click', (event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        state._cb.triggerCommodorePowerOnSequence?.();
+      });
+      el.appendChild(state.commodorePowerButtonEl);
     }
 
     if (overlay.id === 'overlay-left-monitor') {
