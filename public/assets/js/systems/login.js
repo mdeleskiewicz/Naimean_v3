@@ -1,4 +1,4 @@
-import { API_TIMEOUT_MS, DISCORD_BUTTON_IMAGE_URL, DISCORD_CDN_BASE_URL, DISCORD_GUEST_INVITE_URL, DISCORD_AVATAR_HASH_RE, DISCORD_LOGIN_FLOW_STORAGE_KEY, DISCORD_LOGIN_SEQUENCE_REDIRECT_DELAY_MS, DISCORD_LOGIN_SEQUENCE_STEP_DELAY_MS, DISCORD_LOGIN_STEP_KEYS, DISCORD_USER_ID_RE } from '../core/constants.js';
+import { API_TIMEOUT_MS, DISCORD_BUTTON_IMAGE_URL, DISCORD_CDN_BASE_URL, DISCORD_AVATAR_HASH_RE, DISCORD_LOGIN_FLOW_STORAGE_KEY, DISCORD_LOGIN_SEQUENCE_REDIRECT_DELAY_MS, DISCORD_LOGIN_SEQUENCE_STEP_DELAY_MS, DISCORD_LOGIN_STEP_KEYS, DISCORD_USER_ID_RE } from '../core/constants.js';
 import { state } from '../core/state.js';
 import { wait } from '../core/utils.js';
 
@@ -75,12 +75,25 @@ function syncDiscordAuthBodyClass() {
 
 function handleDiscordJoinButtonAction() {
   if (state.discordAuthState?.authenticated) {
-    persistDiscordInviteReturnState(true);
-    window.location.assign(DISCORD_GUEST_INVITE_URL);
+    state._cb.activateBigTvPromptMode?.();
     return;
   }
   state.shouldAutoStartDiscordLoginOnNextLoginActivation = true;
   state._cb.setLeftMonitorState?.('login');
+}
+
+async function ensureDiscordAuthForQuadrantAction() {
+  if (state.discordAuthState?.authenticated) {
+    return true;
+  }
+  if (!state.discordAuthState) {
+    await fetchDiscordAuthState();
+  }
+  if (state.discordAuthState?.authenticated) {
+    return true;
+  }
+  window.location.assign('/api/discord/auth');
+  return false;
 }
 
 async function fetchDiscordAuthState() {
@@ -334,5 +347,6 @@ state._cb.syncDiscordButtonUi = syncDiscordButtonUi;
 state._cb.syncDiscordAuthBodyClass = syncDiscordAuthBodyClass;
 state._cb.handleDiscordJoinButtonAction = handleDiscordJoinButtonAction;
 state._cb.handleLoginPrimaryAction = handleLoginPrimaryAction;
+state._cb.ensureDiscordAuthForQuadrantAction = ensureDiscordAuthForQuadrantAction;
 
-export { persistDiscordLoginFlowState, consumeDiscordLoginFlowState, getDiscordAvatarUrl, syncLoginStepUi, syncLoginOverlayUi, beginDiscordLoginFlow, handleDiscordJoinButtonAction, handleLoginPrimaryAction, showLoginOverlay, hideLoginOverlay, fetchDiscordAuthState, syncDiscordButtonUi, syncDiscordAuthBodyClass, activateLoginMode };
+export { persistDiscordLoginFlowState, consumeDiscordLoginFlowState, getDiscordAvatarUrl, syncLoginStepUi, syncLoginOverlayUi, beginDiscordLoginFlow, handleDiscordJoinButtonAction, handleLoginPrimaryAction, showLoginOverlay, hideLoginOverlay, fetchDiscordAuthState, syncDiscordButtonUi, syncDiscordAuthBodyClass, activateLoginMode, ensureDiscordAuthForQuadrantAction };
