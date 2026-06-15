@@ -41,13 +41,18 @@ test('right monitor corner score overlay applies expected classes and initials p
   );
   assert.match(
     source,
-    /bigTvHighScoreStatsEl\.className = 'right-monitor-cs-server-stats';/,
-    'Expected right monitor server stats panel class to be applied',
+    /bigTvHighScoreStatsEl\.className = 'big-tv-high-score-stats';/,
+    'Expected big TV CornerScore metrics panel class to be applied',
   );
   assert.match(
     source,
-    /rightMonitorCornerScoreServerStatsEl\.className = 'right-monitor-cs-server-stats-grid';/,
-    'Expected right monitor server stats grid class to be applied',
+    /highScoreStatsGridEl\.className = 'big-tv-high-score-stats-grid';/,
+    'Expected big TV CornerScore metrics panel grid class to be applied',
+  );
+  assert.match(
+    source,
+    /quadrantEl\.className = `big-tv-corner-score-quadrant \$\{cls\}`;/,
+    'Expected metrics panel quadrants to be created for each DVD corner',
   );
 });
 

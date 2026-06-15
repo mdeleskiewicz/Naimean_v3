@@ -498,21 +498,77 @@ function createOverlays() {
         state.bigTvGithubQuadrantEl.appendChild(btn);
       });
       state.bigTvDvdOverlayEl.appendChild(state.bigTvGithubQuadrantEl);
-      // Big TV high score stats panel — toggled by clicking the whiteboard high-score overlay
+      // Big TV CornerScore metrics panel — toggled by clicking the whiteboard high-score overlay
       state.bigTvHighScoreStatsEl = document.createElement('div');
       state.bigTvHighScoreStatsEl.className = 'big-tv-high-score-stats';
       state.bigTvHighScoreStatsEl.setAttribute('aria-hidden', 'true');
       const highScoreStatsTitleEl = document.createElement('p');
       highScoreStatsTitleEl.className = 'big-tv-high-score-stats-title';
-      highScoreStatsTitleEl.textContent = 'High Score';
-      const highScoreStatsRowEl = document.createElement('div');
-      highScoreStatsRowEl.className = 'big-tv-high-score-stats-row';
-      state.bigTvHighScoreStatsValueEl = document.createElement('p');
-      state.bigTvHighScoreStatsValueEl.className = 'big-tv-high-score-stats-value';
-      state.bigTvHighScoreStatsInitialsEl = document.createElement('p');
-      state.bigTvHighScoreStatsInitialsEl.className = 'big-tv-high-score-stats-initials';
-      highScoreStatsRowEl.append(state.bigTvHighScoreStatsValueEl, state.bigTvHighScoreStatsInitialsEl);
-      state.bigTvHighScoreStatsEl.append(highScoreStatsTitleEl, highScoreStatsRowEl);
+      highScoreStatsTitleEl.textContent = 'CornerScore Metrics';
+      const highScoreStatsGridEl = document.createElement('div');
+      highScoreStatsGridEl.className = 'big-tv-high-score-stats-grid';
+      const metricQuadrants = [
+        {
+          cls: 'big-tv-corner-score-quadrant-top-left',
+          title: 'Score',
+          fields: [
+            { label: 'Local', cls: 'big-tv-cs-local-score' },
+            { label: 'High', cls: 'big-tv-high-score-stats-value', stateKey: 'bigTvHighScoreStatsValueEl' }
+          ]
+        },
+        {
+          cls: 'big-tv-corner-score-quadrant-top-right',
+          title: 'Initials + Time',
+          fields: [
+            { label: 'Initials', cls: 'big-tv-high-score-stats-initials', stateKey: 'bigTvHighScoreStatsInitialsEl' },
+            { label: 'Run Time', cls: 'big-tv-cs-run-elapsed', stateKey: 'rightMonitorCornerScoreElapsedEl' }
+          ]
+        },
+        {
+          cls: 'big-tv-corner-score-quadrant-bottom-left',
+          title: 'Run Stats',
+          fields: [
+            { label: 'Bounces', cls: 'big-tv-cs-run-bounces', stateKey: 'rightMonitorCornerScoreBouncesEl' },
+            { label: 'Near Misses', cls: 'big-tv-cs-run-near-misses', stateKey: 'rightMonitorCornerScoreNearMissesEl' }
+          ]
+        },
+        {
+          cls: 'big-tv-corner-score-quadrant-bottom-right',
+          title: 'Server Totals',
+          fields: [
+            { label: 'Scores', cls: 'big-tv-cs-total-scores' },
+            { label: 'Bounces', cls: 'big-tv-cs-total-bounces' },
+            { label: 'Near Misses', cls: 'big-tv-cs-total-near-misses' },
+            { label: 'Time', cls: 'big-tv-cs-total-time' },
+            { label: 'Runs', cls: 'big-tv-cs-total-runs' }
+          ]
+        }
+      ];
+      metricQuadrants.forEach(({ cls, title, fields }) => {
+        const quadrantEl = document.createElement('section');
+        quadrantEl.className = `big-tv-corner-score-quadrant ${cls}`;
+        const titleEl = document.createElement('p');
+        titleEl.className = 'big-tv-corner-score-quadrant-title';
+        titleEl.textContent = title;
+        quadrantEl.appendChild(titleEl);
+        const listEl = document.createElement('div');
+        listEl.className = 'big-tv-corner-score-quadrant-list';
+        fields.forEach(({ label, cls: valueClassName, stateKey }) => {
+          const labelEl = document.createElement('span');
+          labelEl.className = 'big-tv-corner-score-metric-label';
+          labelEl.textContent = label;
+          const valueEl = document.createElement('span');
+          valueEl.className = `big-tv-corner-score-metric-value ${valueClassName}`;
+          valueEl.textContent = '—';
+          if (stateKey) {
+            state[stateKey] = valueEl;
+          }
+          listEl.append(labelEl, valueEl);
+        });
+        quadrantEl.appendChild(listEl);
+        highScoreStatsGridEl.appendChild(quadrantEl);
+      });
+      state.bigTvHighScoreStatsEl.append(highScoreStatsTitleEl, highScoreStatsGridEl);
       state.bigTvDvdOverlayEl.appendChild(state.bigTvHighScoreStatsEl);
       el.appendChild(state.bigTvDvdOverlayEl);
       applyDvdColorStep();
@@ -937,59 +993,6 @@ function createOverlays() {
         submitCornerScoreInitials();
       });
       state.rightMonitorCornerScoreOverlayEl.append(rightMonitorCornerScoreLabelEl, state.rightMonitorCornerScoreValueEl);
-      // Run stats row
-      const runStatsRowEl = document.createElement('div');
-      runStatsRowEl.className = 'right-monitor-cs-run-stats';
-      const statItems = [
-        { key: 'elapsed', label: 'Time', stateKey: 'rightMonitorCornerScoreElapsedEl', value: '0:00' },
-        { key: 'bounces', label: 'Bounces', stateKey: 'rightMonitorCornerScoreBouncesEl', value: '0' },
-        { key: 'near-misses', label: 'Near Misses', stateKey: 'rightMonitorCornerScoreNearMissesEl', value: '0' }
-      ];
-      statItems.forEach(({ key, label, stateKey, value }) => {
-        const itemEl = document.createElement('div');
-        itemEl.className = 'right-monitor-cs-stat-item';
-        const labelEl = document.createElement('span');
-        labelEl.className = 'right-monitor-cs-stat-label';
-        labelEl.textContent = label;
-        const valueEl = document.createElement('span');
-        valueEl.className = `right-monitor-cs-stat-value right-monitor-cs-stat-${key}`;
-        valueEl.textContent = value;
-        state[stateKey] = valueEl;
-        itemEl.append(labelEl, valueEl);
-        runStatsRowEl.appendChild(itemEl);
-      });
-      state.rightMonitorCornerScoreOverlayEl.appendChild(runStatsRowEl);
-      state.bigTvHighScoreStatsEl = document.createElement('div');
-      state.bigTvHighScoreStatsEl.className = 'right-monitor-cs-server-stats';
-      state.bigTvHighScoreStatsEl.setAttribute('aria-hidden', 'true');
-      const serverStatsTitleEl = document.createElement('p');
-      serverStatsTitleEl.className = 'right-monitor-cs-server-stats-title';
-      serverStatsTitleEl.textContent = 'Server High Score';
-      state.rightMonitorCornerScoreServerStatsEl = document.createElement('div');
-      state.rightMonitorCornerScoreServerStatsEl.className = 'right-monitor-cs-server-stats-grid';
-      const serverStatFields = [
-        { label: 'High Score', cls: 'right-monitor-cs-server-high-score-value', stateKey: 'bigTvHighScoreStatsValueEl' },
-        { label: 'Initials', cls: 'right-monitor-cs-server-high-score-initials', stateKey: 'bigTvHighScoreStatsInitialsEl' },
-        { label: 'Scores', cls: 'right-monitor-cs-total-scores' },
-        { label: 'Bounces', cls: 'right-monitor-cs-total-bounces' },
-        { label: 'Near Misses', cls: 'right-monitor-cs-total-near-misses' },
-        { label: 'Time', cls: 'right-monitor-cs-total-time' },
-        { label: 'Runs', cls: 'right-monitor-cs-total-runs' }
-      ];
-      serverStatFields.forEach(({ label, cls, stateKey }) => {
-        const labelEl = document.createElement('span');
-        labelEl.className = 'right-monitor-cs-server-stats-label';
-        labelEl.textContent = label;
-        const valueEl = document.createElement('span');
-        valueEl.className = `right-monitor-cs-server-stats-value ${cls}`;
-        valueEl.textContent = '—';
-        if (stateKey) {
-          state[stateKey] = valueEl;
-        }
-        state.rightMonitorCornerScoreServerStatsEl.append(labelEl, valueEl);
-      });
-      state.bigTvHighScoreStatsEl.append(serverStatsTitleEl, state.rightMonitorCornerScoreServerStatsEl);
-      state.rightMonitorCornerScoreOverlayEl.appendChild(state.bigTvHighScoreStatsEl);
       state.rightMonitorCornerScoreOverlayEl.appendChild(state.bigTvCornerScoreInitialsPromptEl);
       renderCornerScore();
       syncCornerScoreInitialsPromptVisibility();

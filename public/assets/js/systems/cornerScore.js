@@ -200,13 +200,13 @@ function renderPersonalBestStats() {
 }
 
 function renderServerStats() {
-  if (!state.rightMonitorCornerScoreServerStatsEl) return;
+  if (!state.bigTvHighScoreStatsEl) return;
   const stats = state.cornerScoreServerStats;
-  const totalScoresEl = state.rightMonitorCornerScoreServerStatsEl.querySelector('.right-monitor-cs-total-scores');
-  const totalBouncesEl = state.rightMonitorCornerScoreServerStatsEl.querySelector('.right-monitor-cs-total-bounces');
-  const totalNearMissesEl = state.rightMonitorCornerScoreServerStatsEl.querySelector('.right-monitor-cs-total-near-misses');
-  const totalTimeEl = state.rightMonitorCornerScoreServerStatsEl.querySelector('.right-monitor-cs-total-time');
-  const totalRunsEl = state.rightMonitorCornerScoreServerStatsEl.querySelector('.right-monitor-cs-total-runs');
+  const totalScoresEl = state.bigTvHighScoreStatsEl.querySelector('.big-tv-cs-total-scores');
+  const totalBouncesEl = state.bigTvHighScoreStatsEl.querySelector('.big-tv-cs-total-bounces');
+  const totalNearMissesEl = state.bigTvHighScoreStatsEl.querySelector('.big-tv-cs-total-near-misses');
+  const totalTimeEl = state.bigTvHighScoreStatsEl.querySelector('.big-tv-cs-total-time');
+  const totalRunsEl = state.bigTvHighScoreStatsEl.querySelector('.big-tv-cs-total-runs');
   if (totalScoresEl) totalScoresEl.textContent = stats ? String(stats.totalScores) : '—';
   if (totalBouncesEl) totalBouncesEl.textContent = stats ? String(stats.totalBounces) : '—';
   if (totalNearMissesEl) totalNearMissesEl.textContent = stats ? String(stats.totalNearMisses) : '—';
@@ -285,6 +285,12 @@ function savePersonalBestIfImproved() {
 function renderCornerScore() {
   if (state.rightMonitorCornerScoreValueEl) {
     state.rightMonitorCornerScoreValueEl.textContent = String(state.cornerScoreValue);
+  }
+  if (state.bigTvHighScoreStatsEl) {
+    const localScoreEl = state.bigTvHighScoreStatsEl.querySelector('.big-tv-cs-local-score');
+    if (localScoreEl) {
+      localScoreEl.textContent = String(state.cornerScoreValue);
+    }
   }
   if (state.whiteboardCornerScoreValueEl) {
     state.whiteboardCornerScoreValueEl.textContent = String(state.cornerScoreHighScoreValue);
