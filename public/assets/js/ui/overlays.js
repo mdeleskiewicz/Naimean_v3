@@ -329,7 +329,6 @@ function deactivateGithubScreensaverMode() {
   state.githubScreensaverSequenceToken += 1;
   if (state.bigTvDvdLogoEl) {
     state.bigTvDvdLogoEl.src = BIG_TV_SCREENSAVER_LOGO_URL;
-    state.bigTvDvdLogoEl.classList.remove('github-screensaver-logo');
   }
   if (state.bigTvGithubQuadrantEl) {
     state.bigTvGithubQuadrantEl.classList.remove('is-active');
@@ -369,7 +368,6 @@ async function activateGithubScreensaverMode() {
   state.isGithubScreensaverMode = true;
   if (state.bigTvDvdLogoEl) {
     state.bigTvDvdLogoEl.src = GITHUB_SCREENSAVER_LOGO_URL;
-    state.bigTvDvdLogoEl.classList.add('github-screensaver-logo');
   }
   if (state.bigTvGithubQuadrantEl) {
     // Reset any previously-activated quadrant states each time mode is entered
@@ -1043,7 +1041,6 @@ function createOverlays() {
         if (!isBigTvMonitorInteractive()) return;
         const clickedInteractive = event.target instanceof Element && event.target.closest(BIG_TV_INTERACTIVE_UI_SELECTORS);
         if (clickedInteractive) return;
-        void enterBigTvFullscreen(el);
       });
     }
 

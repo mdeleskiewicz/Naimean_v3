@@ -723,7 +723,7 @@ function createHotspots(hotspotList) {
         state._cb.interruptBigTvDvdLoop?.();
         if (wasDvdScreensaverActive) state._cb.activateRightMonitorCornerScoreMode?.();
         state._cb.setLeftMonitorState?.(DEFAULT_LEFT_MONITOR_STATE);
-        return void state._cb.enterBigTvFullscreen?.();
+        return;
       }
       if (spot.id === FLIP_CLOCK_OVERLAY_CONTROL_ID) return void state._cb.openClockApp?.();
       if (WHITEBOARD_HOTSPOT_IDS.has(spot.id)) return void window.open(getHotspotEffectiveUrl(spot.id) || WHITEBOARD_HOTSPOT_URLS[spot.id] || WHITEBOARD_HOTSPOT_URLS.whiteboard, '_blank', 'noopener,noreferrer');
