@@ -61,7 +61,7 @@ Workers can export multiple things: the default `fetch` handler *and* any Durabl
 | **Worker** | The JavaScript file that handles requests (`src/worker.js`) |
 | **Binding** | A named reference in `env` that lets the worker talk to another Cloudflare service |
 | **`env`** | The second argument to `fetch(request, env)` — holds all bindings and environment variables |
-| **`compatibility_date`** | Tells Cloudflare which version of the Workers runtime to use; set to `2026-05-18` in this project |
+| **`compatibility_date`** | Tells Cloudflare which version of the Workers runtime to use; set to `2026-06-15` in this project |
 | **`nodejs_compat`** | A compatibility flag that allows some Node.js built-in APIs (like `Buffer`, `crypto`) to work inside the Worker |
 
 ---
@@ -69,8 +69,17 @@ Workers can export multiple things: the default `fetch` handler *and* any Durabl
 ## Where to Look in This Repo
 
 - **`src/worker.js`** — the entire worker: routing, session management, API handlers, and the HotspotStore class
-- **`wrangler.jsonc`** — tells Cloudflare which file is the worker (`"main": "src/worker.js"`), what bindings it has, and what environment variables to inject
+- **`wrangler.toml`** — tells Cloudflare which file is the worker (`main = "src/worker.js"`), what bindings it has, and what environment variables to inject
 - **`test/worker.test.js`** — unit tests for the worker's routing and API behaviour
+
+## Runtime Binding Snapshot
+
+From `wrangler.toml`, this worker currently has:
+
+- `ASSETS` (static assets from `public/`)
+- `HOTSPOT_STORE` (Durable Object class `HotspotStore`)
+- `DB` (D1 database `naimean-v3-db`, id `0798d2f2-618b-4044-91f5-a2c762922184`)
+- `ASSETS_STORAGE` (R2 bucket `naimean-v3-assets`)
 
 ---
 

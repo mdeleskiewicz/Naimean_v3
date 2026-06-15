@@ -12,14 +12,13 @@ In older Cloudflare setups, Pages and Workers were separate products. In this pr
 
 The **Assets** binding is how the Worker accesses the static files in the `public/` folder. When the Worker calls `env.ASSETS.fetch(request)`, Cloudflare's infrastructure finds the matching file in the `public/` directory and returns it as an HTTP response — just like a traditional web server would.
 
-Configured in `wrangler.jsonc`:
+Configured in `wrangler.toml`:
 
-```jsonc
-"assets": {
-  "directory": "public",      // the local folder to deploy as static files
-  "binding": "ASSETS",        // the name used to access it in env (env.ASSETS)
-  "run_worker_first": ["/*"]  // run the Worker on ALL paths before checking assets
-}
+```toml
+[assets]
+directory = "public"          # local folder deployed as static files
+binding = "ASSETS"            # name used in env (env.ASSETS)
+run_worker_first = ["/*"]     # run Worker on all paths before serving assets
 ```
 
 The key line is `"run_worker_first": ["/*"]`. Without this, Cloudflare would serve matching static files directly without calling the Worker at all. With it, **every request goes through `src/worker.js` first** — allowing the worker to add security headers, enforce auth, rewrite paths, etc. before the file is returned.
@@ -88,6 +87,21 @@ The `public/_redirects` file is a Cloudflare Pages convention for declaring URL 
 ```
 
 However, because `run_worker_first` is enabled on all paths, these redirects are handled by the Worker's own routing logic first. The `_redirects` file acts as a fallback for any redirects the Worker doesn't handle.
+
+## R2 Asset Bucket
+
+This repository also binds an R2 bucket in `wrangler.toml`:
+
+```toml
+[[r2_buckets]]
+binding = "ASSETS_STORAGE"
+bucket_name = "naimean-v3-assets"
+```
+
+`env.ASSETS` and `env.ASSETS_STORAGE` are different:
+
+- `env.ASSETS` serves deployed static files from `public/`
+- `env.ASSETS_STORAGE` is object storage for runtime-managed files
 
 ---
 

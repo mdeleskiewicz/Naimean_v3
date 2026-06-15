@@ -1,171 +1,84 @@
 # Wrangler
 
-## What Is Wrangler?
+## What Wrangler Does Here
 
-**Wrangler** is Cloudflare's official command-line tool for developing, testing, and deploying Cloudflare Workers (and Pages). It is the equivalent of tools like the AWS CLI or the Firebase CLI — it bridges your local code and Cloudflare's cloud infrastructure.
+Wrangler is the CLI used to validate and deploy this Cloudflare project. The active repo config is in `wrangler.toml`.
 
-In this project, Wrangler is used to:
-- Deploy the Worker and static assets to Cloudflare
-- Validate configuration before deploying
+## `wrangler.toml` Overview
 
-Wrangler is listed as a dev dependency in `package.json`:
+Current high-value config sections:
 
-```json
-"devDependencies": {
-  "wrangler": "^4.98.0"
-}
+```toml
+name = "naimeav3"
+main = "src/worker.js"
+compatibility_date = "2026-06-15"
+compatibility_flags = ["nodejs_compat"]
+
+[assets]
+directory = "public"
+binding = "ASSETS"
+run_worker_first = ["/*"]
+
+[[d1_databases]]
+binding = "DB"
+database_name = "naimean-v3-db"
+database_id = "0798d2f2-618b-4044-91f5-a2c762922184"
+
+[[r2_buckets]]
+binding = "ASSETS_STORAGE"
+bucket_name = "naimean-v3-assets"
+
+[[durable_objects.bindings]]
+name = "HOTSPOT_STORE"
+class_name = "HotspotStore"
 ```
 
----
+## Cloudflare Storage Reference
 
-## `wrangler.jsonc` — The Configuration File
+### Bound resources
 
-The `wrangler.jsonc` file is the project's Cloudflare configuration. It tells Wrangler (and Cloudflare) everything it needs to know about the deployment: which Worker file to use, what static files to serve, what services the Worker can access, and what environment variables to inject.
+| Type | Binding | Resource |
+|---|---|---|
+| Assets | `ASSETS` | `public/` static files |
+| D1 | `DB` | `naimean-v3-db` (`0798d2f2-618b-4044-91f5-a2c762922184`) |
+| R2 | `ASSETS_STORAGE` | `naimean-v3-assets` |
+| Durable Object | `HOTSPOT_STORE` | `HotspotStore` class |
 
-```jsonc
-{
-  "$schema": "node_modules/wrangler/config-schema.json",
+### Additional account resources provided for Copilot/refactoring context
 
-  // The name of your Worker in Cloudflare's dashboard
-  "name": "naimeav3",
+| Type | Name | ID |
+|---|---|---|
+| Workers KV | `naimean-kv` | `dff7175059ce478eab8c910949ca330f` |
+| D1 | `naimean-db` | `0871f90d-f7e3-467a-a1f9-4e74ac8aef42` |
+| D1 | `barrelroll-counter-db` | `22277fbe-031d-4ca2-8937-245309e981cd` |
 
-  // The main Worker entry point file
-  "main": "src/worker.js",
+These extra resources are inventory references only unless/until they are declared as bindings in `wrangler.toml`.
 
-  // Locks the runtime API version for stability
-  "compatibility_date": "2026-05-18",
+## Vars and Secrets
 
-  // Enables some Node.js APIs inside the Worker
-  "compatibility_flags": ["nodejs_compat"],
+### Vars in `wrangler.toml` (`[vars]`)
 
-  // Static file hosting configuration
-  "assets": {
-    "directory": "public",        // Local folder to deploy
-    "binding": "ASSETS",          // Name in env (env.ASSETS)
-    "run_worker_first": ["/*"]    // Run Worker before serving any file
-  },
+Non-sensitive values such as folder IDs, client IDs, and page sizes.
 
-  // Enables Cloudflare's built-in logging and tracing
-  "observability": {
-    "enabled": true
-  },
+### Secrets in Cloudflare runtime
 
-  // Environment variables injected into env
-  "vars": {
-    "GOOGLE_DRIVE_SHRIMP_FOLDER_ID": "...",
-    "GOOGLE_DRIVE_PAGE_SIZE": "100",
-    "AQUARIUM_LOCAL_CLIP_COUNT": "23",
-    "DISCORD_CLIENT_ID": "...",
-    "DISCORD_GUILD_ID": "REQUIRED_SET_DISCORD_GUILD_ID",
-    "DISCORD_ALLOWED_ROLE_IDS": "..."
-  },
-
-  // Durable Object class registration
-  "durable_objects": {
-    "bindings": [
-      {
-        "name": "HOTSPOT_STORE",
-        "class_name": "HotspotStore"
-      }
-    ]
-  },
-
-  // Schema migrations for Durable Object storage
-  "migrations": [
-    {
-      "tag": "v1",
-      "new_sqlite_classes": ["HotspotStore"]
-    }
-  ]
-}
-```
-
-### Key Sections Explained
-
-#### `name`
-The identifier for your Worker in Cloudflare's dashboard. The deployed Worker will be reachable at `https://naimeav3.<your-subdomain>.workers.dev` by default (though in this project it uses a custom domain).
-
-#### `main`
-The JavaScript entry point file. Wrangler bundles and uploads this file (and anything it imports) to Cloudflare.
-
-#### `compatibility_date`
-Cloudflare occasionally changes how Workers behave. Setting a `compatibility_date` means your Worker always uses the runtime behaviour from that date, even as Cloudflare evolves. This prevents surprise breakages from Cloudflare's changes.
-
-#### `compatibility_flags`
-Feature flags for the runtime. `nodejs_compat` enables Node.js compatibility APIs (e.g. some `crypto` and `Buffer` behaviour) inside the Worker.
-
-#### `assets`
-See [Cloudflare Pages and Assets](Cloudflare-Pages-and-Assets.md) for a full explanation.
-
-#### `observability`
-Enables Cloudflare's built-in **Workers Observability** — logs and traces from your Worker are automatically collected and viewable in the Cloudflare dashboard under "Workers & Pages → your worker → Logs". This is how you debug a live deployment.
-
-#### `vars`
-Plain-text environment variables that are injected into the Worker's `env` object. These are visible to anyone who can read `wrangler.jsonc`, so they should not contain secrets.
-
-**Secrets** (like `DISCORD_CLIENT_SECRET`, `SESSION_SECRET`, `GOOGLE_DRIVE_API_KEY`) are stored separately using Cloudflare's encrypted secrets system and set via the Cloudflare dashboard or `wrangler secret put`. They appear in `env` just like vars, but are never stored in the repository.
-
-#### `durable_objects`
-Registers the `HotspotStore` class (exported from `src/worker.js`) as a Durable Object and gives it the binding name `HOTSPOT_STORE`. See [Durable Objects](Durable-Objects.md).
-
-#### `migrations`
-A versioned list of changes to Durable Object storage. The `v1` migration uses `new_sqlite_classes` to tell Cloudflare that `HotspotStore` should be created with SQLite storage enabled. This migration only runs once, on the first deployment that includes it.
-
----
-
-## The `wrangler.toml` File
-
-There is also a `wrangler.toml` file in the repo root. It contains the same core settings (name, main, assets, durable objects) in TOML format instead of JSON. Wrangler supports both formats. The `.jsonc` file is the authoritative one used for deployment (specified explicitly in the GitHub Actions deploy workflow with `--config wrangler.jsonc`).
-
----
-
-## Common Wrangler Commands
-
-| Command | What it does |
-|---|---|
-| `npx wrangler deploy` | Deploys the Worker and assets to Cloudflare |
-| `npx wrangler deploy --dry-run` | Validates the config and builds the Worker *without* actually deploying |
-| `npx wrangler dev` | Starts a local development server that emulates the Cloudflare runtime |
-| `npx wrangler secret put SECRET_NAME` | Uploads an encrypted secret to Cloudflare |
-| `npx wrangler tail` | Streams live logs from your deployed Worker |
-| `npx wrangler d1 execute ...` | Run SQL against a D1 database (not used in this project) |
-
-In this project, the deploy command used in CI is:
+Set sensitive values with:
 
 ```bash
-npx wrangler deploy --config wrangler.jsonc --color=always
+npx wrangler secret put SECRET_NAME
 ```
 
----
+Examples: `DISCORD_CLIENT_SECRET`, `SESSION_SECRET`, `GOOGLE_DRIVE_API_KEY`.
 
-## Environment Variables vs Secrets
+## Common Commands
 
-| Type | Where defined | Visible in repo | When to use |
-|---|---|---|---|
-| `vars` | `wrangler.jsonc` | ✅ Yes | Non-sensitive config (folder IDs, counts, client IDs) |
-| Secrets | Cloudflare dashboard / `wrangler secret put` | ❌ No | Sensitive values (API keys, tokens, passwords) |
-
-Both appear in the Worker's `env` object at runtime — the Worker code cannot tell the difference. Only the storage location differs.
-
----
-
-## Key Concepts for Learning
-
-| Term | Plain-English meaning |
+| Command | Use |
 |---|---|
-| **Wrangler** | Cloudflare's CLI — used to deploy, develop, and manage Workers |
-| **`wrangler.jsonc`** | The project's Cloudflare configuration file |
-| **`compatibility_date`** | Locks the Workers runtime version for your project |
-| **`vars`** | Plain-text environment variables defined in config |
-| **Secrets** | Encrypted environment variables stored securely in Cloudflare, not in the repo |
-| **`--dry-run`** | A Wrangler flag that validates and builds without deploying |
-| **Observability** | Cloudflare's built-in logging and tracing for live Workers |
+| `npx wrangler dev` | Local development runtime |
+| `npx wrangler deploy` | Deploy worker + assets |
+| `npx --yes wrangler@latest deploy --dry-run` | Validate config/build without deploying |
+| `npx wrangler secret put SECRET_NAME` | Set/update runtime secret |
 
----
+## CI Note
 
-## Further Reading
-
-- [Wrangler — official docs](https://developers.cloudflare.com/workers/wrangler/)
-- [Wrangler configuration reference](https://developers.cloudflare.com/workers/wrangler/configuration/)
-- [Managing secrets with Wrangler](https://developers.cloudflare.com/workers/configuration/secrets/)
-- [Workers Observability / Logs](https://developers.cloudflare.com/workers/observability/logs/)
+Deployment workflow is in `.github/workflows/deploy.yml`. Keep any `--config` path used there aligned with the canonical config file in this repository.
