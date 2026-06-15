@@ -25,7 +25,7 @@ The workflow fires automatically whenever commits are pushed to the `main` branc
 
 ```
 1. Checkout the code
-2. Run: npx wrangler deploy --config wrangler.jsonc
+2. Run: `npx wrangler deploy` (workflow currently passes `--config wrangler.jsonc`)
 3. Save the deploy log to Google Drive
 ```
 
@@ -50,7 +50,7 @@ Clones the repository into the GitHub Actions runner (a temporary Linux VM).
 
 - `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID` are GitHub repository secrets — they authenticate Wrangler to your Cloudflare account without needing to log in interactively.
 - `npx wrangler deploy` runs Wrangler without installing it globally (it downloads it from npm on demand).
-- `--config wrangler.jsonc` explicitly uses the JSON config file (rather than `wrangler.toml`).
+- The workflow currently passes `--config wrangler.jsonc`; the repository config file present in source control is `wrangler.toml`. Keep these aligned to avoid deployment drift.
 - `> raw-deploy.log 2>&1 || true` captures all output to a log file and ensures the step doesn't fail even if Wrangler exits with an error (the `|| true`). The outcome is checked from the log file instead.
 - The log is then stripped of ANSI colour codes and saved as `full-deploy-log.txt`.
 
@@ -104,7 +104,7 @@ npx wrangler secret put SECRET_NAME
 | `DISCORD_REDIRECT_URI` | (Optional) Override for the Discord OAuth callback URL |
 | `ROOM_STATE_REQUIRE_AUTH` | Set to `"true"` to require login for room state writes |
 
-These appear in `env` just like the `vars` in `wrangler.jsonc`, but are never stored in the repository.
+These appear in `env` just like the `vars` in `wrangler.toml`, but are never stored in the repository.
 
 ---
 
@@ -141,7 +141,7 @@ GitHub Actions starts runner (Linux VM)
 Checkout code
        ↓
 npx wrangler deploy
-  ├── Reads wrangler.jsonc
+  ├── Reads configured Wrangler file passed in workflow
   ├── Bundles src/worker.js
   ├── Uploads Worker script to Cloudflare
   ├── Uploads public/ assets to Cloudflare
@@ -174,3 +174,17 @@ Site is live at the custom domain
 - [Wrangler: Creating API tokens](https://developers.cloudflare.com/workers/wrangler/ci-cd/)
 - [Managing secrets with Wrangler](https://developers.cloudflare.com/workers/configuration/secrets/)
 - [GitHub Actions documentation](https://docs.github.com/en/actions)
+
+---
+
+## Cloudflare Resource Inventory Reference
+
+Use this inventory when reviewing deploy/config changes:
+
+| Type | Name | ID / Notes |
+|---|---|---|
+| Workers KV | `naimean-kv` | `dff7175059ce478eab8c910949ca330f` |
+| D1 | `naimean-v3-db` | `0798d2f2-618b-4044-91f5-a2c762922184` (bound as `DB`) |
+| D1 | `naimean-db` | `0871f90d-f7e3-467a-a1f9-4e74ac8aef42` |
+| D1 | `barrelroll-counter-db` | `22277fbe-031d-4ca2-8937-245309e981cd` |
+| R2 | `naimean-v3-assets` | bound as `ASSETS_STORAGE` |
