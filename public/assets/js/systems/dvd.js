@@ -66,6 +66,9 @@ function applyDvdColorStep() {
   if (state.bigTvCornerScoreInitialsPromptEl) {
     state.bigTvCornerScoreInitialsPromptEl.style.setProperty('--corner-score-color', color);
   }
+  if (state.bigTvHighScoreStatsEl) {
+    state.bigTvHighScoreStatsEl.style.setProperty('--corner-score-color', color);
+  }
   if (state.githubShelfImageEl) {
     state.githubShelfImageEl.style.setProperty('--dvd-accent-color', color);
     state.githubShelfImageEl.style.setProperty('--dvd-hue-deg', `${hue}deg`);
@@ -236,6 +239,7 @@ function tickBigTvDvdAnimation(timestamp) {
       } else if (nextCornerScore > previousHighScore) {
         showCornerScoreStatus('New High-Score', nextCornerScore);
         showCornerScoreInitialsPrompt(nextCornerScore);
+        void queueCornerScoreUpdate(nextCornerScore);
       }
     }
     if (!isRightMonitorInteractive() && !state.isRightMonitorCornerScoreWakeSequenceRunning) {

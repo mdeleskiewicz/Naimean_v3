@@ -128,7 +128,9 @@ function syncCornerScoreInitialsPromptVisibility() {
   if (!state.bigTvCornerScoreInitialsPromptEl) {
     return;
   }
-  const shouldShowPrompt = state.cornerScoreValue > state.cornerScoreHighScoreValue;
+  const shouldShowPrompt =
+    state.cornerScoreValue > state.cornerScoreHighScoreValue ||
+    (state.cornerScoreInitialsTargetScore !== null && state.cornerScoreInitialsTargetScore >= state.cornerScoreHighScoreValue);
   if (shouldShowPrompt) {
     if (
       !state.bigTvCornerScoreInitialsPromptEl.classList.contains('is-active') ||
@@ -156,6 +158,21 @@ function renderCornerScore() {
   if (state.whiteboardCornerScoreInitialsGroupEl) {
     state.whiteboardCornerScoreInitialsGroupEl.hidden = false;
   }
+  if (state.bigTvHighScoreStatsValueEl) {
+    state.bigTvHighScoreStatsValueEl.textContent = String(state.cornerScoreHighScoreValue);
+  }
+  if (state.bigTvHighScoreStatsInitialsEl) {
+    state.bigTvHighScoreStatsInitialsEl.textContent = state.cornerScoreHighScoreInitials || CORNER_SCORE_INITIALS_PLACEHOLDER;
+  }
+}
+
+function toggleBigTvHighScoreStats() {
+  if (!state.bigTvHighScoreStatsEl) {
+    return;
+  }
+  state.isBigTvHighScoreStatsVisible = !state.isBigTvHighScoreStatsVisible;
+  state.bigTvHighScoreStatsEl.classList.toggle('is-active', state.isBigTvHighScoreStatsVisible);
+  state.bigTvHighScoreStatsEl.setAttribute('aria-hidden', state.isBigTvHighScoreStatsVisible ? 'false' : 'true');
 }
 
 function setCornerScore(nextScore) {
@@ -331,4 +348,4 @@ function activateRightMonitorCornerScoreMode() {
   state._cb.syncDvdScreensaverState?.();
 }
 
-export { sanitizeCornerScoreInitialsInput, playWrongAudio, hideCornerScoreStatus, showCornerScoreStatus, clearDvdMissIndicatorTimeout, hideDvdMissIndicator, hideAllDvdMissIndicators, showDvdMissIndicator, syncCornerScoreInitialsSubmitState, hideCornerScoreInitialsPrompt, showCornerScoreInitialsPrompt, syncCornerScoreInitialsPromptVisibility, renderCornerScore, setCornerScore, setCornerScoreHighScore, loadCornerScoreFromServer, queueCornerScoreUpdate, submitCornerScoreInitials, unlockCornerScoreScoringAudioFromGesture, playRightMonitorScoringNoise, activateRightMonitorCornerScoreMode };
+export { sanitizeCornerScoreInitialsInput, playWrongAudio, hideCornerScoreStatus, showCornerScoreStatus, clearDvdMissIndicatorTimeout, hideDvdMissIndicator, hideAllDvdMissIndicators, showDvdMissIndicator, syncCornerScoreInitialsSubmitState, hideCornerScoreInitialsPrompt, showCornerScoreInitialsPrompt, syncCornerScoreInitialsPromptVisibility, renderCornerScore, setCornerScore, setCornerScoreHighScore, loadCornerScoreFromServer, queueCornerScoreUpdate, submitCornerScoreInitials, unlockCornerScoreScoringAudioFromGesture, playRightMonitorScoringNoise, activateRightMonitorCornerScoreMode, toggleBigTvHighScoreStats };

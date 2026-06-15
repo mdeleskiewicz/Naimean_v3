@@ -1318,6 +1318,74 @@
         0 0 36px color-mix(in srgb, var(--corner-score-color, #40d6ff) 48%, transparent);
     }
 
+    .big-tv-high-score-stats {
+      position: absolute;
+      left: 50%;
+      bottom: clamp(14px, 4%, 42px);
+      z-index: 2;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: clamp(4px, 0.7vw, 8px);
+      padding: clamp(10px, 1.8vw, 16px) clamp(18px, 3vw, 30px);
+      border: 1px solid color-mix(in srgb, var(--corner-score-color, #40d6ff) 60%, white 20%);
+      border-radius: 14px;
+      background:
+        linear-gradient(180deg, rgba(4, 9, 16, 0.88), rgba(2, 5, 10, 0.88)),
+        rgba(0, 0, 0, 0.8);
+      box-shadow:
+        0 0 0 1px rgba(255, 255, 255, 0.06),
+        0 14px 28px rgba(0, 0, 0, 0.4),
+        0 0 28px color-mix(in srgb, var(--corner-score-color, #40d6ff) 28%, transparent);
+      opacity: 0;
+      visibility: hidden;
+      transform: translateX(-50%);
+      pointer-events: none;
+      transition: opacity 140ms ease;
+    }
+
+    .big-tv-high-score-stats.is-active {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    .big-tv-high-score-stats-title {
+      margin: 0;
+      color: var(--corner-score-color, #40d6ff);
+      font: 800 clamp(11px, 1.5vw, 18px) / 1 "Trebuchet MS", "Arial Black", sans-serif;
+      letter-spacing: 0.24em;
+      text-transform: uppercase;
+      text-align: center;
+      text-shadow:
+        0 0 14px color-mix(in srgb, var(--corner-score-color, #40d6ff) 60%, transparent);
+    }
+
+    .big-tv-high-score-stats-row {
+      display: flex;
+      align-items: baseline;
+      gap: clamp(8px, 1.4vw, 14px);
+    }
+
+    .big-tv-high-score-stats-value {
+      margin: 0;
+      color: var(--corner-score-color, #40d6ff);
+      font: 900 clamp(30px, 6vw, 68px) / 1 "Trebuchet MS", "Arial Black", sans-serif;
+      letter-spacing: 0.02em;
+      text-shadow:
+        0 0 20px color-mix(in srgb, var(--corner-score-color, #40d6ff) 70%, transparent),
+        0 0 42px color-mix(in srgb, var(--corner-score-color, #40d6ff) 40%, transparent);
+    }
+
+    .big-tv-high-score-stats-initials {
+      margin: 0;
+      color: var(--corner-score-color, #40d6ff);
+      font: 800 clamp(16px, 3vw, 36px) / 1 "Trebuchet MS", "Arial Black", sans-serif;
+      letter-spacing: 0.14em;
+      opacity: 0.84;
+      text-shadow:
+        0 0 14px color-mix(in srgb, var(--corner-score-color, #40d6ff) 55%, transparent);
+    }
+
     .big-tv-corner-score-initials-prompt {
       position: absolute;
       left: 50%;

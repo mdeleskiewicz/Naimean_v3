@@ -451,6 +451,22 @@ function createOverlays() {
         state.bigTvDvdMissIndicatorsByCorner.set(corner, missIndicatorEl);
         state.bigTvDvdOverlayEl.appendChild(missIndicatorEl);
       });
+      // Big TV high score stats panel — toggled by clicking the whiteboard high-score overlay
+      state.bigTvHighScoreStatsEl = document.createElement('div');
+      state.bigTvHighScoreStatsEl.className = 'big-tv-high-score-stats';
+      state.bigTvHighScoreStatsEl.setAttribute('aria-hidden', 'true');
+      const highScoreStatsTitleEl = document.createElement('p');
+      highScoreStatsTitleEl.className = 'big-tv-high-score-stats-title';
+      highScoreStatsTitleEl.textContent = 'High Score';
+      const highScoreStatsRowEl = document.createElement('div');
+      highScoreStatsRowEl.className = 'big-tv-high-score-stats-row';
+      state.bigTvHighScoreStatsValueEl = document.createElement('p');
+      state.bigTvHighScoreStatsValueEl.className = 'big-tv-high-score-stats-value';
+      state.bigTvHighScoreStatsInitialsEl = document.createElement('p');
+      state.bigTvHighScoreStatsInitialsEl.className = 'big-tv-high-score-stats-initials';
+      highScoreStatsRowEl.append(state.bigTvHighScoreStatsValueEl, state.bigTvHighScoreStatsInitialsEl);
+      state.bigTvHighScoreStatsEl.append(highScoreStatsTitleEl, highScoreStatsRowEl);
+      state.bigTvDvdOverlayEl.appendChild(state.bigTvHighScoreStatsEl);
       // GitHub quadrant overlay — shown when GitHub screensaver mode is active
       state.bigTvGithubQuadrantEl = document.createElement('div');
       state.bigTvGithubQuadrantEl.className = 'big-tv-github-quadrant-overlay';
