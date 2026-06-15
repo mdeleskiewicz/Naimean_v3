@@ -1,4 +1,4 @@
-import { API_TIMEOUT_MS, CORNER_SCORE_API_URL, CORNER_SCORE_INITIALS_LENGTH, CORNER_SCORE_INITIALS_PLACEHOLDER, CORNER_SCORE_MEDAL_THRESHOLDS, CORNER_SCORE_MIN_RUN_TIME_MS, CORNER_SCORE_PERSONAL_BEST_STORAGE_KEY, CORNER_SCORE_SERVER_BASELINE, DVD_MISS_INDICATOR_DURATION_MS, WRONG_AUDIO_URL } from '../core/constants.js';
+import { API_TIMEOUT_MS, CORNER_SCORE_API_URL, CORNER_SCORE_INITIALS_LENGTH, CORNER_SCORE_INITIALS_PLACEHOLDER, CORNER_SCORE_MEDAL_THRESHOLDS, CORNER_SCORE_MIN_RUN_TIME_MS, CORNER_SCORE_SERVER_BASELINE, DVD_MISS_INDICATOR_DURATION_MS, WRONG_AUDIO_URL } from '../core/constants.js';
 import { state } from '../core/state.js';
 import { isRightMonitorInteractive, wakeRightMonitorForCornerScore } from './monitors.js';
 
@@ -255,19 +255,7 @@ function recordNearMiss() {
 }
 
 function loadPersonalBestFromStorage() {
-  try {
-    const raw = window.localStorage.getItem(CORNER_SCORE_PERSONAL_BEST_STORAGE_KEY);
-    if (!raw) return;
-    const parsed = JSON.parse(raw);
-    if (parsed && typeof parsed === 'object') {
-      state.cornerScorePersonalBest = {
-        score: Number.isFinite(parsed.score) ? Math.max(0, Math.floor(parsed.score)) : 0,
-        timeMs: Number.isFinite(parsed.timeMs) ? Math.max(0, Math.floor(parsed.timeMs)) : 0,
-        bounces: Number.isFinite(parsed.bounces) ? Math.max(0, Math.floor(parsed.bounces)) : 0,
-        nearMisses: Number.isFinite(parsed.nearMisses) ? Math.max(0, Math.floor(parsed.nearMisses)) : 0
-      };
-    }
-  } catch (_) {}
+  // Personal best is now persisted server-side; loaded via loadCornerScoreFromServer.
 }
 
 function savePersonalBestIfImproved() {
@@ -291,10 +279,8 @@ function savePersonalBestIfImproved() {
     nearMisses: pb ? Math.max(nearMisses, pb.nearMisses) : nearMisses
   };
   state.cornerScorePersonalBest = next;
-  try {
-    window.localStorage.setItem(CORNER_SCORE_PERSONAL_BEST_STORAGE_KEY, JSON.stringify(next));
-  } catch (_) {}
   renderPersonalBestStats();
+  void queueCornerScoreUpdate(state.cornerScoreValue, { sendPersonalBest: true });
 }
 
 function renderCornerScore() {
@@ -360,13 +346,20 @@ async function loadCornerScoreFromServer() {
       totalRuns: Number.isFinite(payload?.totalRuns) ? Math.max(0, Math.floor(payload.totalRuns)) : 0
     };
     renderServerStats();
+    const pbScore = Number.isFinite(payload?.pbScore) ? Math.max(0, Math.floor(payload.pbScore)) : 0;
+    const pbTimeMs = Number.isFinite(payload?.pbTimeMs) ? Math.max(0, Math.floor(payload.pbTimeMs)) : 0;
+    const pbBounces = Number.isFinite(payload?.pbBounces) ? Math.max(0, Math.floor(payload.pbBounces)) : 0;
+    const pbNearMisses = Number.isFinite(payload?.pbNearMisses) ? Math.max(0, Math.floor(payload.pbNearMisses)) : 0;
+    if (pbScore > 0 || pbTimeMs > 0 || pbBounces > 0 || pbNearMisses > 0) {
+      state.cornerScorePersonalBest = { score: pbScore, timeMs: pbTimeMs, bounces: pbBounces, nearMisses: pbNearMisses };
+    }
     activateRightMonitorCornerScoreMode();
   } catch (_) {}
 }
 
 function queueCornerScoreUpdate(
   candidateScore = state.cornerScoreValue,
-  { force = false, initials = null, sendRunStats = false } = {}
+  { force = false, initials = null, sendRunStats = false, sendPersonalBest = false } = {}
 ) {
   const sanitizedScore = Number.isFinite(candidateScore) ? Math.max(0, Math.floor(candidateScore)) : state.cornerScoreValue;
   const sanitizedInitials = initials === null ? null : sanitizeCornerScoreInitialsInput(initials);
@@ -374,7 +367,8 @@ function queueCornerScoreUpdate(
     sanitizedInitials !== null &&
     sanitizedInitials.length === CORNER_SCORE_INITIALS_LENGTH &&
     sanitizedScore >= state.cornerScoreHighScoreValue;
-  if (!force && !shouldAttemptInitialsUpdate && sanitizedScore <= state.cornerScoreHighScoreValue) {
+  const shouldSendPersonalBest = sendPersonalBest && Boolean(state.cornerScorePersonalBest);
+  if (!force && !shouldAttemptInitialsUpdate && !shouldSendPersonalBest && sanitizedScore <= state.cornerScoreHighScoreValue) {
     return state.cornerScorePersistQueue;
   }
   const runStats = sendRunStats ? {
@@ -383,9 +377,16 @@ function queueCornerScoreUpdate(
     runScores: state.cornerScoreValue,
     runTimeMs: state.cornerScoreRunElapsedMs
   } : null;
+  const pb = shouldSendPersonalBest ? state.cornerScorePersonalBest : null;
+  const pbData = pb ? {
+    pbScore: pb.score,
+    pbTimeMs: pb.timeMs,
+    pbBounces: pb.bounces,
+    pbNearMisses: pb.nearMisses
+  } : null;
   state.cornerScorePersistQueue = state.cornerScorePersistQueue
     .then(async () => {
-      if (!force && !shouldAttemptInitialsUpdate && sanitizedScore <= state.cornerScoreHighScoreValue) {
+      if (!force && !shouldAttemptInitialsUpdate && !shouldSendPersonalBest && sanitizedScore <= state.cornerScoreHighScoreValue) {
         return;
       }
       const controller = new AbortController();
@@ -397,7 +398,8 @@ function queueCornerScoreUpdate(
         body: JSON.stringify({
           score: sanitizedScore,
           ...(sanitizedInitials !== null ? { initials: sanitizedInitials } : {}),
-          ...(runStats !== null ? runStats : {})
+          ...(runStats !== null ? runStats : {}),
+          ...(pbData !== null ? pbData : {})
         }),
         signal: controller.signal
       });
@@ -417,6 +419,14 @@ function queueCornerScoreUpdate(
           totalRuns: Number.isFinite(payload.totalRuns) ? Math.max(0, Math.floor(payload.totalRuns)) : (prev.totalRuns ?? 0)
         };
         renderServerStats();
+        const respPbScore = Number.isFinite(payload.pbScore) ? Math.max(0, Math.floor(payload.pbScore)) : 0;
+        const respPbTimeMs = Number.isFinite(payload.pbTimeMs) ? Math.max(0, Math.floor(payload.pbTimeMs)) : 0;
+        const respPbBounces = Number.isFinite(payload.pbBounces) ? Math.max(0, Math.floor(payload.pbBounces)) : 0;
+        const respPbNearMisses = Number.isFinite(payload.pbNearMisses) ? Math.max(0, Math.floor(payload.pbNearMisses)) : 0;
+        if (respPbScore > 0 || respPbTimeMs > 0 || respPbBounces > 0 || respPbNearMisses > 0) {
+          state.cornerScorePersonalBest = { score: respPbScore, timeMs: respPbTimeMs, bounces: respPbBounces, nearMisses: respPbNearMisses };
+          renderPersonalBestStats();
+        }
       }
     })
     .catch(() => {});
@@ -512,7 +522,6 @@ function playRightMonitorScoringNoise() {
 }
 
 function activateRightMonitorCornerScoreMode() {
-  loadPersonalBestFromStorage();
   renderPersonalBestStats();
   state.isDvdCornerCountEnabled = true;
   state._cb.syncDvdScreensaverState?.();

@@ -311,11 +311,11 @@ test('HotspotStore GET returns corner score when storage is empty', async () => 
   const body = await response.json();
 
   assert.equal(response.status, 200);
-  assert.deepEqual(body, { score: 0, initials: '', totalBounces: 0, totalNearMisses: 0, totalScores: 0, totalTimeMs: 0, totalRuns: 0 });
+  assert.deepEqual(body, { score: 0, initials: '', totalBounces: 0, totalNearMisses: 0, totalScores: 0, totalTimeMs: 0, totalRuns: 0, pbScore: 0, pbTimeMs: 0, pbBounces: 0, pbNearMisses: 0 });
   assert.deepEqual(calls.get, ['corner-score']);
 });
 
-const ZERO_AGGREGATES = { totalBounces: 0, totalNearMisses: 0, totalScores: 0, totalTimeMs: 0, totalRuns: 0 };
+const ZERO_AGGREGATES = { totalBounces: 0, totalNearMisses: 0, totalScores: 0, totalTimeMs: 0, totalRuns: 0, pbScore: 0, pbTimeMs: 0, pbBounces: 0, pbNearMisses: 0 };
 
 test('HotspotStore POST increments and stores corner score', async () => {
   const { state, calls, getStored } = makeKeyedState({ 'corner-score': 7 });

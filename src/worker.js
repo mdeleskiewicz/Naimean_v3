@@ -637,7 +637,11 @@ function getStoredCornerScoreRecord(input) {
       totalNearMisses: sanitizeCornerScoreAggregateDelta(input.totalNearMisses),
       totalScores: sanitizeCornerScoreAggregateDelta(input.totalScores),
       totalTimeMs: sanitizeCornerScoreAggregateDelta(input.totalTimeMs),
-      totalRuns: sanitizeCornerScoreAggregateDelta(input.totalRuns)
+      totalRuns: sanitizeCornerScoreAggregateDelta(input.totalRuns),
+      pbScore: sanitizeCornerScoreAggregateDelta(input.pbScore),
+      pbTimeMs: sanitizeCornerScoreAggregateDelta(input.pbTimeMs),
+      pbBounces: sanitizeCornerScoreAggregateDelta(input.pbBounces),
+      pbNearMisses: sanitizeCornerScoreAggregateDelta(input.pbNearMisses)
     };
   }
   return {
@@ -647,7 +651,11 @@ function getStoredCornerScoreRecord(input) {
     totalNearMisses: 0,
     totalScores: 0,
     totalTimeMs: 0,
-    totalRuns: 0
+    totalRuns: 0,
+    pbScore: 0,
+    pbTimeMs: 0,
+    pbBounces: 0,
+    pbNearMisses: 0
   };
 }
 
@@ -1189,6 +1197,16 @@ export class HotspotStore {
         const nextTotalScores = storedRecord.totalScores + runScores;
         const nextTotalTimeMs = storedRecord.totalTimeMs + runTimeMs;
         const nextTotalRuns = storedRecord.totalRuns + (hasRunStats ? 1 : 0);
+        // Personal best (take max per metric)
+        const pbScore = sanitizeCornerScoreAggregateDelta(body?.pbScore);
+        const pbTimeMs = sanitizeCornerScoreAggregateDelta(body?.pbTimeMs);
+        const pbBounces = sanitizeCornerScoreAggregateDelta(body?.pbBounces);
+        const pbNearMisses = sanitizeCornerScoreAggregateDelta(body?.pbNearMisses);
+        const nextPbScore = Math.max(storedRecord.pbScore, pbScore);
+        const nextPbTimeMs = Math.max(storedRecord.pbTimeMs, pbTimeMs);
+        const nextPbBounces = Math.max(storedRecord.pbBounces, pbBounces);
+        const nextPbNearMisses = Math.max(storedRecord.pbNearMisses, pbNearMisses);
+        const hasPbUpdate = nextPbScore !== storedRecord.pbScore || nextPbTimeMs !== storedRecord.pbTimeMs || nextPbBounces !== storedRecord.pbBounces || nextPbNearMisses !== storedRecord.pbNearMisses;
         const nextRecord = {
           score: nextScore,
           initials: nextInitials,
@@ -1196,9 +1214,13 @@ export class HotspotStore {
           totalNearMisses: nextTotalNearMisses,
           totalScores: nextTotalScores,
           totalTimeMs: nextTotalTimeMs,
-          totalRuns: nextTotalRuns
+          totalRuns: nextTotalRuns,
+          pbScore: nextPbScore,
+          pbTimeMs: nextPbTimeMs,
+          pbBounces: nextPbBounces,
+          pbNearMisses: nextPbNearMisses
         };
-        const shouldUpdate = shouldUpdateScore || shouldUpdateInitials || hasRunStats;
+        const shouldUpdate = shouldUpdateScore || shouldUpdateInitials || hasRunStats || hasPbUpdate;
         if (shouldUpdate) {
           try {
             await this.state.storage.put(storageKey, nextRecord);
@@ -1215,6 +1237,10 @@ export class HotspotStore {
           totalScores: nextRecord.totalScores,
           totalTimeMs: nextRecord.totalTimeMs,
           totalRuns: nextRecord.totalRuns,
+          pbScore: nextRecord.pbScore,
+          pbTimeMs: nextRecord.pbTimeMs,
+          pbBounces: nextRecord.pbBounces,
+          pbNearMisses: nextRecord.pbNearMisses,
           updated: shouldUpdate
         });
       }
