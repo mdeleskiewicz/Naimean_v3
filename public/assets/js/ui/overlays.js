@@ -660,7 +660,6 @@ function createOverlays() {
       state.leftMonitorStaticVideoEl.defaultMuted = true;
       state.leftMonitorStaticVideoEl.loop = true;
       state.leftMonitorStaticVideoEl.playsInline = true;
-      state.leftMonitorStaticVideoEl.setAttribute('playsinline', '');
       state.leftMonitorStaticVideoEl.setAttribute('webkit-playsinline', '');
       state.leftMonitorStaticOverlayEl.appendChild(state.leftMonitorStaticVideoEl);
       windowEl.append(state.leftMonitorStaticOverlayEl);
