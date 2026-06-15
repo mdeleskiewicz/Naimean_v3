@@ -24,6 +24,9 @@ Cloudflare's CLI and the `wrangler.jsonc` config file. Covers every config secti
 ### 6. [Deployment and CI](Deployment-and-CI.md)
 The GitHub Actions workflow that automatically deploys to Cloudflare on every push to `main`. Covers the deploy steps, required GitHub secrets, Cloudflare runtime secrets, and the Google Drive log reporting hook.
 
+### 7. [Product Features](features/README.md)
+Feature-level wiki pages for user-facing room/tool functionality. Each page includes a UX summary and file-separated code sections (e.g., power button, tools overlay, hotspot persistence, Discord auth).
+
 ---
 
 ## Quick Reference: Cloudflare Services Used in This Project

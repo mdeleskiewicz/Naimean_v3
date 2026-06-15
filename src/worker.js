@@ -769,8 +769,9 @@ function toStoredText(value) {
 }
 
 export class HotspotStore {
-  constructor(state) {
+  constructor(state, env) {
     this.state = state;
+    this.env = env;
     this.sqlSchemaReady = false;
   }
 
@@ -1372,6 +1373,12 @@ export default {
     if (pathname === '/api/discord/callback') return handleDiscordCallback(request, env);
     if (pathname === '/api/discord/me') return handleDiscordMe(request, env);
     if (pathname === '/api/discord/logout') return handleDiscordLogout(request, env);
+
+    // Infrastructure diagnostics
+    if (pathname === '/api/db-test' && env.DB) {
+      const { results } = await env.DB.prepare('SELECT 1').all();
+      return jsonResponse({ connected: true, results });
+    }
 
     // Hotspot Durable Object routes
     if (pathname === '/api/hotspots') return dispatchToHotspotStore(env, request, 'den-hotspots');

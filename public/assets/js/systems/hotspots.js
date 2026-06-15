@@ -1,5 +1,6 @@
 import {
   API_TIMEOUT_MS,
+  AQUARIUM_FISH_EFFECT_ID,
   AQUARIUM_HOTSPOT_IDS,
   AQUARIUM_OVERLAY_ID,
   CHAPEL_URL,
@@ -41,6 +42,7 @@ import {
   SAVE_RESULT_FLASH_KEY,
   WHITEBOARD_HOTSPOT_IDS,
   WHITEBOARD_HOTSPOT_URLS,
+  WHITEBOARD_CORNER_SCORE_CONTROL_ID,
   LEFT_MONITOR_SIDE_FRAME_CONTROL_ID,
   RIGHT_MONITOR_SIDE_FRAME_CONTROL_ID,
   RIGHT_MONITOR_OVERLAY_CONTROL_ID,
@@ -51,7 +53,7 @@ import { state } from '../core/state.js';
 import { dom } from '../core/domRefs.js';
 import { wait, sourceHotspotsToRuntime, runtimeHotspotXToSource, frameBoundsToScreenBounds } from '../core/utils.js';
 import { loadAquariumShrimpClipCatalog } from './aquarium.js';
-import { loadCornerScoreFromServer } from './cornerScore.js';
+import { loadCornerScoreFromServer, toggleBigTvHighScoreStats } from './cornerScore.js';
 import { fetchDiscordAuthState, syncDiscordAuthBodyClass, syncDiscordButtonUi } from './login.js';
 
 const DEBUG_SAVE_PASSWORD_KEY = 'naimean-debug';
@@ -242,6 +244,16 @@ function syncControlledOverlaysFromHotspots() {
     aquariumOverlayEl.style.top = discordOverlayEl.style.top;
     aquariumOverlayEl.style.width = discordOverlayEl.style.width;
     aquariumOverlayEl.style.height = discordOverlayEl.style.height;
+  }
+  const fishEffectEl = state.overlayElementsById.get(AQUARIUM_FISH_EFFECT_ID);
+  if (fishEffectEl) {
+    const aquariumHotspotEl = document.getElementById('aquarium');
+    if (aquariumHotspotEl) {
+      fishEffectEl.style.left = aquariumHotspotEl.style.left;
+      fishEffectEl.style.top = aquariumHotspotEl.style.top;
+      fishEffectEl.style.width = aquariumHotspotEl.style.width;
+      fishEffectEl.style.height = aquariumHotspotEl.style.height;
+    }
   }
 }
 
@@ -729,6 +741,7 @@ function createHotspots(hotspotList) {
         return;
       }
       if (spot.id === FLIP_CLOCK_OVERLAY_CONTROL_ID) return void state._cb.openClockApp?.();
+      if (spot.id === WHITEBOARD_CORNER_SCORE_CONTROL_ID) return void toggleBigTvHighScoreStats();
       if (WHITEBOARD_HOTSPOT_IDS.has(spot.id)) return void window.open(getHotspotEffectiveUrl(spot.id) || WHITEBOARD_HOTSPOT_URLS[spot.id] || WHITEBOARD_HOTSPOT_URLS.whiteboard, '_blank', 'noopener,noreferrer');
       if (AQUARIUM_HOTSPOT_IDS.has(spot.id)) return void state._cb.playAquariumHotspotSequence?.();
       if (

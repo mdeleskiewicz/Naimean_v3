@@ -7,13 +7,16 @@ const repoRoot = path.resolve(import.meta.dirname, '..');
 const cornerScoreJsPath = path.join(repoRoot, 'public', 'assets', 'js', 'systems', 'cornerScore.js');
 const dvdJsPath = path.join(repoRoot, 'public', 'assets', 'js', 'systems', 'dvd.js');
 
-test('corner score initials prompt is gated by local score exceeding server high score', () => {
+test('corner score initials prompt stays visible while a pending target score equals the server high score', () => {
   const source = fs.readFileSync(cornerScoreJsPath, 'utf8');
 
+  // The prompt should also remain open when the server round-trip has updated the stored high score
+  // to match the player's new score (cornerScoreInitialsTargetScore !== null and >= high score),
+  // so the player can still submit their initials without the form disappearing.
   assert.match(
     source,
-    /const shouldShowPrompt = state\.cornerScoreValue > state\.cornerScoreHighScoreValue;/,
-    'Expected initials prompt visibility to require local score greater than server high score',
+    /state\.cornerScoreInitialsTargetScore !== null && state\.cornerScoreInitialsTargetScore >= state\.cornerScoreHighScoreValue/,
+    'Expected initials prompt to remain visible when target score equals current server high score',
   );
 });
 
@@ -29,6 +32,16 @@ test('dvd scoring flow does not preemptively overwrite high score before initial
     source,
     /else if \(nextCornerScore > previousHighScore\) \{\s*showCornerScoreStatus\('New High-Score', nextCornerScore\);\s*showCornerScoreInitialsPrompt\(nextCornerScore\);/s,
     'Expected new high-score path to show initials prompt',
+  );
+});
+
+test('dvd scoring flow persists new high score to server immediately without waiting for initials', () => {
+  const source = fs.readFileSync(dvdJsPath, 'utf8');
+
+  assert.match(
+    source,
+    /else if \(nextCornerScore > previousHighScore\) \{\s*showCornerScoreStatus\('New High-Score', nextCornerScore\);\s*showCornerScoreInitialsPrompt\(nextCornerScore\);\s*void queueCornerScoreUpdate\(nextCornerScore\);/s,
+    'Expected new high-score path to immediately queue a server persist so the score survives a page reload',
   );
 });
 

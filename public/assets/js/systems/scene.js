@@ -1,4 +1,5 @@
 import {
+  AQUARIUM_FISH_EFFECT_ID,
   ASHTRAY_CIGARETTE_CONTROL_ID,
   ASHTRAY_CIGARETTE_DEFAULT_BOUNDS,
   ASHTRAY_CIGARETTE_EFFECT_ID,
@@ -178,9 +179,72 @@ function createAshtrayCigaretteEffect() {
   state.overlayElementsById.set(ASHTRAY_CIGARETTE_EFFECT_ID, el);
 }
 
+function createAquariumFishEffect() {
+  if (!dom.effectsLayer) return;
+  dom.effectsLayer.querySelector(`#${AQUARIUM_FISH_EFFECT_ID}`)?.remove();
+  state.overlayElementsById.delete(AQUARIUM_FISH_EFFECT_ID);
+  const spot = getRuntimeHotspotById('aquarium');
+  if (!spot) return;
+  const el = document.createElement('div');
+  el.id = AQUARIUM_FISH_EFFECT_ID;
+  el.className = 'aquarium-fish-effect';
+  el.style.left = `${Math.round(spot.x)}px`;
+  el.style.top = `${Math.round(spot.y)}px`;
+  el.style.width = `${Math.round(spot.w)}px`;
+  el.style.height = `${Math.round(spot.h)}px`;
+
+  // Filter bubbles: clustered in the lower-right quadrant where a tank filter typically sits
+  const bubbles = [
+    { size: 5,  left: '79%', bottom: '5%',  rise: 590, wobble: -6,  duration: 5.0, delay: 0.0 },
+    { size: 7,  left: '84%', bottom: '3%',  rise: 630, wobble:  8,  duration: 6.4, delay: 1.3 },
+    { size: 4,  left: '76%', bottom: '6%',  rise: 550, wobble: -4,  duration: 5.6, delay: 2.7 },
+    { size: 8,  left: '87%', bottom: '4%',  rise: 610, wobble:  6,  duration: 7.2, delay: 0.6 },
+    { size: 5,  left: '81%', bottom: '3%',  rise: 565, wobble: -8,  duration: 5.9, delay: 3.4 },
+    { size: 6,  left: '78%', bottom: '5%',  rise: 600, wobble:  5,  duration: 6.7, delay: 1.8 },
+    { size: 4,  left: '83%', bottom: '4%',  rise: 525, wobble: -5,  duration: 4.6, delay: 4.1 },
+    { size: 9,  left: '89%', bottom: '3%',  rise: 645, wobble:  7,  duration: 7.6, delay: 2.0 }
+  ];
+  bubbles.forEach(({ size, left, bottom, rise, wobble, duration, delay }) => {
+    const bubble = document.createElement('span');
+    bubble.className = 'aquarium-bubble';
+    bubble.style.width = `${size}px`;
+    bubble.style.height = `${size}px`;
+    bubble.style.left = left;
+    bubble.style.bottom = bottom;
+    bubble.style.setProperty('--bubble-rise', `${rise}px`);
+    bubble.style.setProperty('--bubble-wobble', `${wobble}px`);
+    bubble.style.setProperty('--bubble-duration', `${duration}s`);
+    bubble.style.setProperty('--bubble-delay', `${delay}s`);
+    el.appendChild(bubble);
+  });
+
+  // Shrimp: three at different depths, swimming back and forth with a gentle bob
+  const shrimps = [
+    { size: 24, top: '27%', swimDist: 260, duration: 14.0, delay: 0.0 },
+    { size: 28, top: '51%', swimDist: 195, duration: 11.2, delay: 2.8 },
+    { size: 20, top: '73%', swimDist: 275, duration: 16.4, delay: 5.6 }
+  ];
+  shrimps.forEach(({ size, top, swimDist, duration, delay }) => {
+    const shrimp = document.createElement('span');
+    shrimp.className = 'aquarium-shrimp';
+    shrimp.textContent = '🦐';
+    shrimp.style.fontSize = `${size}px`;
+    shrimp.style.top = top;
+    shrimp.style.left = '4%';
+    shrimp.style.setProperty('--shrimp-swim-dist', `${swimDist}px`);
+    shrimp.style.setProperty('--shrimp-duration', `${duration}s`);
+    shrimp.style.setProperty('--shrimp-delay', `${delay}s`);
+    el.appendChild(shrimp);
+  });
+
+  dom.effectsLayer.appendChild(el);
+  state.overlayElementsById.set(AQUARIUM_FISH_EFFECT_ID, el);
+}
+
 function renderHotspotLayers() {
   createAshtraySmokeEffect();
   createAshtrayCigaretteEffect();
+  createAquariumFishEffect();
   createHotspots(state.hotspots);
   syncControlledOverlaysFromHotspots();
 }
