@@ -66,3 +66,23 @@ test('submitting corner score initials clears the temporary new-high-score statu
     'Expected initials submit flow to hide the temporary new-high-score status text',
   );
 });
+
+test('server high score toggle shows arena stats for 15 seconds and then hides them', () => {
+  const source = fs.readFileSync(cornerScoreJsPath, 'utf8');
+
+  assert.match(
+    source,
+    /const SERVER_STATS_VISIBLE_MS = 15_000;/,
+    'Expected server stats visibility duration to be 15 seconds',
+  );
+  assert.match(
+    source,
+    /state\.bigTvHighScoreStatsEl\.classList\.add\('is-active'\);\s*state\.bigTvHighScoreStatsEl\.setAttribute\('aria-hidden', 'false'\);/s,
+    'Expected toggle flow to reveal server stats immediately',
+  );
+  assert.match(
+    source,
+    /state\.bigTvHighScoreStatsTimeoutId = window\.setTimeout\(\(\) => \{\s*state\.isBigTvHighScoreStatsVisible = false;\s*state\.bigTvHighScoreStatsEl\?\.classList\.remove\('is-active'\);\s*state\.bigTvHighScoreStatsEl\?\.setAttribute\('aria-hidden', 'true'\);/s,
+    'Expected toggle flow to hide server stats after timeout',
+  );
+});
