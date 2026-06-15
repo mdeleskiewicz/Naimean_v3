@@ -703,7 +703,8 @@
     }
 
     .left-monitor-screen-window > .left-monitor-selector,
-    .left-monitor-screen-window > .overlay-static-layer {
+    .left-monitor-screen-window > .overlay-static-layer,
+    .left-monitor-screen-window > .left-monitor-corner-score-overlay {
       top: var(--left-monitor-inner-boundary-top);
       right: var(--left-monitor-inner-boundary-right);
       bottom: var(--left-monitor-inner-boundary-bottom);
@@ -721,6 +722,68 @@
     .left-monitor-screen-window > .left-monitor-content-image.is-calendar-state {
       object-position: left top;
     }
+
+    .left-monitor-corner-score-overlay {
+      position: absolute;
+      z-index: 1;
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+      background: #030405;
+      color: var(--corner-score-color, #40d6ff);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: clamp(3px, 2%, 10px);
+      text-align: center;
+      container-type: size;
+      transition: opacity 120ms ease;
+    }
+
+    .left-monitor-corner-score-overlay.is-active {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    .left-monitor-cs-pb-title {
+      margin: 0;
+      font-size: clamp(9px, min(7cqw, 8cqh), 22px);
+      line-height: 1;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      text-shadow: 0 0 12px color-mix(in srgb, var(--corner-score-color, #40d6ff) 60%, transparent);
+      opacity: 0.7;
+    }
+
+    .left-monitor-cs-pb-row {
+      display: flex;
+      width: 90%;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: 4px;
+    }
+
+    .left-monitor-cs-pb-label {
+      font-size: clamp(7px, min(5.5cqw, 6cqh), 16px);
+      line-height: 1;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      opacity: 0.65;
+    }
+
+    .left-monitor-cs-pb-value {
+      font-size: clamp(8px, min(6.5cqw, 7.5cqh), 20px);
+      line-height: 1;
+      font-weight: 700;
+      font-variant-numeric: tabular-nums lining-nums;
+      text-shadow:
+        0 0 10px color-mix(in srgb, var(--corner-score-color, #40d6ff) 70%, transparent);
+    }
+
+    .left-monitor-cs-pb-medal[data-medal="bronze"] { color: #cd7f32; }
+    .left-monitor-cs-pb-medal[data-medal="silver"] { color: #b0bec5; }
+    .left-monitor-cs-pb-medal[data-medal="gold"]   { color: #ffd700; }
 
     .right-monitor-screen-window > .join-discord-button {
       top: 1px;
@@ -868,6 +931,42 @@
       }
     }
 
+    .right-monitor-cs-run-stats {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: clamp(4px, 1.5%, 12px) clamp(6px, 3%, 24px);
+      width: 90%;
+    }
+
+    .right-monitor-cs-stat-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2px;
+    }
+
+    .right-monitor-cs-stat-label {
+      font-size: clamp(8px, 1.6cqw, 16px);
+      line-height: 1;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      opacity: 0.6;
+    }
+
+    .right-monitor-cs-stat-value {
+      font-size: clamp(10px, 2.2cqw, 22px);
+      line-height: 1;
+      font-weight: 700;
+      font-variant-numeric: tabular-nums lining-nums;
+      text-shadow:
+        0 0 8px color-mix(in srgb, var(--corner-score-color, #40d6ff) 65%, transparent);
+    }
+
+    .right-monitor-cs-medal[data-medal="bronze"] { color: #cd7f32; }
+    .right-monitor-cs-medal[data-medal="silver"] { color: #b0bec5; }
+    .right-monitor-cs-medal[data-medal="gold"]   { color: #ffd700; }
+
     .whiteboard-corner-score-overlay {
       pointer-events: none;
       background: transparent;
@@ -943,6 +1042,38 @@
       line-height: 1;
       letter-spacing: 0.16em;
       transform: rotate(1.6deg) translateX(1.8%);
+    }
+
+    .whiteboard-cs-server-stats {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: clamp(1px, min(0.4cqw, 0.6cqh), 5px);
+      width: 100%;
+      margin-top: clamp(2px, min(0.8cqw, 1.2cqh), 8px);
+      border-top: 1px solid rgba(77, 42, 116, 0.35);
+      padding-top: clamp(2px, min(0.6cqw, 0.9cqh), 6px);
+    }
+
+    .whiteboard-cs-server-stat-row {
+      display: flex;
+      width: 88%;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: 4px;
+    }
+
+    .whiteboard-cs-server-stat-label {
+      font-size: clamp(8px, min(2.8cqw, 3.8cqh), 18px);
+      line-height: 1;
+      opacity: 0.75;
+    }
+
+    .whiteboard-cs-server-stat-value {
+      font-size: clamp(9px, min(3.2cqw, 4.4cqh), 20px);
+      line-height: 1;
+      font-weight: 900;
+      font-variant-numeric: tabular-nums lining-nums;
     }
 
     .right-monitor-shrimp-logo-image {

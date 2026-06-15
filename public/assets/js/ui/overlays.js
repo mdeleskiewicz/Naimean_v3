@@ -48,7 +48,7 @@ import {
 import { state } from '../core/state.js';
 import { clamp } from '../core/utils.js';
 import { applyDvdColorStep } from '../systems/dvd.js';
-import { renderCornerScore, sanitizeCornerScoreInitialsInput, submitCornerScoreInitials, syncCornerScoreInitialsPromptVisibility, syncCornerScoreInitialsSubmitState } from '../systems/cornerScore.js';
+import { renderCornerScore, renderPersonalBestStats, sanitizeCornerScoreInitialsInput, submitCornerScoreInitials, syncCornerScoreInitialsPromptVisibility, syncCornerScoreInitialsSubmitState } from '../systems/cornerScore.js';
 import { applyRadioTuningPosition, createFlipCard, ensureRadioTuningLoopPlayback, getNextRadioTuningAudioUrl, getRadioTuningAudioElement, resetRadioTuningPlayback, startFlipClock, stopRadioTuningLoopPlayback, syncDvdAccelerometerFromTuningPosition } from '../systems/flipClock.js';
 import { isLeftMonitorInteractive, isRightMonitorInteractive } from '../systems/monitors.js';
 import { getOverlayRect, syncControlledOverlaysFromHotspots } from '../systems/hotspots.js';
@@ -677,6 +677,35 @@ function createOverlays() {
         selector.appendChild(segment);
       });
       windowEl.appendChild(selector);
+      // Personal Best cornerscore overlay (shown on left monitor when cornerscore is active)
+      state.leftMonitorCornerScoreOverlayEl = document.createElement('div');
+      state.leftMonitorCornerScoreOverlayEl.className = 'left-monitor-corner-score-overlay';
+      state.leftMonitorCornerScoreOverlayEl.setAttribute('aria-hidden', 'true');
+      const pbTitleEl = document.createElement('p');
+      pbTitleEl.className = 'left-monitor-cs-pb-title';
+      pbTitleEl.textContent = 'Personal Best';
+      state.leftMonitorCornerScoreOverlayEl.appendChild(pbTitleEl);
+      const pbFields = [
+        { label: 'Score', cls: 'left-monitor-cs-pb-score' },
+        { label: 'Time', cls: 'left-monitor-cs-pb-time' },
+        { label: 'Bounces', cls: 'left-monitor-cs-pb-bounces' },
+        { label: 'Near Misses', cls: 'left-monitor-cs-pb-near-misses' },
+        { label: 'Medal', cls: 'left-monitor-cs-pb-medal' }
+      ];
+      pbFields.forEach(({ label, cls }) => {
+        const rowEl = document.createElement('div');
+        rowEl.className = 'left-monitor-cs-pb-row';
+        const labelEl = document.createElement('span');
+        labelEl.className = 'left-monitor-cs-pb-label';
+        labelEl.textContent = label;
+        const valueEl = document.createElement('span');
+        valueEl.className = `left-monitor-cs-pb-value ${cls}`;
+        valueEl.textContent = '—';
+        rowEl.append(labelEl, valueEl);
+        state.leftMonitorCornerScoreOverlayEl.appendChild(rowEl);
+      });
+      windowEl.appendChild(state.leftMonitorCornerScoreOverlayEl);
+      renderPersonalBestStats();
       state.leftMonitorStaticOverlayEl = document.createElement('div');
       state.leftMonitorStaticOverlayEl.className = 'overlay-static-layer';
       state.leftMonitorStaticVideoEl = document.createElement('video');
@@ -780,6 +809,39 @@ function createOverlays() {
         submitCornerScoreInitials();
       });
       state.rightMonitorCornerScoreOverlayEl.append(rightMonitorCornerScoreLabelEl, state.rightMonitorCornerScoreValueEl);
+      // Run stats row
+      const runStatsRowEl = document.createElement('div');
+      runStatsRowEl.className = 'right-monitor-cs-run-stats';
+      const statItems = [
+        { key: 'elapsed', label: 'Time', stateKey: 'rightMonitorCornerScoreElapsedEl', value: '0:00' },
+        { key: 'bounces', label: 'Bounces', stateKey: 'rightMonitorCornerScoreBouncesEl', value: '0' },
+        { key: 'near-misses', label: 'Near Misses', stateKey: 'rightMonitorCornerScoreNearMissesEl', value: '0' }
+      ];
+      statItems.forEach(({ key, label, stateKey, value }) => {
+        const itemEl = document.createElement('div');
+        itemEl.className = 'right-monitor-cs-stat-item';
+        const labelEl = document.createElement('span');
+        labelEl.className = 'right-monitor-cs-stat-label';
+        labelEl.textContent = label;
+        const valueEl = document.createElement('span');
+        valueEl.className = `right-monitor-cs-stat-value right-monitor-cs-stat-${key}`;
+        valueEl.textContent = value;
+        state[stateKey] = valueEl;
+        itemEl.append(labelEl, valueEl);
+        runStatsRowEl.appendChild(itemEl);
+      });
+      // Medal
+      const medalItemEl = document.createElement('div');
+      medalItemEl.className = 'right-monitor-cs-stat-item';
+      const medalLabelEl = document.createElement('span');
+      medalLabelEl.className = 'right-monitor-cs-stat-label';
+      medalLabelEl.textContent = 'Medal';
+      state.rightMonitorCornerScoreMedalEl = document.createElement('span');
+      state.rightMonitorCornerScoreMedalEl.className = 'right-monitor-cs-stat-value right-monitor-cs-medal';
+      state.rightMonitorCornerScoreMedalEl.textContent = '—';
+      medalItemEl.append(medalLabelEl, state.rightMonitorCornerScoreMedalEl);
+      runStatsRowEl.appendChild(medalItemEl);
+      state.rightMonitorCornerScoreOverlayEl.appendChild(runStatsRowEl);
       state.rightMonitorCornerScoreOverlayEl.appendChild(state.bigTvCornerScoreInitialsPromptEl);
       renderCornerScore();
       syncCornerScoreInitialsPromptVisibility();
@@ -842,6 +904,29 @@ function createOverlays() {
         state.whiteboardCornerScoreValueEl,
         state.whiteboardCornerScoreInitialsGroupEl
       );
+      // Server aggregate totals section
+      state.whiteboardCornerScoreServerStatsEl = document.createElement('div');
+      state.whiteboardCornerScoreServerStatsEl.className = 'whiteboard-cs-server-stats';
+      const serverStatFields = [
+        { label: 'Scores', cls: 'whiteboard-cs-total-scores' },
+        { label: 'Bounces', cls: 'whiteboard-cs-total-bounces' },
+        { label: 'Near Misses', cls: 'whiteboard-cs-total-near-misses' },
+        { label: 'Time', cls: 'whiteboard-cs-total-time' },
+        { label: 'Runs', cls: 'whiteboard-cs-total-runs' }
+      ];
+      serverStatFields.forEach(({ label, cls }) => {
+        const rowEl = document.createElement('div');
+        rowEl.className = 'whiteboard-cs-server-stat-row';
+        const labelEl = document.createElement('span');
+        labelEl.className = 'whiteboard-cs-server-stat-label';
+        labelEl.textContent = label;
+        const valueEl = document.createElement('span');
+        valueEl.className = `whiteboard-cs-server-stat-value ${cls}`;
+        valueEl.textContent = '—';
+        rowEl.append(labelEl, valueEl);
+        state.whiteboardCornerScoreServerStatsEl.appendChild(rowEl);
+      });
+      whiteboardStackEl.appendChild(state.whiteboardCornerScoreServerStatsEl);
       el.appendChild(whiteboardStackEl);
       renderCornerScore();
     }
