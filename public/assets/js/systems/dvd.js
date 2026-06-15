@@ -63,6 +63,10 @@ function applyDvdColorStep() {
   if (state.bigTvCornerScoreInitialsPromptEl) {
     state.bigTvCornerScoreInitialsPromptEl.style.setProperty('--corner-score-color', color);
   }
+  if (state.githubShelfImageEl) {
+    state.githubShelfImageEl.style.setProperty('--dvd-accent-color', color);
+    state.githubShelfImageEl.style.setProperty('--dvd-hue-deg', `${hue}deg`);
+  }
 }
 
 function getDvdCornerSide(position, maxPosition, minTolerance, maxTolerance, minSide, maxSide) {
