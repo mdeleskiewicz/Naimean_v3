@@ -373,6 +373,8 @@ const OAUTH_STATE_COOKIE = 'naimean_oauth_state';
 const SESSION_COOKIE = 'naimean_session';
 const SESSION_TTL_MS = 7 * 24 * 60 * 60 * 1000;
 const REQUIRED_DISCORD_GUILD_ID_PLACEHOLDER = 'REQUIRED_SET_DISCORD_GUILD_ID';
+const DISCORD_CANONICAL_CALLBACK_HOST = 'naimean.com';
+const DISCORD_WWW_HOST = `www.${DISCORD_CANONICAL_CALLBACK_HOST}`;
 
 function requireSessionSecret(env) {
   if (!env.SESSION_SECRET) {
@@ -388,7 +390,7 @@ async function handleDiscordAuth(request, env) {
   if (!clientId) return errorRedirect(`${url.origin}/`, 'configuration_error');
   
   const redirectUriOverride = env.DISCORD_REDIRECT_URI;
-  const redirectUri = redirectUriOverride || `${url.origin}/api/discord/callback`;
+  const redirectUri = redirectUriOverride || resolveDefaultDiscordRedirectUri(url);
   const stateCookieDomain = resolveOAuthStateCookieDomain(url, redirectUri, Boolean(redirectUriOverride));
   const requestedReturnPath = normalizePostAuthPath(url.searchParams.get('state') || '/');
   const state = createOAuthState(requestedReturnPath);
@@ -437,7 +439,7 @@ async function handleDiscordCallback(request, env) {
   const clientSecret = env.DISCORD_CLIENT_SECRET;
   const sessionSecret = env.SESSION_SECRET;
   const redirectUriOverride = env.DISCORD_REDIRECT_URI;
-  const targetRedirectUri = redirectUriOverride || `${origin}/api/discord/callback`;
+  const targetRedirectUri = redirectUriOverride || resolveDefaultDiscordRedirectUri(url);
   const stateCookieDomain = resolveOAuthStateCookieDomain(url, targetRedirectUri, Boolean(redirectUriOverride));
   if (!clientId || !clientSecret || !sessionSecret) {
     return errorRedirect(`${origin}/`, 'configuration_error');
@@ -513,6 +515,13 @@ async function handleDiscordCallback(request, env) {
   headers.append('Set-Cookie', clearStateCookie);
   applySecurityHeaders(headers);
   return new Response(null, { status: 302, headers });
+}
+
+function resolveDefaultDiscordRedirectUri(url) {
+  if (url.protocol === 'https:' && url.hostname.toLowerCase() === DISCORD_WWW_HOST) {
+    return `https://${DISCORD_CANONICAL_CALLBACK_HOST}/api/discord/callback`;
+  }
+  return `${url.origin}/api/discord/callback`;
 }
 
 async function handleDiscordMe(request, env) {

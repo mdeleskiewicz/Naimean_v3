@@ -2266,6 +2266,17 @@ test('worker /api/discord/auth redirects to Discord OAuth with state cookie', as
   assert.equal(response.headers.get('x-content-type-options'), 'nosniff');
 });
 
+test('worker /api/discord/auth on www host uses apex callback redirect URI by default', async () => {
+  const env = { DISCORD_CLIENT_ID: 'test-client-id', ASSETS: { async fetch() { return new Response(''); } } };
+  const response = await router.fetch(new Request('https://www.naimean.com/api/discord/auth'), env);
+
+  assert.equal(response.status, 302);
+  const location = response.headers.get('Location');
+  assert.ok(location.includes('redirect_uri=https%3A%2F%2Fnaimean.com%2Fapi%2Fdiscord%2Fcallback'));
+  const setCookie = response.headers.get('Set-Cookie');
+  assert.ok(setCookie.includes('Domain=naimean.com'));
+});
+
 test('worker /api/discord/auth sets shared state cookie domain for explicit cross-subdomain redirect URI', async () => {
   const env = {
     DISCORD_CLIENT_ID: 'test-client-id',
@@ -2500,6 +2511,53 @@ test('worker /api/discord/callback clears state cookie on explicit redirect URI 
       : [response.headers.get('Set-Cookie')];
     const stateClearCookie = cookies.find((c) => c.startsWith('naimean_oauth_state=;'));
     assert.ok(stateClearCookie, 'state cookie should be cleared');
+    assert.ok(stateClearCookie.includes('Domain=naimean.com'));
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
+
+test('worker /api/discord/callback on www host uses apex callback redirect URI by default', async () => {
+  const env = {
+    DISCORD_CLIENT_ID: 'cid',
+    DISCORD_CLIENT_SECRET: 'secret',
+    SESSION_SECRET: TEST_SESSION_SECRET,
+    DISCORD_GUILD_ID: 'guild123',
+    ASSETS: { async fetch() { return new Response(''); } }
+  };
+  const state = 'teststate123';
+  const tokenBodies = [];
+
+  const originalFetch = globalThis.fetch;
+  globalThis.fetch = async (url, init = {}) => {
+    const u = String(url);
+    if (u.includes('/oauth2/token')) {
+      tokenBodies.push(new URLSearchParams(String(init.body || '')));
+      return Response.json({ access_token: 'tok123', token_type: 'Bearer' });
+    }
+    if (u.includes('/users/@me/guilds/')) {
+      return Response.json({ roles: [] });
+    }
+    if (u.includes('/users/@me')) {
+      return Response.json({ id: 'user999', username: 'naimean_tester', avatar: 'avatarhash' });
+    }
+    throw new Error(`Unexpected fetch: ${u}`);
+  };
+
+  try {
+    const response = await router.fetch(
+      new Request(`https://www.naimean.com/api/discord/callback?code=code123&state=${state}`, {
+        headers: { Cookie: `naimean_oauth_state=${state}` }
+      }),
+      env
+    );
+
+    assert.equal(response.status, 302);
+    assert.equal(tokenBodies[0].get('redirect_uri'), 'https://naimean.com/api/discord/callback');
+    const cookies = response.headers.getSetCookie
+      ? response.headers.getSetCookie()
+      : [response.headers.get('Set-Cookie')];
+    const stateClearCookie = cookies.find((c) => c.startsWith('naimean_oauth_state=;'));
     assert.ok(stateClearCookie.includes('Domain=naimean.com'));
   } finally {
     globalThis.fetch = originalFetch;
