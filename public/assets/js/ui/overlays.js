@@ -790,6 +790,7 @@ function createOverlays() {
       const TUNING_DRAG_THRESHOLD_PX = 1;
       const KEYBOARD_TUNING_STEP = 0.02;
       const KEYBOARD_AUDIO_STOP_DELAY_MS = 120;
+      const TUNING_POSITION_CHANGE_THRESHOLD = 0.001;
       let activeTunePointerId = null;
       let lastPointerClientX = 0;
       let stopTuneAudioTimeoutId = null;
@@ -807,7 +808,7 @@ function createOverlays() {
         const rect = scaleBlock.getBoundingClientRect();
         if (!rect.width) return false;
         const nextPosition = clamp((clientX - rect.left) / rect.width, 0, 1);
-        if (Math.abs(nextPosition - tuningPosition) < 0.001) return false;
+        if (Math.abs(nextPosition - tuningPosition) < TUNING_POSITION_CHANGE_THRESHOLD) return false;
         tuningPosition = applyRadioTuningPosition(scaleBlock, nextPosition);
         syncDvdAccelerometerFromTuningPosition(tuningPosition, selectorDot);
         resetRadioTuningPlayback(tuningAudio);
