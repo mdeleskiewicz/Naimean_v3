@@ -240,10 +240,10 @@ function tickBigTvDvdAnimation(timestamp) {
     }
     if (!isRightMonitorInteractive() && !state.isRightMonitorCornerScoreWakeSequenceRunning) {
       state.rightMonitorDisplayMode = RIGHT_MONITOR_DISPLAY_MODE_CORNER_SCORE;
-    }
-    syncDvdScreensaverState();
-    if (!isRightMonitorInteractive() && !state.isRightMonitorCornerScoreWakeSequenceRunning) {
+      syncDvdScreensaverState();
       void wakeRightMonitorForCornerScore();
+    } else {
+      syncDvdScreensaverState();
     }
   } else {
     const missCorner = getCornerCollisionName({
