@@ -703,6 +703,7 @@
     }
 
     .left-monitor-screen-window > .left-monitor-selector,
+    .left-monitor-screen-window > .left-monitor-github-quadrant-overlay,
     .left-monitor-screen-window > .overlay-static-layer,
     .left-monitor-screen-window > .left-monitor-corner-score-overlay {
       top: var(--left-monitor-inner-boundary-top);
@@ -816,6 +817,12 @@
     .left-monitor-screen-window > .left-monitor-selector {
       height: auto;
       transform: translate(0, 8px);
+    }
+
+    .left-monitor-selector.is-hidden {
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
     }
 
     .overlay-static-layer {
@@ -1635,7 +1642,7 @@
       opacity: 0.92;
     }
 
-    /* GitHub screensaver quadrant overlay on the big TV */
+    /* GitHub screensaver quadrant overlay */
     .big-tv-github-quadrant-overlay {
       position: absolute;
       inset: 0;
@@ -1690,6 +1697,20 @@
     .github-quadrant-btn:focus-visible {
       outline: 2px solid rgba(255, 255, 255, 0.7);
       outline-offset: -2px;
+    }
+
+    .left-monitor-github-quadrant-overlay {
+      z-index: 2;
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+      transform: translate(0, 8px);
+    }
+
+    .left-monitor-github-quadrant-overlay .github-quadrant-btn {
+      font: 700 clamp(10px, min(7.2cqw, 8.4cqh), 22px) / 1 "Trebuchet MS", "Arial Black", sans-serif;
+      padding: clamp(3px, 1.2%, 8px) clamp(4px, 1.6%, 10px);
+      letter-spacing: 0.04em;
     }
 
     .big-tv-tools-overlay {

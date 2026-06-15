@@ -145,6 +145,7 @@ export const state = {
   isRightMonitorCornerScoreWakeSequenceRunning: false,
   leftMonitorStaticOverlayEl: null,
   leftMonitorStaticVideoEl: null,
+  leftMonitorSelectorEl: null,
   leftMonitorContentImageEl: null,
   leftMonitorSelectedState: DEFAULT_LEFT_MONITOR_STATE,
   discordJoinButtonEl: null,

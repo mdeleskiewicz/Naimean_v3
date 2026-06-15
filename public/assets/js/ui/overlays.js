@@ -323,6 +323,18 @@ async function activateLeftMonitorQuadrant(nextState) {
   await playLeftMonitorStaticPass(sequenceToken);
 }
 
+function syncGithubQuadrantOverlayVisibility() {
+  const isGithubMode = state.isGithubScreensaverMode;
+  if (state.leftMonitorSelectorEl) {
+    state.leftMonitorSelectorEl.classList.toggle('is-hidden', isGithubMode);
+    state.leftMonitorSelectorEl.setAttribute('aria-hidden', isGithubMode ? 'true' : 'false');
+  }
+  if (state.bigTvGithubQuadrantEl) {
+    state.bigTvGithubQuadrantEl.classList.toggle('is-active', isGithubMode);
+    state.bigTvGithubQuadrantEl.setAttribute('aria-hidden', isGithubMode ? 'false' : 'true');
+  }
+}
+
 function deactivateGithubScreensaverMode() {
   if (!state.isGithubScreensaverMode) return;
   state.isGithubScreensaverMode = false;
@@ -331,10 +343,7 @@ function deactivateGithubScreensaverMode() {
     state.bigTvDvdLogoEl.src = BIG_TV_SCREENSAVER_LOGO_URL;
   }
   syncGithubShelfObjectImage();
-  if (state.bigTvGithubQuadrantEl) {
-    state.bigTvGithubQuadrantEl.classList.remove('is-active');
-    state.bigTvGithubQuadrantEl.setAttribute('aria-hidden', 'true');
-  }
+  syncGithubQuadrantOverlayVisibility();
 }
 
 async function activateGithubScreensaverMode() {
@@ -375,9 +384,8 @@ async function activateGithubScreensaverMode() {
   if (state.bigTvGithubQuadrantEl) {
     // Reset any previously-activated quadrant states each time mode is entered
     state.bigTvGithubQuadrantEl.querySelectorAll('.github-quadrant-btn').forEach((btn) => btn.classList.remove('is-active'));
-    state.bigTvGithubQuadrantEl.classList.add('is-active');
-    state.bigTvGithubQuadrantEl.setAttribute('aria-hidden', 'false');
   }
+  syncGithubQuadrantOverlayVisibility();
   state._cb.restoreBigTvDvdLoop?.();
 }
 
@@ -413,6 +421,7 @@ function createOverlays() {
   state.bigTvDvdMissIndicatorsByCorner.clear();
   state.githubShelfImageEl = null;
   state.discordWidgetFrameEl = null;
+  state.leftMonitorSelectorEl = null;
   state.aquariumOverlayEl = null;
   state.commodorePowerButtonEl = null;
   state.commodoreShadowOverlayEl = null;
@@ -467,31 +476,6 @@ function createOverlays() {
       highScoreStatsRowEl.append(state.bigTvHighScoreStatsValueEl, state.bigTvHighScoreStatsInitialsEl);
       state.bigTvHighScoreStatsEl.append(highScoreStatsTitleEl, highScoreStatsRowEl);
       state.bigTvDvdOverlayEl.appendChild(state.bigTvHighScoreStatsEl);
-      // GitHub quadrant overlay — shown when GitHub screensaver mode is active
-      state.bigTvGithubQuadrantEl = document.createElement('div');
-      state.bigTvGithubQuadrantEl.className = 'big-tv-github-quadrant-overlay';
-      state.bigTvGithubQuadrantEl.setAttribute('aria-hidden', 'true');
-      const githubQuadrants = [
-        { label: 'Issues',  url: GITHUB_V3_ISSUES_URL,  pos: 'top-left' },
-        { label: 'Agents',  url: GITHUB_V3_AGENTS_URL,  pos: 'top-right' },
-        { label: 'Wiki',    url: GITHUB_V3_WIKI_URL,    pos: 'bottom-left' },
-        { label: 'Actions', url: GITHUB_V3_ACTIONS_URL, pos: 'bottom-right' }
-      ];
-      githubQuadrants.forEach(({ label, url, pos }) => {
-        const btn = document.createElement('button');
-        btn.type = 'button';
-        btn.className = `github-quadrant-btn github-quadrant-btn-${pos}`;
-        btn.setAttribute('aria-label', `GitHub ${label}`);
-        btn.textContent = label;
-        btn.addEventListener('pointerdown', (e) => e.stopPropagation());
-        btn.addEventListener('click', (e) => {
-          e.stopPropagation();
-          btn.classList.add('is-active');
-          window.open(url, '_blank', 'noopener,noreferrer');
-        });
-        state.bigTvGithubQuadrantEl.appendChild(btn);
-      });
-      state.bigTvDvdOverlayEl.appendChild(state.bigTvGithubQuadrantEl);
       el.appendChild(state.bigTvDvdOverlayEl);
       applyDvdColorStep();
       if (DISCORD_WIDGET_URL) {
@@ -660,6 +644,8 @@ function createOverlays() {
       windowEl.appendChild(state.leftMonitorContentImageEl);
       const selector = document.createElement('div');
       selector.className = 'left-monitor-selector';
+      selector.setAttribute('aria-hidden', 'false');
+      state.leftMonitorSelectorEl = selector;
       LEFT_MONITOR_SEGMENTS.forEach(({ state: segmentState, label, quadrant }) => {
         const segment = document.createElement('button');
         segment.type = 'button';
@@ -677,6 +663,32 @@ function createOverlays() {
         selector.appendChild(segment);
       });
       windowEl.appendChild(selector);
+      // GitHub quadrant overlay (left monitor): shown when GitHub screensaver mode is active.
+      state.bigTvGithubQuadrantEl = document.createElement('div');
+      state.bigTvGithubQuadrantEl.className = 'big-tv-github-quadrant-overlay left-monitor-github-quadrant-overlay';
+      state.bigTvGithubQuadrantEl.setAttribute('aria-hidden', 'true');
+      const githubQuadrants = [
+        { label: 'Issues',  url: GITHUB_V3_ISSUES_URL,  pos: 'top-left' },
+        { label: 'Agents',  url: GITHUB_V3_AGENTS_URL,  pos: 'top-right' },
+        { label: 'Wiki',    url: GITHUB_V3_WIKI_URL,    pos: 'bottom-left' },
+        { label: 'Actions', url: GITHUB_V3_ACTIONS_URL, pos: 'bottom-right' }
+      ];
+      githubQuadrants.forEach(({ label, url, pos }) => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = `github-quadrant-btn github-quadrant-btn-${pos}`;
+        btn.setAttribute('aria-label', `GitHub ${label}`);
+        btn.textContent = label;
+        btn.addEventListener('pointerdown', (e) => e.stopPropagation());
+        btn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          btn.classList.add('is-active');
+          window.open(url, '_blank', 'noopener,noreferrer');
+        });
+        state.bigTvGithubQuadrantEl.appendChild(btn);
+      });
+      windowEl.appendChild(state.bigTvGithubQuadrantEl);
+      syncGithubQuadrantOverlayVisibility();
       // Personal Best cornerscore overlay (shown on left monitor when cornerscore is active)
       state.leftMonitorCornerScoreOverlayEl = document.createElement('div');
       state.leftMonitorCornerScoreOverlayEl.className = 'left-monitor-corner-score-overlay';

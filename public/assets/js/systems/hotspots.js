@@ -22,6 +22,7 @@ import {
   LEGACY_HOTSPOT_API_PATH,
   LEGACY_HOTSPOT_RECORD_TITLE,
   LEGACY_MONITOR_BOUNDS_TOLERANCE_PX,
+  LEFT_MONITOR_OVERLAY_CONTROL_ID,
   LOCKED_DEBUG_HOTSPOT_IDS,
   MIN_HOTSPOT_SIZE,
   MIN_MONITOR_RATIO_DENOMINATOR,
@@ -716,19 +717,27 @@ function createHotspots(hotspotList) {
       if (spot.id === NOAHS_ARCADE_HOTSPOT_ID) return void window.location.assign(getHotspotEffectiveUrl(spot.id) || NOAHS_ARCADE_URL);
       if (spot.id === 'chapel') return void window.location.assign(getHotspotEffectiveUrl(spot.id) || CHAPEL_URL);
       if (spot.id === COMMODORE_POWER_BUTTON_CONTROL_ID) return void state._cb.triggerCommodorePowerOnSequence?.();
-      if (spot.id === DISCORD_OVERLAY_CONTROL_ID) {
-        // When GitHub screensaver mode is active the quadrant overlay sits below the hotspot layer;
-        // forward the click to whichever quadrant the pointer landed in.
+      if (spot.id === LEFT_MONITOR_OVERLAY_CONTROL_ID) {
+        const hotspotRect = el.getBoundingClientRect();
+        const relX = (event.clientX - hotspotRect.left) / hotspotRect.width;
+        const relY = (event.clientY - hotspotRect.top) / hotspotRect.height;
+        const pos = `${relY < 0.5 ? 'top' : 'bottom'}-${relX < 0.5 ? 'left' : 'right'}`;
         if (state.isGithubScreensaverMode && state.bigTvGithubQuadrantEl) {
-          const hotspotRect = el.getBoundingClientRect();
-          const relX = (event.clientX - hotspotRect.left) / hotspotRect.width;
-          const relY = (event.clientY - hotspotRect.top) / hotspotRect.height;
-          const pos = `${relY < 0.5 ? 'top' : 'bottom'}-${relX < 0.5 ? 'left' : 'right'}`;
-          const btn = state.bigTvGithubQuadrantEl.querySelector(`.github-quadrant-btn-${pos}`);
-          if (!btn) console.warn(`GitHub quadrant button not found for position: ${pos}`);
-          btn?.click();
+          const githubBtn = state.bigTvGithubQuadrantEl.querySelector(`.github-quadrant-btn-${pos}`);
+          if (!githubBtn) console.warn(`GitHub quadrant button not found for position: ${pos}`);
+          githubBtn?.click();
           return;
         }
+        const monitorStateByPos = {
+          'top-left': 'tools',
+          'top-right': 'login',
+          'bottom-left': 'calendar',
+          'bottom-right': 'mail'
+        };
+        state.leftMonitorSegmentButtonsByState.get(monitorStateByPos[pos])?.click();
+        return;
+      }
+      if (spot.id === DISCORD_OVERLAY_CONTROL_ID) {
         state._cb.toggleBigTvCornerScoreWidgetMode?.();
         return;
       }
