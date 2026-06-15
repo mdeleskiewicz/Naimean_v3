@@ -128,7 +128,9 @@ function syncCornerScoreInitialsPromptVisibility() {
   if (!state.bigTvCornerScoreInitialsPromptEl) {
     return;
   }
-  const shouldShowPrompt = state.cornerScoreValue > state.cornerScoreHighScoreValue;
+  const shouldShowPrompt =
+    state.cornerScoreValue > state.cornerScoreHighScoreValue ||
+    (state.cornerScoreInitialsTargetScore !== null && state.cornerScoreInitialsTargetScore >= state.cornerScoreHighScoreValue);
   if (shouldShowPrompt) {
     if (
       !state.bigTvCornerScoreInitialsPromptEl.classList.contains('is-active') ||
