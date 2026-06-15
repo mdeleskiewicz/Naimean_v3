@@ -129,8 +129,23 @@ function createAshtraySmokeEffect() {
         '--smoke-duration': '12.8s',
         '--smoke-delay': '2.2s'
       }
+    },
+    {
+      className: 'ashtray-smoke-wisp ashtray-smoke-wisp-extra',
+      vars: {
+        '--smoke-start-x': '-4px',
+        '--smoke-curl-a': '-14px',
+        '--smoke-curl-b': '19px',
+        '--smoke-drift-x': '-22px',
+        '--smoke-curl-angle': '-18deg',
+        '--smoke-duration': '9.8s',
+        '--smoke-delay': '3.6s'
+      }
     }
   ];
+  const stem = document.createElement('span');
+  stem.className = 'ashtray-smoke-stem';
+  el.appendChild(stem);
   wisps.forEach(({ className, vars }) => {
     const wisp = document.createElement('span');
     wisp.className = className;
