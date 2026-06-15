@@ -292,8 +292,9 @@ function syncDvdScreensaverState() {
     canShowRightMonitorOverlayContent &&
     state.rightMonitorDisplayMode === RIGHT_MONITOR_DISPLAY_MODE_CORNER_SCORE;
   const isJoinDiscordActive =
-    canShowRightMonitorOverlayContent &&
-    state.rightMonitorDisplayMode !== RIGHT_MONITOR_DISPLAY_MODE_CORNER_SCORE;
+    (canShowRightMonitorOverlayContent &&
+      state.rightMonitorDisplayMode !== RIGHT_MONITOR_DISPLAY_MODE_CORNER_SCORE) ||
+    (!isScreensaverActive && isRightMonitorInteractive());
   if (state.rightMonitorCornerScoreOverlayEl) {
     state.rightMonitorCornerScoreOverlayEl.classList.toggle('is-active', isCornerScoreActive);
     state.rightMonitorCornerScoreOverlayEl.setAttribute('aria-hidden', isCornerScoreActive ? 'false' : 'true');
@@ -346,12 +347,40 @@ function restoreBigTvDvdLoop({ enableCornerScore = false } = {}) {
   syncDvdScreensaverState();
 }
 
-function toggleBigTvCornerScoreWidgetMode() {
-  if (state.isBigTvDvdLoopInterrupted) {
-    restoreBigTvDvdLoop({ enableCornerScore: true });
+async function toggleBigTvCornerScoreWidgetMode() {
+  if (!state._cb.isBigTvMonitorInteractive?.()) return;
+  if (hasActiveBigTvContentOverlay()) return;
+
+  const goingToDiscordMode = !state.isBigTvDvdLoopInterrupted;
+
+  state.bigTvDiscordSequenceToken += 1;
+  const sequenceToken = state.bigTvDiscordSequenceToken;
+
+  // Play right monitor static concurrently with the big TV transition.
+  // When going to discord mode and the right monitor is off, wake it first;
+  // syncDvdScreensaverState called at the end of the wake sequence will
+  // show join discord once the DVD loop is interrupted.
+  if (isRightMonitorInteractive()) {
+    void state._cb.playRightMonitorStaticPass?.();
+  } else if (goingToDiscordMode && !state.isRightMonitorCornerScoreWakeSequenceRunning) {
+    void wakeRightMonitorForCornerScore();
+  }
+
+  await state._cb.playBigTvStaticPass?.(sequenceToken, () => state.bigTvDiscordSequenceToken);
+
+  if (sequenceToken !== state.bigTvDiscordSequenceToken) {
+    state._cb.hideAquariumStaticOverlay?.();
     return;
   }
-  interruptBigTvDvdLoop();
+
+  state._cb.hideAquariumStaticOverlay?.();
+
+  if (goingToDiscordMode) {
+    interruptBigTvDvdLoop();
+  } else {
+    state.rightMonitorDisplayMode = RIGHT_MONITOR_DISPLAY_MODE_CORNER_SCORE;
+    restoreBigTvDvdLoop({ enableCornerScore: true });
+  }
 }
 
 state._cb.syncDvdScreensaverState = syncDvdScreensaverState;

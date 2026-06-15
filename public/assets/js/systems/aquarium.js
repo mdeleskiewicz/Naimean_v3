@@ -437,6 +437,7 @@ state._cb.playAquariumHotspotSequence = playAquariumHotspotSequence;
 state._cb.playRightMonitorStaticPass = playRightMonitorStaticPass;
 state._cb.hideAquariumStaticOverlay = hideAquariumStaticOverlay;
 state._cb.hideNedryGateOverlay = hideNedryGateOverlay;
+state._cb.playRightMonitorStaticPass = playRightMonitorStaticPass;
 state._cb.transitionAquariumToDvdCornerScoreFromRightMonitor = transitionAquariumToDvdCornerScoreFromRightMonitor;
 state._cb.skipAquariumToNextClip = skipAquariumToNextClip;
 state._cb.skipAquariumToPreviousClip = skipAquariumToPreviousClip;

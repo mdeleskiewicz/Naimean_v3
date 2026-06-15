@@ -1231,7 +1231,7 @@
       top: 0;
       left: 0;
       z-index: 5;
-      width: clamp(104px, 20.5%, 224px);
+      width: clamp(156px, 31%, 336px);
       height: auto;
       display: block;
       object-fit: contain;
