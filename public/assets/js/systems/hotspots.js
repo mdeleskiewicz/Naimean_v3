@@ -717,7 +717,6 @@ function createHotspots(hotspotList) {
           btn?.click();
           return;
         }
-        if (!state._cb.isBigTvMonitorInteractive?.()) return;
         state._cb.toggleBigTvCornerScoreWidgetMode?.();
         return;
       }

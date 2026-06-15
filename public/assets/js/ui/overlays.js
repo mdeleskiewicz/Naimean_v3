@@ -1,7 +1,6 @@
 import {
   AQUARIUM_OVERLAY_ID,
   AQUARIUM_STATIC_VIDEO_URL,
-  BIG_TV_SHADOW_LAYER_ID,
   BIG_TV_FULLSCREEN_OVERLAY_IDS,
   BIG_TV_INTERACTIVE_UI_SELECTORS,
   BIG_TV_PROMPT_PREFIX,
@@ -51,7 +50,7 @@ import { clamp } from '../core/utils.js';
 import { applyDvdColorStep } from '../systems/dvd.js';
 import { renderCornerScore, sanitizeCornerScoreInitialsInput, submitCornerScoreInitials, syncCornerScoreInitialsPromptVisibility, syncCornerScoreInitialsSubmitState } from '../systems/cornerScore.js';
 import { applyRadioTuningPosition, createFlipCard, ensureRadioTuningLoopPlayback, getNextRadioTuningAudioUrl, getRadioTuningAudioElement, resetRadioTuningPlayback, startFlipClock, stopRadioTuningLoopPlayback, syncDvdAccelerometerFromTuningPosition } from '../systems/flipClock.js';
-import { isBigTvMonitorInteractive, isLeftMonitorInteractive, isRightMonitorInteractive } from '../systems/monitors.js';
+import { isLeftMonitorInteractive, isRightMonitorInteractive } from '../systems/monitors.js';
 import { getOverlayRect, syncControlledOverlaysFromHotspots } from '../systems/hotspots.js';
 
 const isIOSDevice =
@@ -195,15 +194,15 @@ function setLeftMonitorState(nextState) {
     state.leftMonitorContentImageEl.classList.toggle('is-calendar-state', nextState === 'calendar');
   }
   syncLeftMonitorSelectionUi();
-  if (nextState === 'tools' && isLeftMonitorInteractive() && isBigTvMonitorInteractive()) {
+  if (nextState === 'tools' && isLeftMonitorInteractive()) {
     hideCalendarBigTvOverlay();
     state._cb.hideLoginOverlay?.();
     void state._cb.activateBigTvToolsMode?.();
-  } else if (nextState === 'login' && isLeftMonitorInteractive() && isBigTvMonitorInteractive()) {
+  } else if (nextState === 'login' && isLeftMonitorInteractive()) {
     hideCalendarBigTvOverlay();
     state._cb.hideBigTvToolsOverlay?.();
     void state._cb.activateLoginMode?.();
-  } else if (nextState === 'calendar' && isLeftMonitorInteractive() && isBigTvMonitorInteractive()) {
+  } else if (nextState === 'calendar' && isLeftMonitorInteractive()) {
     state._cb.hideBigTvToolsOverlay?.();
     state._cb.hideLoginOverlay?.();
     void activateCalendarMode();
@@ -348,10 +347,6 @@ async function activateGithubScreensaverMode() {
   state._cb.hideLoginOverlay?.({ cancelSequence: false });
   hideCalendarBigTvOverlay();
   // Wake monitors instantly if power was not already on so static is visible
-  if (state.bigTvShadowOverlayEl && !isBigTvMonitorInteractive()) {
-    state.bigTvShadowOverlayEl.classList.remove('tv-turning-on', 'tv-turning-off');
-    state.bigTvShadowOverlayEl.classList.add('is-monitor-on');
-  }
   if (state.leftMonitorShadowOverlayEl && !isLeftMonitorInteractive()) {
     state.leftMonitorShadowOverlayEl.classList.remove('tv-turning-on', 'tv-turning-off');
     state.leftMonitorShadowOverlayEl.classList.add('is-monitor-on');
@@ -421,7 +416,6 @@ function createOverlays() {
   state.aquariumOverlayEl = null;
   state.commodorePowerButtonEl = null;
   state.commodoreShadowOverlayEl = null;
-  state.bigTvShadowOverlayEl = null;
   state.leftMonitorShadowOverlayEl = null;
   state.rightMonitorShadowOverlayEl = null;
   overlayDefaults.forEach((overlay) => {
@@ -631,11 +625,6 @@ function createOverlays() {
     if (overlay.id === COMMODORE_SHADOW_OVERLAY_ID) {
       el.classList.add('commodore-shadow-overlay');
       state.commodoreShadowOverlayEl = el;
-    }
-
-    if (overlay.id === BIG_TV_SHADOW_LAYER_ID) {
-      el.classList.add('monitor-shadow-overlay');
-      state.bigTvShadowOverlayEl = el;
     }
 
     if (overlay.id === LEFT_MONITOR_SHADOW_LAYER_ID) {
@@ -1068,7 +1057,6 @@ function createOverlays() {
 
     if (BIG_TV_FULLSCREEN_OVERLAY_IDS.has(overlay.id)) {
       el.addEventListener('click', (event) => {
-        if (!isBigTvMonitorInteractive()) return;
         const clickedInteractive = event.target instanceof Element && event.target.closest(BIG_TV_INTERACTIVE_UI_SELECTORS);
         if (clickedInteractive) return;
       });

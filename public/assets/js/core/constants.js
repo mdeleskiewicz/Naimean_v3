@@ -278,8 +278,6 @@ export const SCENE_TILE_IMAGE_URLS = [
   },
 ];
 export const DISCORD_OVERLAY_CONTROL_ID = 'overlay-big-tv-control';
-export const BIG_TV_SHADOW_LAYER_ID = 'big_tv_shadow_layer';
-export const BIG_TV_SHADOW_LAYER_CONTROL_ID = 'big_tv_shadow_layer_control';
 export const LEFT_MONITOR_OVERLAY_CONTROL_ID = 'overlay-left-monitor-control';
 export const LEFT_MONITOR_SHADOW_LAYER_ID = 'left_monitor_shadow_layer';
 export const LEFT_MONITOR_SHADOW_LAYER_CONTROL_ID = 'left_monitor_shadow_layer_control';
@@ -331,7 +329,6 @@ HOTSPOT_READABLE_LABELS.set(COMMODORE_OVERLAY_CONTROL_ID, 'Commodore Screen');
 HOTSPOT_READABLE_LABELS.set(COMMODORE_SHADOW_CONTROL_ID, 'Commodore Shadow');
 HOTSPOT_READABLE_LABELS.set(COMMODORE_POWER_BUTTON_CONTROL_ID, 'Commodore Power Button');
 HOTSPOT_READABLE_LABELS.set(DISCORD_OVERLAY_CONTROL_ID, 'Fullscreen Big TV');
-HOTSPOT_READABLE_LABELS.set(BIG_TV_SHADOW_LAYER_CONTROL_ID, 'Big TV Shadow Layer');
 HOTSPOT_READABLE_LABELS.set(LEFT_MONITOR_OVERLAY_CONTROL_ID, 'Left Monitor Overlay');
 HOTSPOT_READABLE_LABELS.set(LEFT_MONITOR_SHADOW_LAYER_CONTROL_ID, 'Left Monitor Shadow Layer');
 HOTSPOT_READABLE_LABELS.set(LEFT_MONITOR_SIDE_FRAME_CONTROL_ID, 'Left Monitor Side Frame');
@@ -350,7 +347,6 @@ export const LOCKED_DEBUG_HOTSPOT_IDS = new Set([
 export const INTERACTIVE_OVERLAY_CONTROL_IDS = new Set([COMMODORE_OVERLAY_CONTROL_ID, GITHUB_SHELF_OBJECT_CONTROL_ID]);
 export const OVERLAY_CONTROL_BINDINGS = [
   { controlId: DISCORD_OVERLAY_CONTROL_ID, overlayId: DISCORD_OVERLAY_ID },
-  { controlId: BIG_TV_SHADOW_LAYER_CONTROL_ID, overlayId: BIG_TV_SHADOW_LAYER_ID },
   { controlId: LEFT_MONITOR_OVERLAY_CONTROL_ID, overlayId: 'overlay-left-monitor' },
   { controlId: LEFT_MONITOR_SHADOW_LAYER_CONTROL_ID, overlayId: LEFT_MONITOR_SHADOW_LAYER_ID },
   { controlId: LEFT_MONITOR_SIDE_FRAME_CONTROL_ID, overlayId: LEFT_MONITOR_SIDE_FRAME_OVERLAY_ID },
@@ -400,7 +396,6 @@ export const defaultHotspots = [
   ...WHITEBOARD_TASK_HOTSPOTS.map(({ id, x, y, w, h }) => ({ id, x, y, w, h })),
   { id: 'pencil-sharpener', x: 2562, y: 1220, w: 221, h: 245 },
   { id: DISCORD_OVERLAY_CONTROL_ID, x: 1469, y: 330, w: 1000, h: 572 },
-  { id: BIG_TV_SHADOW_LAYER_CONTROL_ID, x: 1468, y: 329, w: 1002, h: 574 },
   { id: COMMODORE_OVERLAY_CONTROL_ID, x: 1703, y: 994, w: 372, h: 246 },
   { id: COMMODORE_SHADOW_CONTROL_ID, x: 1682, y: 1095, w: 414, h: 198 },
   { id: COMMODORE_POWER_BUTTON_CONTROL_ID, ...COMMODORE_POWER_BUTTON_BOUNDS },
@@ -432,7 +427,6 @@ export const defaultHotspots = [
 export const overlayDefaults = [
   { id: DISCORD_OVERLAY_ID, x: 1468, y: 329, w: 1002, h: 574 },
   { id: AQUARIUM_OVERLAY_ID, x: 1468, y: 329, w: 1002, h: 574 },
-  { id: BIG_TV_SHADOW_LAYER_ID, x: 1468, y: 329, w: 1002, h: 574 },
   { id: 'overlay-left-monitor', ...LEFT_MONITOR_FRAME_BOUNDS },
   { id: LEFT_MONITOR_SHADOW_LAYER_ID, ...LEFT_MONITOR_FRAME_BOUNDS },
   { id: LEFT_MONITOR_SIDE_FRAME_OVERLAY_ID, ...LEFT_MONITOR_FRAME_BOUNDS },

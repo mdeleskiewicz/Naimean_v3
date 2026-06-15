@@ -143,7 +143,6 @@ export const state = {
   commodorePowerButtonEl: null,
   isCommodorePoweringOn: false,
   commodoreShadowOverlayEl: null,
-  bigTvShadowOverlayEl: null,
   leftMonitorShadowOverlayEl: null,
   rightMonitorShadowOverlayEl: null,
   monitorPowerTimeoutIds: [],
