@@ -774,6 +774,8 @@ function createOverlays() {
       state.rightMonitorStaticVideoEl.src = AQUARIUM_STATIC_VIDEO_URL;
       state.rightMonitorStaticVideoEl.muted = true;
       state.rightMonitorStaticVideoEl.loop = true;
+      state.rightMonitorStaticVideoEl.playsInline = true;
+      state.rightMonitorStaticVideoEl.setAttribute('webkit-playsinline', '');
       state.rightMonitorStaticOverlayEl.appendChild(state.rightMonitorStaticVideoEl);
       windowEl.appendChild(state.rightMonitorStaticOverlayEl);
       state.rightMonitorShrimpLogoOverlayEl = document.createElement('div');

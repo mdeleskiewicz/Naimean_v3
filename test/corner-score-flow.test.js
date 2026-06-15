@@ -32,13 +32,15 @@ test('dvd scoring flow does not preemptively overwrite high score before initial
   );
 });
 
-test('corner score mode activates after successful server score hydration', () => {
+test('server score hydration does not pre-activate right monitor corner score overlays', () => {
   const source = fs.readFileSync(cornerScoreJsPath, 'utf8');
 
-  assert.match(
+  // Hydrating the high score from the server must NOT call activateRightMonitorCornerScoreMode
+  // so that both right-monitor overlays stay transparent until the user actually scores a corner.
+  assert.doesNotMatch(
     source,
-    /const payload = await response\.json\(\);\s*setCornerScoreHighScore\(payload\?\.score, payload\?\.initials\);\s*activateRightMonitorCornerScoreMode\(\);/s,
-    'Expected successful server hydration to activate right monitor corner score mode',
+    /setCornerScoreHighScore\(payload\?\.score, payload\?\.initials\);\s*activateRightMonitorCornerScoreMode\(\);/s,
+    'Expected server hydration to NOT activate right monitor corner score mode before a corner is scored',
   );
 });
 
