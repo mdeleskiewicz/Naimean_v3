@@ -1559,6 +1559,105 @@
       right: clamp(16px, 3.4%, 34px);
     }
 
+    .big-tv-high-score-stats {
+      position: absolute;
+      inset: clamp(16px, 3.2%, 32px);
+      z-index: 2;
+      display: grid;
+      grid-template-rows: auto 1fr;
+      gap: clamp(10px, 1.8%, 18px);
+      padding: clamp(14px, 2.2%, 22px);
+      border: 1px solid color-mix(in srgb, var(--corner-score-color, #40d6ff) 56%, white 20%);
+      border-radius: 18px;
+      background:
+        linear-gradient(180deg, rgba(3, 8, 14, 0.92), rgba(2, 5, 10, 0.9)),
+        rgba(0, 0, 0, 0.84);
+      box-shadow:
+        0 0 0 1px rgba(255, 255, 255, 0.05),
+        0 18px 34px rgba(0, 0, 0, 0.42),
+        0 0 32px color-mix(in srgb, var(--corner-score-color, #40d6ff) 24%, transparent);
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+      transition: opacity 140ms ease;
+    }
+
+    .big-tv-high-score-stats.is-active {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    .big-tv-high-score-stats-title {
+      margin: 0;
+      text-align: center;
+      text-transform: uppercase;
+      letter-spacing: 0.13em;
+      font: 800 clamp(14px, 2.6cqh, 30px) / 1 "Trebuchet MS", "Arial Black", sans-serif;
+      color: var(--corner-score-color, #40d6ff);
+      text-shadow: 0 0 16px color-mix(in srgb, var(--corner-score-color, #40d6ff) 60%, transparent);
+    }
+
+    .big-tv-high-score-stats-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: clamp(8px, 1.6%, 16px);
+      min-height: 0;
+    }
+
+    .big-tv-corner-score-quadrant {
+      border: 1px solid color-mix(in srgb, var(--corner-score-color, #40d6ff) 42%, transparent);
+      border-radius: 12px;
+      padding: clamp(8px, 1.6%, 14px);
+      background: rgba(4, 10, 16, 0.66);
+      display: grid;
+      grid-template-rows: auto 1fr;
+      gap: clamp(4px, 1.2%, 8px);
+    }
+
+    .big-tv-corner-score-quadrant-title {
+      margin: 0;
+      text-transform: uppercase;
+      letter-spacing: 0.09em;
+      font: 700 clamp(10px, 2.1cqh, 20px) / 1.05 "Trebuchet MS", "Arial Black", sans-serif;
+      color: color-mix(in srgb, var(--corner-score-color, #40d6ff) 88%, white 12%);
+    }
+
+    .big-tv-corner-score-quadrant-list {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+      align-items: baseline;
+      column-gap: clamp(8px, 2.4cqw, 22px);
+      row-gap: clamp(4px, 1.2cqh, 10px);
+    }
+
+    .big-tv-corner-score-metric-label {
+      text-align: right;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      font-size: clamp(9px, 1.8cqh, 18px);
+      line-height: 1;
+      opacity: 0.74;
+      white-space: nowrap;
+    }
+
+    .big-tv-corner-score-metric-value {
+      text-align: left;
+      font-weight: 900;
+      font-size: clamp(14px, 4.2cqh, 38px);
+      line-height: 0.96;
+      font-variant-numeric: tabular-nums lining-nums;
+      letter-spacing: 0.03em;
+      text-shadow:
+        0 0 18px color-mix(in srgb, var(--corner-score-color, #40d6ff) 64%, transparent),
+        0 0 34px color-mix(in srgb, var(--corner-score-color, #40d6ff) 38%, transparent);
+      white-space: nowrap;
+    }
+
+    .big-tv-high-score-stats-initials {
+      letter-spacing: 0.12em;
+      font-size: clamp(14px, 3.8cqh, 30px);
+    }
+
     .big-tv-corner-score-status {
       position: absolute;
       top: clamp(18px, 4%, 42px);
