@@ -191,6 +191,7 @@ export const DEN_URL_OVERRIDES_STORAGE_KEY = 'naimean.den.urlOverrides';
 export const BIG_TV_TOOLS_LOGO_URL = 'assets/images/tools_logo.png';
 export const GITHUB_SCREENSAVER_LOGO_URL = 'assets/images/github-logo.svg';
 export const GITHUB_SHELF_OBJECT_IMAGE_URL = 'assets/images/github-logo.svg';
+export const GITHUB_SHELF_OBJECT_DVD_IMAGE_URL = 'assets/images/dvd-logo-shelf.svg';
 export const GITHUB_V3_ISSUES_URL = 'https://github.com/naimean/Naimean_v3/issues';
 export const GITHUB_V3_AGENTS_URL = 'https://github.com/naimean/Naimean_v3/agents';
 export const GITHUB_V3_WIKI_URL = 'https://github.com/naimean/Naimean_v3/wiki';

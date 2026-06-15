@@ -738,7 +738,14 @@ function createHotspots(hotspotList) {
         return void state._cb.activateBigTvPromptMode?.();
       }
       if (spot.id === PENCIL_SHARPENER_HOTSPOT_ID) return void window.location.assign(getHotspotEffectiveUrl(spot.id) || NOTES_URL);
-      if (spot.id === GITHUB_SHELF_OBJECT_CONTROL_ID) return void state._cb.activateGithubScreensaverMode?.();
+      if (spot.id === GITHUB_SHELF_OBJECT_CONTROL_ID) {
+        if (state.isGithubScreensaverMode) {
+          state._cb.deactivateGithubScreensaverMode?.();
+          state._cb.restoreBigTvDvdLoop?.();
+          return;
+        }
+        return void state._cb.activateGithubScreensaverMode?.();
+      }
     });
     el.addEventListener('keydown', (event) => {
       if (event.key === 'Enter' || event.key === ' ') {

@@ -42,6 +42,7 @@ export const state = {
   bigTvDvdMissTimeoutIdsByCorner: new Map(),
   bigTvCornerScoreStatusEl: null,
   bigTvCornerScoreStatusLabelEl: null,
+  githubShelfImageEl: null,
   bigTvCornerScoreInitialsPromptEl: null,
   bigTvCornerScoreInitialsInputEl: null,
   bigTvCornerScoreInitialsSubmitButtonEl: null,
