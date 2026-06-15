@@ -390,9 +390,12 @@
 
     #overlay-left-monitor,
     #overlay-commodore-screen,
-    #overlay-middle-monitor-corner-score,
     #overlay-right-monitor {
       z-index: 1;
+    }
+
+    #overlay-middle-monitor-corner-score {
+      z-index: 1.5;
     }
 
     #overlay-commodore-shadow,
@@ -452,7 +455,7 @@
       text-align: center;
       font-family: "Courier New", "Consolas", monospace;
       font-weight: 700;
-      font-size: clamp(11px, 3.1cqw, 20px);
+      font-size: clamp(33px, 9.3cqw, 60px);
       letter-spacing: 0.08em;
       text-transform: uppercase;
       text-shadow: 0 0 10px rgba(64, 214, 255, 0.5);
@@ -475,7 +478,7 @@
     }
 
     .middle-monitor-cs-server-stat-label {
-      font-size: clamp(10px, 2.8cqw, 18px);
+      font-size: clamp(30px, 8.4cqw, 54px);
       line-height: 1;
       letter-spacing: 0.04em;
       text-transform: uppercase;
@@ -483,7 +486,7 @@
     }
 
     .middle-monitor-cs-server-stat-value {
-      font-size: clamp(11px, 3.2cqw, 22px);
+      font-size: clamp(33px, 9.6cqw, 66px);
       line-height: 1;
       font-weight: 700;
       font-variant-numeric: tabular-nums lining-nums;
