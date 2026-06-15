@@ -674,6 +674,8 @@
       display: flex;
       align-items: center;
       justify-content: center;
+      opacity: 0;
+      pointer-events: none;
     }
 
     .join-discord-button:focus-visible {
@@ -734,19 +736,12 @@
       height: auto;
       padding: 0;
       box-sizing: border-box;
-      opacity: 0;
-      pointer-events: none;
       transition: opacity 120ms ease;
     }
 
     .right-monitor-screen-window.is-join-discord-active > .join-discord-button {
       opacity: 1;
       pointer-events: auto;
-    }
-
-    .right-monitor-screen-window.is-corner-score-active > .join-discord-button {
-      opacity: 0;
-      pointer-events: none;
     }
 
     .right-monitor-screen-window > .overlay-static-layer,

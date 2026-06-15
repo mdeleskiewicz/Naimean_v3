@@ -4,6 +4,9 @@ import { clamp } from '../core/utils.js';
 import { activateRightMonitorCornerScoreMode, hideAllDvdMissIndicators, playRightMonitorScoringNoise, queueCornerScoreUpdate, setCornerScore, showCornerScoreInitialsPrompt, showCornerScoreStatus, showDvdMissIndicator } from './cornerScore.js';
 import { isRightMonitorInteractive, wakeRightMonitorForCornerScore } from './monitors.js';
 
+const RIGHT_MONITOR_DISPLAY_MODE_CORNER_SCORE = 'corner-score';
+const RIGHT_MONITOR_DISPLAY_MODE_JOIN_DISCORD = 'join-discord';
+
 function hasActiveBigTvContentOverlay() {
   const aquariumActive = state.aquariumStaticOverlayEl?.classList.contains('is-active');
   const nedryGateActive = state.nedryGateOverlayEl?.classList.contains('is-active');
@@ -269,14 +272,11 @@ function startBigTvDvdAnimation() {
 }
 
 function toggleRightMonitorDisplayMode() {
-  if (!isRightMonitorInteractive()) {
-    return false;
-  }
-  state.rightMonitorDisplayMode = state.rightMonitorDisplayMode === 'corner-score'
-    ? 'join-discord'
-    : 'corner-score';
+  state.rightMonitorDisplayMode =
+    state.rightMonitorDisplayMode === RIGHT_MONITOR_DISPLAY_MODE_CORNER_SCORE
+      ? RIGHT_MONITOR_DISPLAY_MODE_JOIN_DISCORD
+      : RIGHT_MONITOR_DISPLAY_MODE_CORNER_SCORE;
   syncDvdScreensaverState();
-  return true;
 }
 
 function syncDvdScreensaverState() {
@@ -285,8 +285,12 @@ function syncDvdScreensaverState() {
     isScreensaverActive &&
     state.isDvdCornerCountEnabled &&
     isRightMonitorInteractive();
-  const isCornerScoreActive = canShowRightMonitorOverlayContent && state.rightMonitorDisplayMode === 'corner-score';
-  const isJoinDiscordActive = canShowRightMonitorOverlayContent && state.rightMonitorDisplayMode !== 'corner-score';
+  const isCornerScoreActive =
+    canShowRightMonitorOverlayContent &&
+    state.rightMonitorDisplayMode === RIGHT_MONITOR_DISPLAY_MODE_CORNER_SCORE;
+  const isJoinDiscordActive =
+    canShowRightMonitorOverlayContent &&
+    state.rightMonitorDisplayMode !== RIGHT_MONITOR_DISPLAY_MODE_CORNER_SCORE;
   if (state.rightMonitorCornerScoreOverlayEl) {
     state.rightMonitorCornerScoreOverlayEl.classList.toggle('is-active', isCornerScoreActive);
     state.rightMonitorCornerScoreOverlayEl.setAttribute('aria-hidden', isCornerScoreActive ? 'false' : 'true');

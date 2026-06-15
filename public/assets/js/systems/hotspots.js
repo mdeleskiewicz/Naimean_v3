@@ -732,7 +732,11 @@ function createHotspots(hotspotList) {
       if (spot.id === FLIP_CLOCK_OVERLAY_CONTROL_ID) return void state._cb.openClockApp?.();
       if (WHITEBOARD_HOTSPOT_IDS.has(spot.id)) return void window.open(getHotspotEffectiveUrl(spot.id) || WHITEBOARD_HOTSPOT_URLS[spot.id] || WHITEBOARD_HOTSPOT_URLS.whiteboard, '_blank', 'noopener,noreferrer');
       if (AQUARIUM_HOTSPOT_IDS.has(spot.id)) return void state._cb.playAquariumHotspotSequence?.();
-      if (NEDRY_GATE_TRIGGER_HOTSPOT_IDS.has(spot.id)) {
+      if (
+        NEDRY_GATE_TRIGGER_HOTSPOT_IDS.has(spot.id) &&
+        spot.id !== RIGHT_MONITOR_OVERLAY_CONTROL_ID &&
+        spot.id !== DISCORD_OVERLAY_CONTROL_ID
+      ) {
         if (state._cb.isAquariumPlaybackSequenceActive?.()) {
           const didReplay = state._cb.replayAquariumPlaybackSequenceFromStatic?.();
           if (didReplay) return;
