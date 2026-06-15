@@ -54,21 +54,26 @@ let sceneEventsBound = false;
 
 function createSceneTiles() {
   dom.sceneLayer.textContent = '';
+  const useModernSceneFormats = !isIOSDevice;
   SCENE_TILE_IMAGE_URLS.forEach((sources, index) => {
     const tile = document.createElement('picture');
     tile.className = 'scene-tile';
     tile.style.left = `${index * TILE_WIDTH}px`;
-    const avifSource = document.createElement('source');
-    avifSource.type = 'image/avif';
-    avifSource.srcset = sources.avif;
-    const webpSource = document.createElement('source');
-    webpSource.type = 'image/webp';
-    webpSource.srcset = sources.webp;
     const image = document.createElement('img');
     image.src = sources.png;
     image.alt = '';
     image.loading = index === 0 ? 'eager' : 'lazy';
-    tile.append(avifSource, webpSource, image);
+    if (useModernSceneFormats) {
+      const avifSource = document.createElement('source');
+      avifSource.type = 'image/avif';
+      avifSource.srcset = sources.avif;
+      const webpSource = document.createElement('source');
+      webpSource.type = 'image/webp';
+      webpSource.srcset = sources.webp;
+      tile.append(avifSource, webpSource, image);
+    } else {
+      tile.append(image);
+    }
     dom.sceneLayer.appendChild(tile);
   });
 }
