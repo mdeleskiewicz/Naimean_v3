@@ -1,6 +1,6 @@
 import { BIG_TV_MONITOR_INTERACTIVE_WAIT_TIMEOUT_MS, COMMODORE_MONITOR_TURN_ON_MS, COMMODORE_NAV_SOURCE_DEN, COMMODORE_NAV_SOURCE_STORAGE_KEY, COMMODORE_POWER_STATE_STORAGE_KEY, COMMODORE_URL, DEFAULT_LEFT_MONITOR_STATE, MONITOR_INTERACTIVE_POLL_INTERVAL_MS, MONITOR_POWER_CASCADE_MS } from '../core/constants.js';
 import { state } from '../core/state.js';
-import { waitForMediaPlaybackToEnd, waitForRightMonitorInteractive } from '../core/media.js';
+import { waitForRightMonitorInteractive } from '../core/media.js';
 import { playRightMonitorStaticPass } from './aquarium.js';
 
 function loadCommodorePowerState() {
@@ -23,7 +23,6 @@ function syncStoredCommodorePowerState() {
   state.isCommodorePoweringOn = loadCommodorePowerState();
   reconcileCommodorePowerStateOnLoad();
   state.commodorePowerButtonEl?.classList.toggle('on', state.isCommodorePoweringOn);
-  syncMiddleMonitorCornerScoreVisibility();
 }
 
 function handlePageShow() {
@@ -50,88 +49,6 @@ function isCommodoreMonitorInteractive() {
 
 function isRightMonitorInteractive() {
   return isMonitorPoweredOn(state.rightMonitorShadowOverlayEl);
-}
-
-function syncMiddleMonitorCornerScoreVisibility() {
-  if (!state.middleMonitorCornerScoreOverlayEl) {
-    return;
-  }
-  const isVisible = isCommodoreMonitorInteractive();
-  state.middleMonitorCornerScoreOverlayEl.classList.toggle('is-active', isVisible);
-  state.middleMonitorCornerScoreOverlayEl.setAttribute('aria-hidden', isVisible ? 'false' : 'true');
-}
-
-function waitForCommodoreMonitorInteractive(timeoutMs = BIG_TV_MONITOR_INTERACTIVE_WAIT_TIMEOUT_MS) {
-  if (isCommodoreMonitorInteractive()) {
-    return Promise.resolve(true);
-  }
-  return new Promise((resolve) => {
-    const deadline = Date.now() + timeoutMs;
-    const checkInteractiveState = () => {
-      if (isCommodoreMonitorInteractive()) {
-        resolve(true);
-        return;
-      }
-      if (Date.now() >= deadline) {
-        resolve(false);
-        return;
-      }
-      window.setTimeout(checkInteractiveState, MONITOR_INTERACTIVE_POLL_INTERVAL_MS);
-    };
-    checkInteractiveState();
-  });
-}
-
-async function playMiddleMonitorStaticPass() {
-  if (!state.middleMonitorStaticOverlayEl || !state.middleMonitorStaticVideoEl) {
-    return false;
-  }
-  state.middleMonitorStaticVideoEl.pause();
-  state.middleMonitorStaticVideoEl.loop = false;
-  state.middleMonitorStaticVideoEl.currentTime = 0;
-  state.middleMonitorStaticOverlayEl.classList.add('is-active');
-  try {
-    await state.middleMonitorStaticVideoEl.play();
-  } catch (error) {
-    if (error?.name !== 'AbortError') {
-      console.warn('Unable to play middle monitor static (CornerScore server stats).', error);
-    }
-    state.middleMonitorStaticOverlayEl.classList.remove('is-active');
-    state.middleMonitorStaticVideoEl.loop = true;
-    return false;
-  }
-  const hasEnded = await waitForMediaPlaybackToEnd(state.middleMonitorStaticVideoEl);
-  state.middleMonitorStaticOverlayEl.classList.remove('is-active');
-  state.middleMonitorStaticVideoEl.loop = true;
-  return hasEnded;
-}
-
-async function triggerMiddleMonitorCornerScoreStatsTransition() {
-  if (!isCommodoreMonitorInteractive() || state.isMiddleMonitorCornerScoreStaticSequenceRunning) {
-    syncMiddleMonitorCornerScoreVisibility();
-    return false;
-  }
-  state.isMiddleMonitorCornerScoreStaticSequenceRunning = true;
-  try {
-    await playMiddleMonitorStaticPass();
-    syncMiddleMonitorCornerScoreVisibility();
-    return true;
-  } finally {
-    state.isMiddleMonitorCornerScoreStaticSequenceRunning = false;
-  }
-}
-
-async function wakeMiddleMonitorForCornerScoreStats() {
-  const isReady = await waitForCommodoreMonitorInteractive();
-  if (!isReady) {
-    console.warn('Middle monitor did not become interactive for CornerScore server stats.');
-    return;
-  }
-  if (!state.isCommodorePoweringOn) {
-    syncMiddleMonitorCornerScoreVisibility();
-    return;
-  }
-  await triggerMiddleMonitorCornerScoreStatsTransition();
 }
 
 function hasActiveMonitorPowerState() {
@@ -170,14 +87,6 @@ function resetMonitorsToOffState() {
   state._cb.stopZeldaSecretAudioPlayback?.();
   state._cb.stopBigTvDvdAnimation?.();
   state._cb.stopMonitorFlickerLoops?.();
-  if (state.middleMonitorStaticOverlayEl) {
-    state.middleMonitorStaticOverlayEl.classList.remove('is-active');
-  }
-  if (state.middleMonitorStaticVideoEl) {
-    state.middleMonitorStaticVideoEl.pause();
-    state.middleMonitorStaticVideoEl.currentTime = 0;
-  }
-  syncMiddleMonitorCornerScoreVisibility();
   if (state.rightMonitorShrimpLogoOverlayEl) {
     state.rightMonitorShrimpLogoOverlayEl.classList.remove('is-active');
   }
@@ -213,7 +122,6 @@ function animateMonitorShadowOn(el) {
     ) {
       void state._cb.activateCalendarMode?.();
     }
-    syncMiddleMonitorCornerScoreVisibility();
     state._cb.syncDvdScreensaverState?.();
   }, { once: true });
 }
@@ -227,7 +135,6 @@ function animateMonitorShadowOff(el) {
   el.classList.add('tv-turning-off');
   el.addEventListener('animationend', () => {
     el.classList.remove('tv-turning-off');
-    syncMiddleMonitorCornerScoreVisibility();
     state._cb.syncDvdScreensaverState?.();
   }, { once: true });
 }
@@ -292,7 +199,6 @@ function triggerCommodorePowerOnSequence() {
     state.commodorePowerButtonEl.classList.add('on');
   }
   animateMonitorShadowOn(state.commodoreShadowOverlayEl);
-  void wakeMiddleMonitorForCornerScoreStats();
 
   // When corner score has been played, ensure the right monitor shows the scoreboard.
   if (state.isDvdCornerCountEnabled) {
@@ -322,7 +228,6 @@ function hideAllMonitorShadows() {
     el.classList.remove('tv-turning-on', 'tv-turning-off');
     el.classList.add('is-monitor-on');
   });
-  syncMiddleMonitorCornerScoreVisibility();
 }
 
 async function wakeRightMonitorForCornerScore() {
@@ -347,7 +252,5 @@ async function wakeRightMonitorForCornerScore() {
 
 state._cb.triggerCommodorePowerOnSequence = triggerCommodorePowerOnSequence;
 state._cb.isRightMonitorInteractive = isRightMonitorInteractive;
-state._cb.triggerMiddleMonitorCornerScoreStatsTransition = triggerMiddleMonitorCornerScoreStatsTransition;
-state._cb.syncMiddleMonitorCornerScoreVisibility = syncMiddleMonitorCornerScoreVisibility;
 
-export { loadCommodorePowerState, saveCommodorePowerState, syncStoredCommodorePowerState, handlePageShow, cancelMonitorPowerTimeouts, isMonitorPoweredOn, isLeftMonitorInteractive, isCommodoreMonitorInteractive, isRightMonitorInteractive, hasActiveMonitorPowerState, reconcileCommodorePowerStateOnLoad, resetMonitorsToOffState, animateMonitorShadowOn, animateMonitorShadowOff, navigateToCommodoreFromDen, triggerCommodorePowerOnSequence, hideAllMonitorShadows, wakeRightMonitorForCornerScore, waitForLeftMonitorInteractive, waitForCommodoreMonitorInteractive, playMiddleMonitorStaticPass, triggerMiddleMonitorCornerScoreStatsTransition, powerOnLeftMonitorWithStatic };
+export { loadCommodorePowerState, saveCommodorePowerState, syncStoredCommodorePowerState, handlePageShow, cancelMonitorPowerTimeouts, isMonitorPoweredOn, isLeftMonitorInteractive, isCommodoreMonitorInteractive, isRightMonitorInteractive, hasActiveMonitorPowerState, reconcileCommodorePowerStateOnLoad, resetMonitorsToOffState, animateMonitorShadowOn, animateMonitorShadowOff, navigateToCommodoreFromDen, triggerCommodorePowerOnSequence, hideAllMonitorShadows, wakeRightMonitorForCornerScore, waitForLeftMonitorInteractive, powerOnLeftMonitorWithStatic };

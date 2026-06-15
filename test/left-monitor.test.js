@@ -56,3 +56,23 @@ test('left monitor github quadrant overlay is centered and uses reduced label fo
     'Expected left monitor GitHub quadrant labels to be reduced by 20%',
   );
 });
+
+test('left monitor content bleeds 1px past the frame transparency', () => {
+  const source = fs.readFileSync(indexCssPath, 'utf8');
+
+  assert.match(
+    source,
+    /\.left-monitor-screen-window\s*\{[^}]*--monitor-content-bleed:\s*1px;/s,
+    'Expected left monitor screen window to define a 1px content bleed',
+  );
+  assert.match(
+    source,
+    /\.left-monitor-screen-window\s*>\s*\.left-monitor-selector,\s*\.left-monitor-screen-window\s*>\s*\.left-monitor-github-quadrant-overlay,\s*\.left-monitor-screen-window\s*>\s*\.overlay-static-layer,\s*\.left-monitor-screen-window\s*>\s*\.left-monitor-corner-score-overlay\s*\{[^}]*top:\s*calc\(var\(--left-monitor-inner-boundary-top\) - var\(--monitor-content-bleed\)\);[^}]*right:\s*calc\(var\(--left-monitor-inner-boundary-right\) - var\(--monitor-content-bleed\)\);[^}]*bottom:\s*calc\(var\(--left-monitor-inner-boundary-bottom\) - var\(--monitor-content-bleed\)\);[^}]*left:\s*calc\(var\(--left-monitor-inner-boundary-left\) - var\(--monitor-content-bleed\)\);/s,
+    'Expected left monitor overlays to extend 1px past the frame transparency on every side',
+  );
+  assert.match(
+    source,
+    /\.left-monitor-screen-window\s*>\s*\.left-monitor-content-image\s*\{[^}]*top:\s*calc\(var\(--left-monitor-inner-boundary-top\) - var\(--monitor-content-bleed\)\);[^}]*left:\s*calc\(var\(--left-monitor-inner-boundary-left\) - var\(--monitor-content-bleed\)\);[^}]*width:\s*calc\(100% - var\(--left-monitor-inner-boundary-left\) - var\(--left-monitor-inner-boundary-right\) \+ \(var\(--monitor-content-bleed\) \* 2\)\);[^}]*height:\s*calc\(100% - var\(--left-monitor-inner-boundary-top\) - var\(--left-monitor-inner-boundary-bottom\) \+ \(var\(--monitor-content-bleed\) \* 2\)\);/s,
+    'Expected the left monitor content image to extend 1px past the frame transparency on every side',
+  );
+});

@@ -852,56 +852,11 @@ function createOverlays() {
     if (overlay.id === MONITOR_GROUP_MIDDLE_ID) {
       el.classList.add('monitor-group', 'monitor-group-middle');
 
-      // Layer 2: power-on/off black overlay (no frame PNG for middle — Commodore desk image provides bezel)
+      // Layer 1: power-on/off black overlay (Commodore desk image provides bezel/screen art)
       const shadowLayer = document.createElement('div');
       shadowLayer.className = 'monitor-shadow-layer';
       state.commodoreShadowOverlayEl = shadowLayer;
       el.appendChild(shadowLayer);
-
-      // Layer 1: screen content
-      const middleWindowEl = document.createElement('div');
-      middleWindowEl.className = 'monitor-overlay-layer middle-monitor-screen-window';
-      state.middleMonitorCornerScoreOverlayEl = middleWindowEl;
-      state.middleMonitorCornerScoreOverlayEl.classList.add('middle-monitor-corner-score-overlay');
-      state.middleMonitorCornerScoreOverlayEl.setAttribute('aria-hidden', 'true');
-      const middleMonitorTitleEl = document.createElement('p');
-      middleMonitorTitleEl.className = 'middle-monitor-corner-score-title';
-      middleMonitorTitleEl.textContent = 'CornerScore Server';
-      state.middleMonitorCornerScoreServerStatsEl = document.createElement('div');
-      state.middleMonitorCornerScoreServerStatsEl.className = 'middle-monitor-cs-server-stats';
-      const serverStatFields = [
-        { label: 'Scores', cls: 'whiteboard-cs-total-scores' },
-        { label: 'Bounces', cls: 'whiteboard-cs-total-bounces' },
-        { label: 'Near Misses', cls: 'whiteboard-cs-total-near-misses' },
-        { label: 'Time', cls: 'whiteboard-cs-total-time' },
-        { label: 'Runs', cls: 'whiteboard-cs-total-runs' }
-      ];
-      serverStatFields.forEach(({ label, cls }) => {
-        const rowEl = document.createElement('div');
-        rowEl.className = 'middle-monitor-cs-server-stat-row';
-        const labelEl = document.createElement('span');
-        labelEl.className = 'middle-monitor-cs-server-stat-label';
-        labelEl.textContent = label;
-        const valueEl = document.createElement('span');
-        valueEl.className = `middle-monitor-cs-server-stat-value ${cls}`;
-        valueEl.textContent = '—';
-        rowEl.append(labelEl, valueEl);
-        state.middleMonitorCornerScoreServerStatsEl.appendChild(rowEl);
-      });
-      state.middleMonitorCornerScoreOverlayEl.append(middleMonitorTitleEl, state.middleMonitorCornerScoreServerStatsEl);
-      state.middleMonitorStaticOverlayEl = document.createElement('div');
-      state.middleMonitorStaticOverlayEl.className = 'overlay-static-layer middle-monitor-static-layer';
-      state.middleMonitorStaticVideoEl = document.createElement('video');
-      state.middleMonitorStaticVideoEl.className = 'overlay-static-video';
-      state.middleMonitorStaticVideoEl.src = AQUARIUM_STATIC_VIDEO_URL;
-      state.middleMonitorStaticVideoEl.muted = true;
-      state.middleMonitorStaticVideoEl.defaultMuted = true;
-      state.middleMonitorStaticVideoEl.loop = true;
-      state.middleMonitorStaticVideoEl.playsInline = true;
-      state.middleMonitorStaticVideoEl.setAttribute('webkit-playsinline', '');
-      state.middleMonitorStaticOverlayEl.appendChild(state.middleMonitorStaticVideoEl);
-      state.middleMonitorCornerScoreOverlayEl.appendChild(state.middleMonitorStaticOverlayEl);
-      el.appendChild(middleWindowEl);
     }
 
     if (overlay.id === COMMODORE_POWER_BUTTON_OVERLAY_ID) {
