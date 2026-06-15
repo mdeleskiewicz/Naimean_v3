@@ -2,6 +2,48 @@ import { API_TIMEOUT_MS, DISCORD_BUTTON_IMAGE_URL, DISCORD_CDN_BASE_URL, DISCORD
 import { state } from '../core/state.js';
 import { wait } from '../core/utils.js';
 
+const DISCORD_INVITE_RETURN_STORAGE_KEY = 'naimean.discordInviteReturnToDen.v1';
+const DISCORD_INVITE_RETURN_MAX_AGE_MS = 6 * 60 * 60 * 1000;
+
+function persistDiscordInviteReturnState(value) {
+  try {
+    if (value) {
+      sessionStorage.setItem(DISCORD_INVITE_RETURN_STORAGE_KEY, JSON.stringify({
+        requestedAt: Date.now()
+      }));
+      return;
+    }
+    sessionStorage.removeItem(DISCORD_INVITE_RETURN_STORAGE_KEY);
+  } catch (_) {}
+}
+
+function shouldReturnToDenAfterDiscordInvite() {
+  try {
+    const rawValue = sessionStorage.getItem(DISCORD_INVITE_RETURN_STORAGE_KEY);
+    if (!rawValue) return false;
+    const parsedValue = JSON.parse(rawValue);
+    const requestedAt = Number(parsedValue?.requestedAt);
+    if (!Number.isFinite(requestedAt) || (Date.now() - requestedAt) > DISCORD_INVITE_RETURN_MAX_AGE_MS) {
+      persistDiscordInviteReturnState(false);
+      return false;
+    }
+    return true;
+  } catch (_) {
+    persistDiscordInviteReturnState(false);
+    return false;
+  }
+}
+
+function maybeReturnToDenAfterDiscordInvite() {
+  if (!shouldReturnToDenAfterDiscordInvite() || !state.discordAuthState?.authenticated) {
+    return;
+  }
+  persistDiscordInviteReturnState(false);
+  if (window.location.pathname !== '/') {
+    window.location.assign('/');
+  }
+}
+
 function syncDiscordButtonUi() {
   if (!state.discordJoinButtonEl) return;
   if (state.discordAuthState && state.discordAuthState.authenticated) {
@@ -31,6 +73,16 @@ function syncDiscordAuthBodyClass() {
   }
 }
 
+function handleDiscordJoinButtonAction() {
+  if (state.discordAuthState?.authenticated) {
+    persistDiscordInviteReturnState(true);
+    window.location.assign(DISCORD_GUEST_INVITE_URL);
+    return;
+  }
+  state.shouldAutoStartDiscordLoginOnNextLoginActivation = true;
+  state._cb.setLeftMonitorState?.('login');
+}
+
 async function fetchDiscordAuthState() {
   try {
     const controller = new AbortController();
@@ -39,6 +91,7 @@ async function fetchDiscordAuthState() {
     window.clearTimeout(timeoutId);
     if (res.ok) {
       state.discordAuthState = await res.json();
+      maybeReturnToDenAfterDiscordInvite();
     }
   } catch {
     // Auth state remains null if request fails
@@ -279,6 +332,7 @@ state._cb.activateLoginMode = activateLoginMode;
 state._cb.syncLoginOverlayUi = syncLoginOverlayUi;
 state._cb.syncDiscordButtonUi = syncDiscordButtonUi;
 state._cb.syncDiscordAuthBodyClass = syncDiscordAuthBodyClass;
+state._cb.handleDiscordJoinButtonAction = handleDiscordJoinButtonAction;
 state._cb.handleLoginPrimaryAction = handleLoginPrimaryAction;
 
-export { persistDiscordLoginFlowState, consumeDiscordLoginFlowState, getDiscordAvatarUrl, syncLoginStepUi, syncLoginOverlayUi, beginDiscordLoginFlow, handleLoginPrimaryAction, showLoginOverlay, hideLoginOverlay, fetchDiscordAuthState, syncDiscordButtonUi, syncDiscordAuthBodyClass, activateLoginMode };
+export { persistDiscordLoginFlowState, consumeDiscordLoginFlowState, getDiscordAvatarUrl, syncLoginStepUi, syncLoginOverlayUi, beginDiscordLoginFlow, handleDiscordJoinButtonAction, handleLoginPrimaryAction, showLoginOverlay, hideLoginOverlay, fetchDiscordAuthState, syncDiscordButtonUi, syncDiscordAuthBodyClass, activateLoginMode };

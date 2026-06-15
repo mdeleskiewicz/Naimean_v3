@@ -723,6 +723,12 @@ function createOverlays() {
       state.discordJoinButtonEl = document.createElement('button');
       state.discordJoinButtonEl.className = 'join-discord-button';
       state.discordJoinButtonEl.type = 'button';
+      state.discordJoinButtonEl.addEventListener('pointerdown', (event) => event.stopPropagation());
+      state.discordJoinButtonEl.addEventListener('click', (event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        state._cb.handleDiscordJoinButtonAction?.();
+      });
       state.discordButtonImgEl = document.createElement('img');
       state.discordButtonImgEl.className = 'join-discord-button-image';
       state.discordButtonImgEl.src = DISCORD_BUTTON_IMAGE_URL;
