@@ -602,6 +602,19 @@ function createOverlays() {
       el.appendChild(imageEl);
     }
 
+    if (overlay.id === COMMODORE_POWER_BUTTON_OVERLAY_ID) {
+      el.classList.add('commodore-power-button-overlay');
+      const buttonEl = document.createElement('button');
+      buttonEl.type = 'button';
+      buttonEl.className = 'commodore-power-button-button';
+      buttonEl.setAttribute('aria-hidden', 'true');
+      buttonEl.tabIndex = -1;
+      if (state.isCommodorePoweringOn) {
+        buttonEl.classList.add('on');
+      }
+      el.appendChild(buttonEl);
+      state.commodorePowerButtonEl = buttonEl;
+    }
     if (overlay.id === 'overlay-right-monitor') {
       const windowEl = document.createElement('div');
       windowEl.className = 'monitor-screen-window right-monitor-screen-window';
