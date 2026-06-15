@@ -1086,6 +1086,7 @@ state._cb.hideCalendarBigTvOverlay = hideCalendarBigTvOverlay;
 state._cb.activateCalendarMode = activateCalendarMode;
 state._cb.activateGithubScreensaverMode = activateGithubScreensaverMode;
 state._cb.deactivateGithubScreensaverMode = deactivateGithubScreensaverMode;
+state._cb.activateLeftMonitorQuadrant = activateLeftMonitorQuadrant;
 
 export {
   syncBigTvContentVisibility,
