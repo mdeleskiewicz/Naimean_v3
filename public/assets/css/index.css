@@ -949,10 +949,10 @@
       pointer-events: none;
       background: #030405;
       color: var(--corner-score-color, #40d6ff);
-      display: flex;
-      flex-direction: column;
+      display: grid;
+      grid-template-rows: auto 1fr auto;
+      justify-items: center;
       align-items: center;
-      justify-content: center;
       gap: clamp(8px, 2%, 16px);
       padding: clamp(14px, 4%, 30px) clamp(8px, 2.4%, 20px) clamp(12px, 3.5%, 26px);
       box-sizing: border-box;
@@ -975,19 +975,19 @@
       line-height: 1;
       letter-spacing: 0.08em;
       text-transform: uppercase;
-      transform: translateY(20px);
       text-shadow: 0 0 16px color-mix(in srgb, var(--corner-score-color, #40d6ff) 70%, transparent);
     }
 
     .right-monitor-corner-score-value {
       margin: 0;
       font-size: clamp(130.2px, 28.73vw, 325.6px);
-      line-height: 0.92;
+      line-height: 1;
       font-weight: 800;
       font-variant-numeric: tabular-nums lining-nums;
       text-shadow:
         0 0 20px color-mix(in srgb, var(--corner-score-color, #40d6ff) 80%, transparent),
         0 0 44px color-mix(in srgb, var(--corner-score-color, #40d6ff) 55%, transparent);
+      align-self: center;
     }
 
     @supports (font-size: 1cqw) {
@@ -1017,7 +1017,7 @@
       align-items: flex-end;
       gap: clamp(4px, 1.5%, 12px) clamp(6px, 3%, 24px);
       width: 100%;
-      margin-top: auto;
+      align-self: end;
     }
 
     .right-monitor-cs-stat-item {
@@ -1043,10 +1043,6 @@
       text-shadow:
         0 0 8px color-mix(in srgb, var(--corner-score-color, #40d6ff) 65%, transparent);
     }
-
-    .right-monitor-cs-medal[data-medal="bronze"] { color: #cd7f32; }
-    .right-monitor-cs-medal[data-medal="silver"] { color: #b0bec5; }
-    .right-monitor-cs-medal[data-medal="gold"]   { color: #ffd700; }
 
     .whiteboard-corner-score-overlay {
       pointer-events: none;

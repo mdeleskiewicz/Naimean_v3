@@ -876,17 +876,6 @@ function createOverlays() {
         itemEl.append(labelEl, valueEl);
         runStatsRowEl.appendChild(itemEl);
       });
-      // Medal
-      const medalItemEl = document.createElement('div');
-      medalItemEl.className = 'right-monitor-cs-stat-item';
-      const medalLabelEl = document.createElement('span');
-      medalLabelEl.className = 'right-monitor-cs-stat-label';
-      medalLabelEl.textContent = 'Medal';
-      state.rightMonitorCornerScoreMedalEl = document.createElement('span');
-      state.rightMonitorCornerScoreMedalEl.className = 'right-monitor-cs-stat-value right-monitor-cs-medal';
-      state.rightMonitorCornerScoreMedalEl.textContent = '—';
-      medalItemEl.append(medalLabelEl, state.rightMonitorCornerScoreMedalEl);
-      runStatsRowEl.appendChild(medalItemEl);
       state.rightMonitorCornerScoreOverlayEl.appendChild(runStatsRowEl);
       state.rightMonitorCornerScoreOverlayEl.appendChild(state.bigTvCornerScoreInitialsPromptEl);
       renderCornerScore();

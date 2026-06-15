@@ -167,7 +167,6 @@ function renderRunStats() {
   const elapsed = state.cornerScoreRunElapsedMs;
   const bounces = state.cornerScoreRunBounces;
   const nearMisses = state.cornerScoreRunNearMisses;
-  const medal = getMedalForScore(state.cornerScoreValue);
   if (state.rightMonitorCornerScoreElapsedEl) {
     state.rightMonitorCornerScoreElapsedEl.textContent = formatElapsedMs(elapsed);
   }
@@ -176,10 +175,6 @@ function renderRunStats() {
   }
   if (state.rightMonitorCornerScoreNearMissesEl) {
     state.rightMonitorCornerScoreNearMissesEl.textContent = String(nearMisses);
-  }
-  if (state.rightMonitorCornerScoreMedalEl) {
-    state.rightMonitorCornerScoreMedalEl.dataset.medal = medal ?? '';
-    state.rightMonitorCornerScoreMedalEl.textContent = medal ? medal.charAt(0).toUpperCase() + medal.slice(1) : '—';
   }
 }
 

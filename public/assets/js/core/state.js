@@ -79,7 +79,6 @@ export const state = {
   rightMonitorCornerScoreElapsedEl: null,
   rightMonitorCornerScoreBouncesEl: null,
   rightMonitorCornerScoreNearMissesEl: null,
-  rightMonitorCornerScoreMedalEl: null,
   whiteboardCornerScoreValueEl: null,
   whiteboardCornerScoreInitialsGroupEl: null,
   whiteboardCornerScoreInitialsEl: null,
