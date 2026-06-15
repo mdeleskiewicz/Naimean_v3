@@ -356,9 +356,14 @@ async function activateGithubScreensaverMode() {
     state.leftMonitorShadowOverlayEl.classList.remove('tv-turning-on', 'tv-turning-off');
     state.leftMonitorShadowOverlayEl.classList.add('is-monitor-on');
   }
-  // Play left monitor static concurrently
+  if (state.rightMonitorShadowOverlayEl && !isRightMonitorInteractive()) {
+    state.rightMonitorShadowOverlayEl.classList.remove('tv-turning-on', 'tv-turning-off');
+    state.rightMonitorShadowOverlayEl.classList.add('is-monitor-on');
+  }
+  // Play left monitor and right monitor static concurrently
   state.leftMonitorTransitionToken += 1;
   void playLeftMonitorStaticPass(state.leftMonitorTransitionToken);
+  void state._cb.playRightMonitorStaticPass?.();
   // Play big TV static
   const staticEnded = await state._cb.playBigTvStaticPass?.(sequenceToken, () => state.githubScreensaverSequenceToken);
   if (sequenceToken !== state.githubScreensaverSequenceToken) {
