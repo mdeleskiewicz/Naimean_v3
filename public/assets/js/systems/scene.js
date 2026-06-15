@@ -9,6 +9,7 @@ import {
   ASHTRAY_SMOKE_TAIL_HEIGHT,
   ASHTRAY_SMOKE_Y,
   CAMERA_MOTION_IDLE_TIMEOUT_MS,
+  CAMERA_MOTION_PERFORMANCE_MODE_ENABLED,
   CAMERA_SETTLE_EPSILON,
   CAMERA_SMOOTHING_FACTOR,
   DESIGN_HEIGHT,
@@ -176,10 +177,15 @@ function applyTransforms() {
 }
 
 function setCameraMotionPerformanceMode(enabled) {
+  if (!CAMERA_MOTION_PERFORMANCE_MODE_ENABLED) {
+    document.body.classList.remove('camera-motion-active');
+    return;
+  }
   document.body.classList.toggle('camera-motion-active', enabled);
 }
 
 function markCameraMotionActivity() {
+  if (!CAMERA_MOTION_PERFORMANCE_MODE_ENABLED) return;
   if (!state.hasInitializedCamera) return;
   setCameraMotionPerformanceMode(true);
   if (state.cameraMotionIdleTimeoutId !== null) {
