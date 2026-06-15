@@ -776,10 +776,12 @@
       --left-monitor-inner-boundary-right: 2.8%;
       --left-monitor-inner-boundary-bottom: 4%;
       --left-monitor-inner-boundary-left: 2.8%;
+      --monitor-content-bleed: 1px;
       background: transparent;
     }
 
     .right-monitor-screen-window {
+      --monitor-content-bleed: 1px;
       background: transparent;
       box-shadow: none;
     }
@@ -788,17 +790,17 @@
     .left-monitor-screen-window > .left-monitor-github-quadrant-overlay,
     .left-monitor-screen-window > .overlay-static-layer,
     .left-monitor-screen-window > .left-monitor-corner-score-overlay {
-      top: var(--left-monitor-inner-boundary-top);
-      right: var(--left-monitor-inner-boundary-right);
-      bottom: var(--left-monitor-inner-boundary-bottom);
-      left: var(--left-monitor-inner-boundary-left);
+      top: calc(var(--left-monitor-inner-boundary-top) - var(--monitor-content-bleed));
+      right: calc(var(--left-monitor-inner-boundary-right) - var(--monitor-content-bleed));
+      bottom: calc(var(--left-monitor-inner-boundary-bottom) - var(--monitor-content-bleed));
+      left: calc(var(--left-monitor-inner-boundary-left) - var(--monitor-content-bleed));
     }
 
     .left-monitor-screen-window > .left-monitor-content-image {
-      top: var(--left-monitor-inner-boundary-top);
-      left: var(--left-monitor-inner-boundary-left);
-      width: calc(100% - var(--left-monitor-inner-boundary-left) - var(--left-monitor-inner-boundary-right));
-      height: calc(100% - var(--left-monitor-inner-boundary-top) - var(--left-monitor-inner-boundary-bottom));
+      top: calc(var(--left-monitor-inner-boundary-top) - var(--monitor-content-bleed));
+      left: calc(var(--left-monitor-inner-boundary-left) - var(--monitor-content-bleed));
+      width: calc(100% - var(--left-monitor-inner-boundary-left) - var(--left-monitor-inner-boundary-right) + (var(--monitor-content-bleed) * 2));
+      height: calc(100% - var(--left-monitor-inner-boundary-top) - var(--left-monitor-inner-boundary-bottom) + (var(--monitor-content-bleed) * 2));
       object-fit: contain;
     }
 
@@ -869,10 +871,10 @@
     .left-monitor-cs-pb-medal[data-medal="gold"]   { color: #ffd700; }
 
     .right-monitor-screen-window > .join-discord-button {
-      top: 1px;
-      right: 1px;
-      bottom: 1px;
-      left: 1px;
+      top: calc(0px - var(--monitor-content-bleed));
+      right: calc(0px - var(--monitor-content-bleed));
+      bottom: calc(0px - var(--monitor-content-bleed));
+      left: calc(0px - var(--monitor-content-bleed));
       width: auto;
       height: auto;
       padding: 0;
@@ -888,10 +890,10 @@
     .right-monitor-screen-window > .overlay-static-layer,
     .right-monitor-screen-window > .right-monitor-shrimp-logo-overlay,
     .right-monitor-screen-window > .right-monitor-corner-score-overlay {
-      top: 0;
-      bottom: 0;
-      left: 0;
-      right: 0;
+      top: calc(0px - var(--monitor-content-bleed));
+      bottom: calc(0px - var(--monitor-content-bleed));
+      left: calc(0px - var(--monitor-content-bleed));
+      right: calc(0px - var(--monitor-content-bleed));
       width: auto;
       height: auto;
     }
