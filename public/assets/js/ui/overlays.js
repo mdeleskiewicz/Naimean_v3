@@ -13,6 +13,7 @@ import {
   CALENDAR_MONTH_IMAGE_START,
   CALENDAR_MONTH_NAME_FORMATTER,
   COMMODORE_DESK_IMAGE_URL,
+  COMMODORE_POWER_BUTTON_OVERLAY_ID,
   DEFAULT_LEFT_MONITOR_STATE,
   DISCORD_BUTTON_IMAGE_URL,
   DISCORD_OVERLAY_ID,
@@ -326,6 +327,7 @@ function createOverlays() {
   state.leftMonitorSegmentButtonsByState.clear();
   state.loginStepElsByKey.clear();
   state.aquariumOverlayEl = null;
+  state.commodorePowerButtonEl = null;
   overlayDefaults.forEach((overlay) => {
     const rect = getOverlayRect(overlay.id);
     if (!rect) return;
@@ -547,6 +549,19 @@ function createOverlays() {
       el.appendChild(imageEl);
     }
 
+    if (overlay.id === COMMODORE_POWER_BUTTON_OVERLAY_ID) {
+      el.classList.add('commodore-power-button-overlay');
+      const buttonEl = document.createElement('button');
+      buttonEl.type = 'button';
+      buttonEl.className = 'commodore-power-button-button';
+      buttonEl.setAttribute('aria-hidden', 'true');
+      buttonEl.tabIndex = -1;
+      if (state.isCommodorePoweringOn) {
+        buttonEl.classList.add('on');
+      }
+      el.appendChild(buttonEl);
+      state.commodorePowerButtonEl = buttonEl;
+    }
     if (overlay.id === 'overlay-right-monitor') {
       const windowEl = document.createElement('div');
       windowEl.className = 'monitor-screen-window right-monitor-screen-window';
