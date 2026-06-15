@@ -21,7 +21,6 @@ export const state = {
   momentumAnimationFrameId: null,
   momentumVelocityX: 0,
   lastMomentumTimestamp: 0,
-  cameraMotionIdleTimeoutId: null,
   saveButtonResetTimeoutId: null,
   hasDebugSaveAccess: false,
   hotspotApiMode: 'primary',

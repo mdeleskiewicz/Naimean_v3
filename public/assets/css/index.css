@@ -1416,10 +1416,6 @@
       outline-offset: 3px;
     }
 
-    body.camera-motion-active .big-tv-dvd-logo {
-      display: none;
-    }
-
     /* GitHub shelf object overlay */
     .screen-overlay.github-shelf-object-overlay {
       pointer-events: none;
@@ -2182,9 +2178,6 @@
       transition: opacity 120ms linear;
     }
 
-    body.camera-motion-active .ashtray-smoke-effect {
-      opacity: 0.45;
-    }
 
     .ashtray-smoke-stem {
       position: absolute;
@@ -2207,16 +2200,13 @@
       pointer-events: none;
     }
 
-    body.camera-motion-active .ashtray-smoke-stem {
-      animation-play-state: paused;
-    }
-
     @keyframes ashtray-smoke-stem-sway {
       0%   { transform: translateX(calc(-50% - 4px)) scaleX(0.7); opacity: 0.82; }
       35%  { transform: translateX(calc(-50% + 1px)) scaleX(1.1); opacity: 1; }
       65%  { transform: translateX(calc(-50% - 2px)) scaleX(0.9); opacity: 0.9; }
       100% { transform: translateX(calc(-50% + 4px)) scaleX(1.2); opacity: 0.88; }
     }
+
 
     .ashtray-smoke-wisp {
       position: absolute;
@@ -2233,11 +2223,6 @@
       will-change: transform, opacity;
       animation: ashtray-smoke-rise var(--smoke-duration, 10.6s) linear infinite;
       animation-delay: var(--smoke-delay, 0s);
-    }
-
-    body.camera-motion-active .ashtray-smoke-wisp,
-    body.camera-motion-active .ashtray-smoke-wisp::before {
-      animation-play-state: paused;
     }
 
     .ashtray-smoke-wisp::before {
