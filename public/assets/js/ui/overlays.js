@@ -419,6 +419,11 @@ function createOverlays() {
   state.bigTvDvdMissTimeoutIdsByCorner.forEach((timeoutId) => window.clearTimeout(timeoutId));
   state.bigTvDvdMissTimeoutIdsByCorner.clear();
   state.bigTvDvdMissIndicatorsByCorner.clear();
+  if (state.bigTvHighScoreStatsTimeoutId !== null) {
+    window.clearTimeout(state.bigTvHighScoreStatsTimeoutId);
+    state.bigTvHighScoreStatsTimeoutId = null;
+  }
+  state.isBigTvHighScoreStatsVisible = false;
   state.githubShelfImageEl = null;
   state.discordWidgetFrameEl = null;
   state.leftMonitorSelectorEl = null;
@@ -464,6 +469,31 @@ function createOverlays() {
         state.bigTvDvdMissIndicatorsByCorner.set(corner, missIndicatorEl);
         state.bigTvDvdOverlayEl.appendChild(missIndicatorEl);
       });
+      // GitHub quadrant overlay — shown when GitHub screensaver mode is active
+      state.bigTvGithubQuadrantEl = document.createElement('div');
+      state.bigTvGithubQuadrantEl.className = 'big-tv-github-quadrant-overlay';
+      state.bigTvGithubQuadrantEl.setAttribute('aria-hidden', 'true');
+      const githubQuadrants = [
+        { label: 'Issues',  url: GITHUB_V3_ISSUES_URL,  pos: 'top-left' },
+        { label: 'Agents',  url: GITHUB_V3_AGENTS_URL,  pos: 'top-right' },
+        { label: 'Wiki',    url: GITHUB_V3_WIKI_URL,    pos: 'bottom-left' },
+        { label: 'Actions', url: GITHUB_V3_ACTIONS_URL, pos: 'bottom-right' }
+      ];
+      githubQuadrants.forEach(({ label, url, pos }) => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = `github-quadrant-btn github-quadrant-btn-${pos}`;
+        btn.setAttribute('aria-label', `GitHub ${label}`);
+        btn.textContent = label;
+        btn.addEventListener('pointerdown', (e) => e.stopPropagation());
+        btn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          btn.classList.add('is-active');
+          window.open(url, '_blank', 'noopener,noreferrer');
+        });
+        state.bigTvGithubQuadrantEl.appendChild(btn);
+      });
+      state.bigTvDvdOverlayEl.appendChild(state.bigTvGithubQuadrantEl);
       // Big TV high score stats panel — toggled by clicking the whiteboard high-score overlay
       state.bigTvHighScoreStatsEl = document.createElement('div');
       state.bigTvHighScoreStatsEl.className = 'big-tv-high-score-stats';
@@ -900,6 +930,37 @@ function createOverlays() {
       medalItemEl.append(medalLabelEl, state.rightMonitorCornerScoreMedalEl);
       runStatsRowEl.appendChild(medalItemEl);
       state.rightMonitorCornerScoreOverlayEl.appendChild(runStatsRowEl);
+      state.bigTvHighScoreStatsEl = document.createElement('div');
+      state.bigTvHighScoreStatsEl.className = 'right-monitor-cs-server-stats';
+      state.bigTvHighScoreStatsEl.setAttribute('aria-hidden', 'true');
+      const serverStatsTitleEl = document.createElement('p');
+      serverStatsTitleEl.className = 'right-monitor-cs-server-stats-title';
+      serverStatsTitleEl.textContent = 'Server High Score';
+      state.rightMonitorCornerScoreServerStatsEl = document.createElement('div');
+      state.rightMonitorCornerScoreServerStatsEl.className = 'right-monitor-cs-server-stats-grid';
+      const serverStatFields = [
+        { label: 'High Score', cls: 'right-monitor-cs-server-high-score-value', stateKey: 'bigTvHighScoreStatsValueEl' },
+        { label: 'Initials', cls: 'right-monitor-cs-server-high-score-initials', stateKey: 'bigTvHighScoreStatsInitialsEl' },
+        { label: 'Scores', cls: 'right-monitor-cs-total-scores' },
+        { label: 'Bounces', cls: 'right-monitor-cs-total-bounces' },
+        { label: 'Near Misses', cls: 'right-monitor-cs-total-near-misses' },
+        { label: 'Time', cls: 'right-monitor-cs-total-time' },
+        { label: 'Runs', cls: 'right-monitor-cs-total-runs' }
+      ];
+      serverStatFields.forEach(({ label, cls, stateKey }) => {
+        const labelEl = document.createElement('span');
+        labelEl.className = 'right-monitor-cs-server-stats-label';
+        labelEl.textContent = label;
+        const valueEl = document.createElement('span');
+        valueEl.className = `right-monitor-cs-server-stats-value ${cls}`;
+        valueEl.textContent = '—';
+        if (stateKey) {
+          state[stateKey] = valueEl;
+        }
+        state.rightMonitorCornerScoreServerStatsEl.append(labelEl, valueEl);
+      });
+      state.bigTvHighScoreStatsEl.append(serverStatsTitleEl, state.rightMonitorCornerScoreServerStatsEl);
+      state.rightMonitorCornerScoreOverlayEl.appendChild(state.bigTvHighScoreStatsEl);
       state.rightMonitorCornerScoreOverlayEl.appendChild(state.bigTvCornerScoreInitialsPromptEl);
       renderCornerScore();
       syncCornerScoreInitialsPromptVisibility();
@@ -962,29 +1023,6 @@ function createOverlays() {
         state.whiteboardCornerScoreValueEl,
         state.whiteboardCornerScoreInitialsGroupEl
       );
-      // Server aggregate totals section
-      state.whiteboardCornerScoreServerStatsEl = document.createElement('div');
-      state.whiteboardCornerScoreServerStatsEl.className = 'whiteboard-cs-server-stats';
-      const serverStatFields = [
-        { label: 'Scores', cls: 'whiteboard-cs-total-scores' },
-        { label: 'Bounces', cls: 'whiteboard-cs-total-bounces' },
-        { label: 'Near Misses', cls: 'whiteboard-cs-total-near-misses' },
-        { label: 'Time', cls: 'whiteboard-cs-total-time' },
-        { label: 'Runs', cls: 'whiteboard-cs-total-runs' }
-      ];
-      serverStatFields.forEach(({ label, cls }) => {
-        const rowEl = document.createElement('div');
-        rowEl.className = 'whiteboard-cs-server-stat-row';
-        const labelEl = document.createElement('span');
-        labelEl.className = 'whiteboard-cs-server-stat-label';
-        labelEl.textContent = label;
-        const valueEl = document.createElement('span');
-        valueEl.className = `whiteboard-cs-server-stat-value ${cls}`;
-        valueEl.textContent = '—';
-        rowEl.append(labelEl, valueEl);
-        state.whiteboardCornerScoreServerStatsEl.appendChild(rowEl);
-      });
-      whiteboardStackEl.appendChild(state.whiteboardCornerScoreServerStatsEl);
       el.appendChild(whiteboardStackEl);
       renderCornerScore();
     }

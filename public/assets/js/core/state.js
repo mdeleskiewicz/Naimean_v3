@@ -93,6 +93,8 @@ export const state = {
   bigTvHighScoreStatsEl: null,
   bigTvHighScoreStatsValueEl: null,
   bigTvHighScoreStatsInitialsEl: null,
+  rightMonitorCornerScoreServerStatsEl: null,
+  bigTvHighScoreStatsTimeoutId: null,
   isBigTvHighScoreStatsVisible: false,
   rightMonitorScreenWindowEl: null,
   cornerScorePersistQueue: Promise.resolve(),

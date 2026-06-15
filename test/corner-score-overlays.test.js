@@ -39,6 +39,16 @@ test('right monitor corner score overlay applies expected classes and initials p
     /bigTvCornerScoreInitialsPromptEl\.addEventListener\('submit', \(event\) => \{\s*event\.preventDefault\(\);\s*submitCornerScoreInitials\(\);\s*\}\);/s,
     'Expected initials form submit handler to submit corner score initials',
   );
+  assert.match(
+    source,
+    /bigTvHighScoreStatsEl\.className = 'right-monitor-cs-server-stats';/,
+    'Expected right monitor server stats panel class to be applied',
+  );
+  assert.match(
+    source,
+    /rightMonitorCornerScoreServerStatsEl\.className = 'right-monitor-cs-server-stats-grid';/,
+    'Expected right monitor server stats grid class to be applied',
+  );
 });
 
 test('whiteboard corner score overlay uses styled stack/value/initials classes', () => {
@@ -68,5 +78,10 @@ test('whiteboard corner score overlay uses styled stack/value/initials classes',
     source,
     /whiteboardCornerScoreInitialsEl\.className = 'whiteboard-corner-score-initials';/,
     'Expected whiteboard initials value class to be applied',
+  );
+  assert.doesNotMatch(
+    source,
+    /whiteboard-cs-server-stats/,
+    'Expected whiteboard overlay to avoid rendering server stats rows',
   );
 });
