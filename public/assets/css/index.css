@@ -1159,17 +1159,26 @@
     }
 
     .left-monitor-segment {
+      display: flex;
+      align-items: flex-end;
+      justify-content: flex-start;
       border: 0;
       margin: 0;
-      padding: 0;
+      padding: clamp(4px, 1.8%, 10px) clamp(5px, 2.2%, 12px);
       background: transparent;
       cursor: pointer;
       border-right: 1px solid rgba(216, 236, 255, 0.35);
       border-bottom: 1px solid rgba(216, 236, 255, 0.35);
+      color: rgba(255, 255, 255, 0.6);
+      font: 700 clamp(8px, 1.5vw, 13px) / 1 "Trebuchet MS", "Arial Black", sans-serif;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      text-shadow: 0 0 6px rgba(0, 0, 0, 0.85);
     }
 
     .left-monitor-segment:nth-child(even) {
       border-right: 0;
+      justify-content: flex-end;
     }
 
     .left-monitor-segment:nth-child(n+3) {
@@ -1225,7 +1234,7 @@
       top: 0;
       left: 0;
       z-index: 5;
-      width: clamp(132px, 26.4%, 286px);
+      width: clamp(80px, 15.8%, 172px);
       height: auto;
       display: block;
       object-fit: contain;
