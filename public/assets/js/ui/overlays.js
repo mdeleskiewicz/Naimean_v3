@@ -20,6 +20,9 @@ import {
   DISCORD_BUTTON_IMAGE_URL,
   DISCORD_OVERLAY_ID,
   DISCORD_WIDGET_URL,
+  DVD_ACCELEROMETER_DEFAULT_POSITION,
+  DVD_ACCELEROMETER_MULTIPLIER_MIN,
+  DVD_ACCELEROMETER_MULTIPLIER_MAX,
   LEFT_MONITOR_SIDE_FRAME_IMAGE_URL,
   LEFT_MONITOR_IMAGE_URLS,
   LEFT_MONITOR_SHADOW_LAYER_ID,
@@ -36,9 +39,10 @@ import {
   overlayDefaults
 } from '../core/constants.js';
 import { state } from '../core/state.js';
+import { clamp } from '../core/utils.js';
 import { applyDvdColorStep } from '../systems/dvd.js';
 import { renderCornerScore, sanitizeCornerScoreInitialsInput, submitCornerScoreInitials, syncCornerScoreInitialsPromptVisibility, syncCornerScoreInitialsSubmitState } from '../systems/cornerScore.js';
-import { createFlipCard, startFlipClock } from '../systems/flipClock.js';
+import { applyRadioTuningPosition, createFlipCard, ensureRadioTuningLoopPlayback, getNextRadioTuningAudioUrl, getRadioTuningAudioElement, resetRadioTuningPlayback, startFlipClock, stopRadioTuningLoopPlayback, syncDvdAccelerometerFromTuningPosition } from '../systems/flipClock.js';
 import { isBigTvMonitorInteractive, isLeftMonitorInteractive, isRightMonitorInteractive } from '../systems/monitors.js';
 import { getOverlayRect, syncControlledOverlaysFromHotspots } from '../systems/hotspots.js';
 
@@ -537,20 +541,6 @@ function createOverlays() {
       state.rightMonitorShadowOverlayEl = el;
     }
 
-    if (overlay.id === COMMODORE_POWER_BUTTON_OVERLAY_ID) {
-      el.classList.add('commodore-power-button-overlay');
-      state.commodorePowerButtonEl = document.createElement('button');
-      state.commodorePowerButtonEl.type = 'button';
-      state.commodorePowerButtonEl.className = 'commodore-power-button-button';
-      state.commodorePowerButtonEl.setAttribute('aria-label', 'Power on Commodore monitors');
-      state.commodorePowerButtonEl.addEventListener('click', (event) => {
-        event.preventDefault();
-        event.stopPropagation();
-        state._cb.triggerCommodorePowerOnSequence?.();
-      });
-      el.appendChild(state.commodorePowerButtonEl);
-    }
-
     if (overlay.id === 'overlay-left-monitor') {
       const windowEl = document.createElement('div');
       windowEl.className = 'monitor-screen-window left-monitor-screen-window';
@@ -607,11 +597,15 @@ function createOverlays() {
       const buttonEl = document.createElement('button');
       buttonEl.type = 'button';
       buttonEl.className = 'commodore-power-button-button';
-      buttonEl.setAttribute('aria-hidden', 'true');
-      buttonEl.tabIndex = -1;
+      buttonEl.setAttribute('aria-label', 'Power on Commodore monitors');
       if (state.isCommodorePoweringOn) {
         buttonEl.classList.add('on');
       }
+      buttonEl.addEventListener('click', (event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        state._cb.triggerCommodorePowerOnSequence?.();
+      });
       el.appendChild(buttonEl);
       state.commodorePowerButtonEl = buttonEl;
     }
@@ -727,17 +721,219 @@ function createOverlays() {
 
     if (overlay.id === FLIP_CLOCK_OVERLAY_ID) {
       el.classList.add('flip-clock-overlay');
-      const digits = document.createElement('div');
-      digits.className = 'fc-digits';
+      el.addEventListener('pointerdown', (event) => event.stopPropagation());
+      el.addEventListener('click', (event) => event.stopPropagation());
+
+      function makeClockZone(className, ariaLabel, onClick) {
+        const zone = document.createElement('button');
+        zone.type = 'button';
+        zone.className = `rc-zone ${className}`;
+        zone.setAttribute('aria-label', ariaLabel);
+        zone.addEventListener('pointerdown', (e) => e.stopPropagation());
+        zone.addEventListener('click', (e) => { e.stopPropagation(); onClick(); });
+        return zone;
+      }
+
+      const top = document.createElement('div');
+      top.className = 'rc-top';
+      const sleepKnob = document.createElement('div');
+      sleepKnob.className = 'rc-knob';
+      sleepKnob.setAttribute('aria-hidden', 'true');
+      const speaker = document.createElement('div');
+      speaker.className = 'rc-speaker';
+      speaker.setAttribute('aria-hidden', 'true');
+      const tunerKnob = document.createElement('div');
+      tunerKnob.className = 'rc-knob';
+      tunerKnob.setAttribute('aria-hidden', 'true');
+      top.append(sleepKnob, speaker, tunerKnob);
+
+      const face = document.createElement('div');
+      face.className = 'rc-face';
+
+      const clockZone = makeClockZone('rc-clock-zone', 'Open Clock App', () => state._cb.openClockApp?.());
+      const clockDigits = document.createElement('div');
+      clockDigits.className = 'fc-digits';
       const h1 = createFlipCard(false); h1.dataset.key = 'h1';
       const h2 = createFlipCard(false); h2.dataset.key = 'h2';
+      const timeGap = document.createElement('span');
+      timeGap.className = 'rc-time-gap';
+      timeGap.setAttribute('aria-hidden', 'true');
       const m1 = createFlipCard(false); m1.dataset.key = 'm1';
       const m2 = createFlipCard(false); m2.dataset.key = 'm2';
+      clockDigits.append(h1, h2, timeGap, m1, m2);
+      clockZone.append(clockDigits);
+
+      const radioZone = document.createElement('div');
+      radioZone.className = 'rc-radio-zone';
+
+      const model = document.createElement('div');
+      model.className = 'rc-model';
+      model.textContent = 'FM/AM';
+
       const dateBadge = document.createElement('div');
       dateBadge.className = 'rc-date-badge';
       dateBadge.dataset.key = 'date-badge';
-      digits.append(h1, h2, m1, m2, dateBadge);
-      el.appendChild(digits);
+      dateBadge.textContent = 'JAN 01';
+
+      const scaleBlock = document.createElement('div');
+      scaleBlock.className = 'rc-scale-block';
+
+      const selectorLine = document.createElement('div');
+      selectorLine.className = 'rc-selector-line';
+      selectorLine.setAttribute('aria-hidden', 'true');
+
+      let tuningPosition = applyRadioTuningPosition(scaleBlock, DVD_ACCELEROMETER_DEFAULT_POSITION);
+      let tuningAudio = state.flipClockRadioTuningAudioEl || getRadioTuningAudioElement(getNextRadioTuningAudioUrl());
+      state.flipClockRadioTuningAudioEl = tuningAudio;
+      resetRadioTuningPlayback(tuningAudio);
+
+      const TUNING_DRAG_THRESHOLD_PX = 1;
+      const KEYBOARD_TUNING_STEP = 0.02;
+      const KEYBOARD_AUDIO_STOP_DELAY_MS = 120;
+      const TUNING_POSITION_CHANGE_THRESHOLD = 0.001;
+      let activeTunePointerId = null;
+      let lastPointerClientX = 0;
+      let stopTuneAudioTimeoutId = null;
+
+      const selectorDot = document.createElement('div');
+      selectorDot.className = 'rc-selector-dot';
+      selectorDot.setAttribute('role', 'slider');
+      selectorDot.setAttribute('tabindex', '0');
+      selectorDot.setAttribute('aria-label', 'Adjust DVD screensaver acceleration');
+      selectorDot.setAttribute('aria-valuemin', String(Math.round(DVD_ACCELEROMETER_MULTIPLIER_MIN * 100)));
+      selectorDot.setAttribute('aria-valuemax', String(Math.round(DVD_ACCELEROMETER_MULTIPLIER_MAX * 100)));
+      syncDvdAccelerometerFromTuningPosition(tuningPosition, selectorDot);
+
+      function updateTuningFromClientX(clientX) {
+        const rect = scaleBlock.getBoundingClientRect();
+        if (!rect.width) return false;
+        const nextPosition = clamp((clientX - rect.left) / rect.width, 0, 1);
+        if (Math.abs(nextPosition - tuningPosition) < TUNING_POSITION_CHANGE_THRESHOLD) return false;
+        tuningPosition = applyRadioTuningPosition(scaleBlock, nextPosition);
+        syncDvdAccelerometerFromTuningPosition(tuningPosition, selectorDot);
+        resetRadioTuningPlayback(tuningAudio);
+        ensureRadioTuningLoopPlayback(tuningAudio);
+        return true;
+      }
+
+      function endTuneDrag(pointerId) {
+        if (activeTunePointerId !== pointerId) return;
+        activeTunePointerId = null;
+        stopRadioTuningLoopPlayback(tuningAudio);
+        if (scaleBlock.hasPointerCapture(pointerId)) {
+          scaleBlock.releasePointerCapture(pointerId);
+        }
+      }
+
+      function selectNextTuningAudio() {
+        const nextAudio = getRadioTuningAudioElement(getNextRadioTuningAudioUrl());
+        if (tuningAudio && tuningAudio !== nextAudio) {
+          stopRadioTuningLoopPlayback(tuningAudio);
+        }
+        tuningAudio = nextAudio;
+        state.flipClockRadioTuningAudioEl = tuningAudio;
+        resetRadioTuningPlayback(tuningAudio);
+      }
+
+      function beginTuneDrag(event) {
+        if (typeof event.button === 'number' && event.button !== 0) return;
+        event.preventDefault();
+        event.stopPropagation();
+        activeTunePointerId = event.pointerId;
+        lastPointerClientX = event.clientX;
+        scaleBlock.setPointerCapture(event.pointerId);
+        selectNextTuningAudio();
+        const didUpdate = updateTuningFromClientX(event.clientX);
+        if (!didUpdate) {
+          resetRadioTuningPlayback(tuningAudio);
+          ensureRadioTuningLoopPlayback(tuningAudio);
+        }
+      }
+
+      scaleBlock.addEventListener('pointerdown', beginTuneDrag);
+      selectorDot.addEventListener('pointerdown', beginTuneDrag);
+
+      scaleBlock.addEventListener('pointermove', (event) => {
+        if (event.pointerId !== activeTunePointerId) return;
+        event.preventDefault();
+        event.stopPropagation();
+        const didMove = updateTuningFromClientX(event.clientX);
+        if (!didMove && Math.abs(event.clientX - lastPointerClientX) > TUNING_DRAG_THRESHOLD_PX) {
+          ensureRadioTuningLoopPlayback(tuningAudio);
+        }
+        lastPointerClientX = event.clientX;
+      });
+
+      scaleBlock.addEventListener('pointerup', (event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        endTuneDrag(event.pointerId);
+      });
+      scaleBlock.addEventListener('pointercancel', (event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        endTuneDrag(event.pointerId);
+      });
+      scaleBlock.addEventListener('lostpointercapture', () => {
+        activeTunePointerId = null;
+        stopRadioTuningLoopPlayback(tuningAudio);
+      });
+      selectorDot.addEventListener('click', (event) => {
+        event.preventDefault();
+        event.stopPropagation();
+      });
+      selectorDot.addEventListener('keydown', (event) => {
+        if (event.key !== 'ArrowLeft' && event.key !== 'ArrowRight') return;
+        event.preventDefault();
+        event.stopPropagation();
+        const step = event.key === 'ArrowRight' ? KEYBOARD_TUNING_STEP : -KEYBOARD_TUNING_STEP;
+        tuningPosition = applyRadioTuningPosition(scaleBlock, tuningPosition + step);
+        syncDvdAccelerometerFromTuningPosition(tuningPosition, selectorDot);
+        resetRadioTuningPlayback(tuningAudio);
+        ensureRadioTuningLoopPlayback(tuningAudio);
+        if (stopTuneAudioTimeoutId !== null) {
+          window.clearTimeout(stopTuneAudioTimeoutId);
+        }
+        stopTuneAudioTimeoutId = window.setTimeout(() => {
+          stopTuneAudioTimeoutId = null;
+          stopRadioTuningLoopPlayback(tuningAudio);
+        }, KEYBOARD_AUDIO_STOP_DELAY_MS);
+      });
+
+      const fmRow = document.createElement('div');
+      fmRow.className = 'rc-scale-row';
+      fmRow.innerHTML = `
+        <span class="rc-band">FM</span>
+        <span class="rc-frequencies">
+          <span>88</span><span>92</span><span>96</span><span>100</span><span>104</span><span>108</span>
+        </span>
+        <span class="rc-unit">MHz</span>
+      `;
+
+      const amRow = document.createElement('div');
+      amRow.className = 'rc-scale-row';
+      amRow.innerHTML = `
+        <span class="rc-band">AM</span>
+        <span class="rc-frequencies">
+          <span>53</span><span>60</span><span>70</span><span>90</span><span>120</span><span>160</span>
+        </span>
+        <span class="rc-unit">kHz</span>
+      `;
+
+      const selectorLabel = document.createElement('div');
+      selectorLabel.className = 'rc-selector-label';
+      selectorLabel.textContent = 'Tuning';
+
+      const brand = document.createElement('div');
+      brand.className = 'rc-brand';
+      brand.textContent = 'Panasonic';
+
+      scaleBlock.append(selectorLine, selectorDot, fmRow, amRow);
+      radioZone.append(model, dateBadge, scaleBlock, selectorLabel, brand);
+
+      face.append(clockZone, radioZone);
+      el.append(top, face);
+
       requestAnimationFrame(() => startFlipClock(el));
     }
 
