@@ -4,19 +4,21 @@ This wiki explains how Naimean V3 uses Cloudflare services in the current reposi
 
 ## Pages
 
-1. [Cloudflare Workers](Cloudflare-Workers.md)  
+1. [Naimean V3 Cloudflare Infrastructure and Architecture](Naimean-V3-Cloudflare-Infrastructure-and-Architecture.md)  
+   Master reference for current Cloudflare deployment architecture and resource inventory.
+2. [Cloudflare Workers](Cloudflare-Workers.md)  
    Runtime request handling in `src/worker.js` (routing, auth, APIs, headers).
-2. [Cloudflare Pages and Assets](Cloudflare-Pages-and-Assets.md)  
+3. [Cloudflare Pages and Assets](Cloudflare-Pages-and-Assets.md)  
    Static files in `public/`, `ASSETS` binding behavior, aliasing, and caching.
-3. [Durable Objects](Durable-Objects.md)  
+4. [Durable Objects](Durable-Objects.md)  
    `HotspotStore` instance model and route dispatch patterns.
-4. [Durable Object Storage](Durable-Object-Storage.md)  
+5. [Durable Object Storage](Durable-Object-Storage.md)  
    KV-style and SQLite storage usage inside `HotspotStore`.
-5. [Wrangler](Wrangler.md)  
+6. [Wrangler](Wrangler.md)  
    `wrangler.toml` config layout, bindings, vars, and secrets.
-6. [Deployment and CI](Deployment-and-CI.md)  
+7. [Deployment and CI](Deployment-and-CI.md)  
    GitHub Actions deploy flow, required secrets, and validation workflow.
-7. [Product Features](features/README.md)  
+8. [Product Features](features/README.md)  
    Feature-level docs for room behavior and overlays.
 
 ## Quick Reference: Active Cloudflare Wiring
