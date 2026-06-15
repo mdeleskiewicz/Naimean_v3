@@ -627,7 +627,7 @@ function createOverlays() {
     }
 
     if (overlay.id === BIG_TV_SHADOW_LAYER_ID) {
-      el.classList.add('monitor-shadow-overlay');
+      el.classList.add('monitor-shadow-overlay', 'is-monitor-on');
       state.bigTvShadowOverlayEl = el;
     }
 
