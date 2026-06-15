@@ -701,11 +701,22 @@ function createHotspots(hotspotList) {
     label.textContent = `${readableLabel} (${spot.x}, ${spot.y}) ${spot.w}×${spot.h}`;
     el.appendChild(label);
     addResizeHandles(el);
-    el.addEventListener('click', () => {
+    el.addEventListener('click', (event) => {
       if (spot.id === NOAHS_ARCADE_HOTSPOT_ID) return void window.location.assign(getHotspotEffectiveUrl(spot.id) || NOAHS_ARCADE_URL);
       if (spot.id === 'chapel') return void window.location.assign(getHotspotEffectiveUrl(spot.id) || CHAPEL_URL);
       if (spot.id === COMMODORE_POWER_BUTTON_CONTROL_ID) return void state._cb.triggerCommodorePowerOnSequence?.();
       if (spot.id === DISCORD_OVERLAY_CONTROL_ID) {
+        // When GitHub screensaver mode is active the quadrant overlay sits below the hotspot layer;
+        // forward the click to whichever quadrant the pointer landed in.
+        if (state.isGithubScreensaverMode && state.bigTvGithubQuadrantEl) {
+          const hotspotRect = el.getBoundingClientRect();
+          const relX = (event.clientX - hotspotRect.left) / hotspotRect.width;
+          const relY = (event.clientY - hotspotRect.top) / hotspotRect.height;
+          const pos = `${relY < 0.5 ? 'top' : 'bottom'}-${relX < 0.5 ? 'left' : 'right'}`;
+          const btn = state.bigTvGithubQuadrantEl.querySelector(`.github-quadrant-btn-${pos}`);
+          btn?.click();
+          return;
+        }
         if (!state._cb.isBigTvMonitorInteractive?.()) return;
         const wasDvdScreensaverActive = state.bigTvDvdOverlayEl?.classList.contains('is-active');
         state._cb.interruptBigTvDvdLoop?.();
