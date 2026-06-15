@@ -1,18 +1,6 @@
 import { BIG_TV_MONITOR_INTERACTIVE_WAIT_TIMEOUT_MS, MEDIA_ENDED_PAUSE_TOLERANCE_S, MONITOR_INTERACTIVE_POLL_INTERVAL_MS } from './constants.js';
 import { state } from './state.js';
 
-function isMonitorPoweredOn(shadowOverlayEl) {
-  return !!shadowOverlayEl && shadowOverlayEl.classList.contains('is-monitor-on');
-}
-
-function isBigTvMonitorInteractive() {
-  return isMonitorPoweredOn(state.bigTvShadowOverlayEl);
-}
-
-function isRightMonitorInteractive() {
-  return isMonitorPoweredOn(state.rightMonitorShadowOverlayEl);
-}
-
 function waitForMediaPlaybackToEnd(mediaEl) {
   return new Promise((resolve) => {
     const onEnded = () => {
@@ -48,28 +36,6 @@ function waitForMediaPlaybackToEnd(mediaEl) {
   });
 }
 
-function waitForBigTvMonitorInteractive(timeoutMs = BIG_TV_MONITOR_INTERACTIVE_WAIT_TIMEOUT_MS) {
-  if (isBigTvMonitorInteractive()) {
-    return Promise.resolve(true);
-  }
-
-  return new Promise((resolve) => {
-    const deadline = Date.now() + timeoutMs;
-    const checkInteractiveState = () => {
-      if (isBigTvMonitorInteractive()) {
-        resolve(true);
-        return;
-      }
-      if (Date.now() >= deadline) {
-        resolve(false);
-        return;
-      }
-      window.setTimeout(checkInteractiveState, MONITOR_INTERACTIVE_POLL_INTERVAL_MS);
-    };
-    checkInteractiveState();
-  });
-}
-
 function waitForRightMonitorInteractive(timeoutMs = BIG_TV_MONITOR_INTERACTIVE_WAIT_TIMEOUT_MS) {
   if (isRightMonitorInteractive()) {
     return Promise.resolve(true);
@@ -92,4 +58,4 @@ function waitForRightMonitorInteractive(timeoutMs = BIG_TV_MONITOR_INTERACTIVE_W
   });
 }
 
-export { waitForMediaPlaybackToEnd, waitForBigTvMonitorInteractive, waitForRightMonitorInteractive };
+export { waitForMediaPlaybackToEnd, waitForRightMonitorInteractive };

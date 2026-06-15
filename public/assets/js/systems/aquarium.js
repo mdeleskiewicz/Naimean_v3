@@ -1,8 +1,7 @@
 import { API_TIMEOUT_MS, AQUARIUM_CLIP_CATALOG_API_URL, AQUARIUM_CLIP_SOURCE_GOOGLE_DRIVE, AQUARIUM_CLIP_SOURCE_LOCAL_FALLBACK, BIG_TV_DEBUG_WATERMARK_DEFAULT_TOP_PX, BIG_TV_DEBUG_WATERMARK_LETTERBOX_CLEARANCE_PX, BIG_TV_DEBUG_WATERMARK_MIN_TOP_MARGIN_PX, BIG_TV_DEBUG_WATERMARK_SERVER_ASSET, BIG_TV_DEBUG_WATERMARK_SHRIMP_CITY, DEFAULT_LEFT_MONITOR_STATE, NEDRY_GATE_VIDEO_URL } from '../core/constants.js';
 import { state } from '../core/state.js';
 import { wait, shuffleArrayInPlace } from '../core/utils.js';
-import { waitForBigTvMonitorInteractive, waitForMediaPlaybackToEnd } from '../core/media.js';
-import { isBigTvMonitorInteractive, triggerCommodorePowerOnSequence } from './monitors.js';
+import { waitForMediaPlaybackToEnd } from '../core/media.js';
 import { restoreBigTvDvdLoop } from './dvd.js';
 
 function cancelAquariumPlaybackSequence() {
@@ -414,16 +413,6 @@ async function playRightMonitorAquariumSequence() {
 }
 
 async function playAquariumHotspotSequence() {
-  if (!isBigTvMonitorInteractive()) {
-    if (!state.isCommodorePoweringOn) {
-      triggerCommodorePowerOnSequence();
-    }
-    const isBigTvReady = await waitForBigTvMonitorInteractive();
-    if (!isBigTvReady) {
-      return;
-    }
-  }
-
   if (replayAquariumPlaybackSequenceFromStatic()) {
     return;
   }

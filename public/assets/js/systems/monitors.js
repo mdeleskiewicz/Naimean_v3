@@ -39,10 +39,6 @@ function isMonitorPoweredOn(shadowOverlayEl) {
   return !!shadowOverlayEl && shadowOverlayEl.classList.contains('is-monitor-on');
 }
 
-function isBigTvMonitorInteractive() {
-  return isMonitorPoweredOn(state.bigTvShadowOverlayEl);
-}
-
 function isLeftMonitorInteractive() {
   return isMonitorPoweredOn(state.leftMonitorShadowOverlayEl);
 }
@@ -52,7 +48,7 @@ function isRightMonitorInteractive() {
 }
 
 function hasActiveMonitorPowerState() {
-  return [state.commodoreShadowOverlayEl, state.bigTvShadowOverlayEl, state.leftMonitorShadowOverlayEl, state.rightMonitorShadowOverlayEl]
+  return [state.commodoreShadowOverlayEl, state.leftMonitorShadowOverlayEl, state.rightMonitorShadowOverlayEl]
     .some((el) =>
       !!el &&
       (
@@ -108,20 +104,17 @@ function animateMonitorShadowOn(el) {
     el.classList.add('is-monitor-on');
     if (
       state.leftMonitorSelectedState === 'tools' &&
-      isLeftMonitorInteractive() &&
-      isBigTvMonitorInteractive()
+      isLeftMonitorInteractive()
     ) {
       void state._cb.activateBigTvToolsMode?.();
     } else if (
       state.leftMonitorSelectedState === 'login' &&
-      isLeftMonitorInteractive() &&
-      isBigTvMonitorInteractive()
+      isLeftMonitorInteractive()
     ) {
       void state._cb.activateLoginMode?.();
     } else if (
       state.leftMonitorSelectedState === 'calendar' &&
-      isLeftMonitorInteractive() &&
-      isBigTvMonitorInteractive()
+      isLeftMonitorInteractive()
     ) {
       void state._cb.activateCalendarMode?.();
     }
@@ -178,7 +171,7 @@ function triggerCommodorePowerOnSequence() {
 }
 
 function hideAllMonitorShadows() {
-  [state.commodoreShadowOverlayEl, state.bigTvShadowOverlayEl, state.leftMonitorShadowOverlayEl, state.rightMonitorShadowOverlayEl].forEach((el) => {
+  [state.commodoreShadowOverlayEl, state.leftMonitorShadowOverlayEl, state.rightMonitorShadowOverlayEl].forEach((el) => {
     if (!el) {
       return;
     }
@@ -208,7 +201,6 @@ async function wakeRightMonitorForCornerScore() {
 }
 
 state._cb.triggerCommodorePowerOnSequence = triggerCommodorePowerOnSequence;
-state._cb.isBigTvMonitorInteractive = isBigTvMonitorInteractive;
 state._cb.isRightMonitorInteractive = isRightMonitorInteractive;
 
-export { loadCommodorePowerState, saveCommodorePowerState, syncStoredCommodorePowerState, handlePageShow, cancelMonitorPowerTimeouts, isMonitorPoweredOn, isBigTvMonitorInteractive, isLeftMonitorInteractive, isRightMonitorInteractive, hasActiveMonitorPowerState, reconcileCommodorePowerStateOnLoad, resetMonitorsToOffState, animateMonitorShadowOn, animateMonitorShadowOff, navigateToCommodoreFromDen, triggerCommodorePowerOnSequence, hideAllMonitorShadows, wakeRightMonitorForCornerScore };
+export { loadCommodorePowerState, saveCommodorePowerState, syncStoredCommodorePowerState, handlePageShow, cancelMonitorPowerTimeouts, isMonitorPoweredOn, isLeftMonitorInteractive, isRightMonitorInteractive, hasActiveMonitorPowerState, reconcileCommodorePowerStateOnLoad, resetMonitorsToOffState, animateMonitorShadowOn, animateMonitorShadowOff, navigateToCommodoreFromDen, triggerCommodorePowerOnSequence, hideAllMonitorShadows, wakeRightMonitorForCornerScore };

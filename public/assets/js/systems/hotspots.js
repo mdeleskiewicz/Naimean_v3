@@ -718,7 +718,6 @@ function createHotspots(hotspotList) {
           btn?.click();
           return;
         }
-        if (!state._cb.isBigTvMonitorInteractive?.()) return;
         const wasDvdScreensaverActive = state.bigTvDvdOverlayEl?.classList.contains('is-active');
         state._cb.interruptBigTvDvdLoop?.();
         if (wasDvdScreensaverActive) state._cb.activateRightMonitorCornerScoreMode?.();

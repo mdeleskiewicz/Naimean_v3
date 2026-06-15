@@ -395,14 +395,9 @@
     }
 
     #overlay-commodore-shadow,
-    #big_tv_shadow_layer,
     #left_monitor_shadow_layer,
     #right_monitor_shadow_layer {
       z-index: 2;
-    }
-
-    #big_tv_shadow_layer {
-      opacity: 0;
     }
 
     #overlay-left-monitor-side-frame,
