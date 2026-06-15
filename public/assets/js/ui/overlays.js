@@ -657,7 +657,10 @@ function createOverlays() {
       state.leftMonitorStaticVideoEl = document.createElement('video');
       state.leftMonitorStaticVideoEl.src = AQUARIUM_STATIC_VIDEO_URL;
       state.leftMonitorStaticVideoEl.muted = true;
+      state.leftMonitorStaticVideoEl.defaultMuted = true;
       state.leftMonitorStaticVideoEl.loop = true;
+      state.leftMonitorStaticVideoEl.playsInline = true;
+      state.leftMonitorStaticVideoEl.setAttribute('webkit-playsinline', '');
       state.leftMonitorStaticOverlayEl.appendChild(state.leftMonitorStaticVideoEl);
       windowEl.append(state.leftMonitorStaticOverlayEl);
       el.appendChild(windowEl);
