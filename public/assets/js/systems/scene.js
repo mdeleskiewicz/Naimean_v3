@@ -8,8 +8,6 @@ import {
   ASHTRAY_SMOKE_SOURCE_X,
   ASHTRAY_SMOKE_TAIL_HEIGHT,
   ASHTRAY_SMOKE_Y,
-  CAMERA_MOTION_IDLE_TIMEOUT_MS,
-  CAMERA_MOTION_PERFORMANCE_MODE_ENABLED,
   CAMERA_SETTLE_EPSILON,
   CAMERA_SMOOTHING_FACTOR,
   DESIGN_HEIGHT,
@@ -176,33 +174,11 @@ function applyTransforms() {
   dom.world.style.transform = `translate3d(${-state.cameraX}px, 0, 0)`;
 }
 
-function setCameraMotionPerformanceMode(enabled) {
-  if (!CAMERA_MOTION_PERFORMANCE_MODE_ENABLED) {
-    document.body.classList.remove('camera-motion-active');
-    return;
-  }
-  document.body.classList.toggle('camera-motion-active', enabled);
-}
-
-function markCameraMotionActivity() {
-  if (!CAMERA_MOTION_PERFORMANCE_MODE_ENABLED) return;
-  if (!state.hasInitializedCamera) return;
-  setCameraMotionPerformanceMode(true);
-  if (state.cameraMotionIdleTimeoutId !== null) {
-    window.clearTimeout(state.cameraMotionIdleTimeoutId);
-  }
-  state.cameraMotionIdleTimeoutId = window.setTimeout(() => {
-    state.cameraMotionIdleTimeoutId = null;
-    setCameraMotionPerformanceMode(false);
-  }, CAMERA_MOTION_IDLE_TIMEOUT_MS);
-}
-
 function setCameraX(nextCameraX) {
   const previousCameraX = state.cameraX;
   state.cameraX = clamp(nextCameraX, 0, state.maxCameraX);
   if (state.cameraX === previousCameraX) return;
   applyTransforms();
-  markCameraMotionActivity();
 }
 
 function setTargetCameraX(nextCameraX) {
@@ -454,11 +430,6 @@ function onDebugButtonClick() {
 
 function cleanup() {
   state._cb.hideBigTvPromptOverlay?.();
-  if (state.cameraMotionIdleTimeoutId !== null) {
-    window.clearTimeout(state.cameraMotionIdleTimeoutId);
-    state.cameraMotionIdleTimeoutId = null;
-  }
-  setCameraMotionPerformanceMode(false);
   stopBigTvDvdAnimation();
   if (state.cameraAnimationFrameId !== null) {
     window.cancelAnimationFrame(state.cameraAnimationFrameId);
@@ -573,8 +544,6 @@ state._cb.resize = resize;
 
 export {
   applyTransforms,
-  setCameraMotionPerformanceMode,
-  markCameraMotionActivity,
   setCameraX,
   setTargetCameraX,
   startCameraAnimation,

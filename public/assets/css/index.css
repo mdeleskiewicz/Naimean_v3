@@ -1414,10 +1414,6 @@
       outline-offset: 3px;
     }
 
-    body.camera-motion-active .big-tv-dvd-logo {
-      display: none;
-    }
-
     /* GitHub shelf object overlay */
     .screen-overlay.github-shelf-object-overlay {
       pointer-events: none;
@@ -2180,10 +2176,6 @@
       transition: opacity 120ms linear;
     }
 
-    body.camera-motion-active .ashtray-smoke-effect {
-      opacity: 0.45;
-    }
-
     .ashtray-smoke-wisp {
       position: absolute;
       left: 50%;
@@ -2199,11 +2191,6 @@
       will-change: transform, opacity;
       animation: ashtray-smoke-rise var(--smoke-duration, 10.6s) linear infinite;
       animation-delay: var(--smoke-delay, 0s);
-    }
-
-    body.camera-motion-active .ashtray-smoke-wisp,
-    body.camera-motion-active .ashtray-smoke-wisp::before {
-      animation-play-state: paused;
     }
 
     .ashtray-smoke-wisp::before {
