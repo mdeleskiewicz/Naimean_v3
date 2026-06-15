@@ -1043,7 +1043,6 @@ function createOverlays() {
         if (!isBigTvMonitorInteractive()) return;
         const clickedInteractive = event.target instanceof Element && event.target.closest(BIG_TV_INTERACTIVE_UI_SELECTORS);
         if (clickedInteractive) return;
-        void enterBigTvFullscreen(el);
       });
     }
 

@@ -1250,6 +1250,10 @@
       mix-blend-mode: normal;
     }
 
+    .big-tv-dvd-logo.github-screensaver-logo {
+      width: clamp(112px, 22%, 240px);
+    }
+
     .big-tv-dvd-miss-indicator {
       position: absolute;
       z-index: 3;
