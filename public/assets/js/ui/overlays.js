@@ -23,6 +23,13 @@ import {
   DVD_ACCELEROMETER_DEFAULT_POSITION,
   DVD_ACCELEROMETER_MULTIPLIER_MIN,
   DVD_ACCELEROMETER_MULTIPLIER_MAX,
+  GITHUB_SCREENSAVER_LOGO_URL,
+  GITHUB_SHELF_OBJECT_IMAGE_URL,
+  GITHUB_SHELF_OBJECT_OVERLAY_ID,
+  GITHUB_V3_ISSUES_URL,
+  GITHUB_V3_AGENTS_URL,
+  GITHUB_V3_WIKI_URL,
+  GITHUB_V3_ACTIONS_URL,
   LEFT_MONITOR_SIDE_FRAME_IMAGE_URL,
   LEFT_MONITOR_IMAGE_URLS,
   LEFT_MONITOR_SHADOW_LAYER_ID,
@@ -316,6 +323,53 @@ async function activateLeftMonitorQuadrant(nextState) {
   await playLeftMonitorStaticPass(sequenceToken);
 }
 
+function deactivateGithubScreensaverMode() {
+  if (!state.isGithubScreensaverMode) return;
+  state.isGithubScreensaverMode = false;
+  state.githubScreensaverSequenceToken += 1;
+  if (state.bigTvDvdLogoEl) {
+    state.bigTvDvdLogoEl.src = BIG_TV_SCREENSAVER_LOGO_URL;
+    state.bigTvDvdLogoEl.classList.remove('github-screensaver-logo');
+  }
+  if (state.bigTvGithubQuadrantEl) {
+    state.bigTvGithubQuadrantEl.classList.remove('is-active');
+    state.bigTvGithubQuadrantEl.setAttribute('aria-hidden', 'true');
+  }
+}
+
+async function activateGithubScreensaverMode() {
+  if (!isBigTvMonitorInteractive()) return;
+  state.githubScreensaverSequenceToken += 1;
+  const sequenceToken = state.githubScreensaverSequenceToken;
+  state._cb.stopAquariumPlaybackSequence?.();
+  state._cb.hideBigTvPromptOverlay?.();
+  state._cb.hideNedryGateOverlay?.();
+  state._cb.hideBigTvToolsOverlay?.({ cancelSequence: false });
+  state._cb.hideLoginOverlay?.({ cancelSequence: false });
+  hideCalendarBigTvOverlay();
+  // Play left monitor static concurrently
+  state.leftMonitorTransitionToken += 1;
+  void playLeftMonitorStaticPass(state.leftMonitorTransitionToken);
+  // Play big TV static
+  const staticEnded = await state._cb.playBigTvStaticPass?.(sequenceToken, () => state.githubScreensaverSequenceToken);
+  if (sequenceToken !== state.githubScreensaverSequenceToken) {
+    state._cb.hideAquariumStaticOverlay?.();
+    return;
+  }
+  state._cb.hideAquariumStaticOverlay?.();
+  // Switch to GitHub logo and show quadrant overlay
+  state.isGithubScreensaverMode = true;
+  if (state.bigTvDvdLogoEl) {
+    state.bigTvDvdLogoEl.src = GITHUB_SCREENSAVER_LOGO_URL;
+    state.bigTvDvdLogoEl.classList.add('github-screensaver-logo');
+  }
+  if (state.bigTvGithubQuadrantEl) {
+    state.bigTvGithubQuadrantEl.classList.add('is-active');
+    state.bigTvGithubQuadrantEl.setAttribute('aria-hidden', 'false');
+  }
+  state._cb.restoreBigTvDvdLoop?.();
+}
+
 function positionOverlay(overlayId) {
   const overlayEl = state.overlayElementsById.get(overlayId);
   const rect = getOverlayRect(overlayId);
@@ -376,6 +430,30 @@ function createOverlays() {
         state.bigTvDvdMissIndicatorsByCorner.set(corner, missIndicatorEl);
         state.bigTvDvdOverlayEl.appendChild(missIndicatorEl);
       });
+      // GitHub quadrant overlay — shown when GitHub screensaver mode is active
+      state.bigTvGithubQuadrantEl = document.createElement('div');
+      state.bigTvGithubQuadrantEl.className = 'big-tv-github-quadrant-overlay';
+      state.bigTvGithubQuadrantEl.setAttribute('aria-hidden', 'true');
+      const githubQuadrants = [
+        { label: 'Issues',  url: GITHUB_V3_ISSUES_URL,  pos: 'top-left' },
+        { label: 'Agents',  url: GITHUB_V3_AGENTS_URL,  pos: 'top-right' },
+        { label: 'Wiki',    url: GITHUB_V3_WIKI_URL,    pos: 'bottom-left' },
+        { label: 'Actions', url: GITHUB_V3_ACTIONS_URL, pos: 'bottom-right' }
+      ];
+      githubQuadrants.forEach(({ label, url, pos }) => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = `github-quadrant-btn github-quadrant-btn-${pos}`;
+        btn.setAttribute('aria-label', `GitHub ${label}`);
+        btn.textContent = label;
+        btn.addEventListener('pointerdown', (e) => e.stopPropagation());
+        btn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          window.open(url, '_blank', 'noopener,noreferrer');
+        });
+        state.bigTvGithubQuadrantEl.appendChild(btn);
+      });
+      state.bigTvDvdOverlayEl.appendChild(state.bigTvGithubQuadrantEl);
       el.appendChild(state.bigTvDvdOverlayEl);
       applyDvdColorStep();
       if (DISCORD_WIDGET_URL) {
@@ -937,6 +1015,16 @@ function createOverlays() {
       requestAnimationFrame(() => startFlipClock(el));
     }
 
+    if (overlay.id === GITHUB_SHELF_OBJECT_OVERLAY_ID) {
+      el.classList.add('github-shelf-object-overlay');
+      const imgEl = document.createElement('img');
+      imgEl.className = 'github-shelf-image';
+      imgEl.src = GITHUB_SHELF_OBJECT_IMAGE_URL;
+      imgEl.alt = '';
+      imgEl.setAttribute('aria-hidden', 'true');
+      el.appendChild(imgEl);
+    }
+
     if (BIG_TV_FULLSCREEN_OVERLAY_IDS.has(overlay.id)) {
       el.addEventListener('click', (event) => {
         if (!isBigTvMonitorInteractive()) return;
@@ -966,6 +1054,8 @@ state._cb.setRightMonitorOverlayImageUrl = setRightMonitorOverlayImageUrl;
 state._cb.isBigTvFullscreenTarget = isBigTvFullscreenTarget;
 state._cb.hideCalendarBigTvOverlay = hideCalendarBigTvOverlay;
 state._cb.activateCalendarMode = activateCalendarMode;
+state._cb.activateGithubScreensaverMode = activateGithubScreensaverMode;
+state._cb.deactivateGithubScreensaverMode = deactivateGithubScreensaverMode;
 
 export {
   syncBigTvContentVisibility,
@@ -984,6 +1074,8 @@ export {
   resolveCalendarImageMonth,
   getCalendarMonthImageUrl,
   activateCalendarMode,
+  activateGithubScreensaverMode,
+  deactivateGithubScreensaverMode,
   activateLeftMonitorQuadrant,
   playLeftMonitorStaticPass,
   createOverlays,
