@@ -20,7 +20,7 @@ jobs:
         run: |
           # The '|| true' ensures that even if wrangler fails, the script continues
           # and creates the log file so the upload step doesn't crash.
-          npx wrangler deploy --config wrangler.jsonc --color=always > raw-deploy.log 2>&1 || true
+          npx wrangler deploy --config wrangler.toml --color=always > raw-deploy.log 2>&1 || true
           sed 's/\x1b\[[0-9;]*m//g' raw-deploy.log > full-deploy-log.txt
           
           echo "" >> full-deploy-log.txt

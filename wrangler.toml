@@ -19,17 +19,10 @@ DISCORD_CLIENT_ID = "1495879141638275213"
 DISCORD_GUILD_ID = "1487898909224341534"
 DISCORD_ALLOWED_ROLE_IDS = ""
 
-# --- NEW INFRASTRUCTURE BINDINGS ---
 [[d1_databases]]
 binding = "DB"
 database_name = "naimean-v3-db"
 database_id = "0798d2f2-618b-4044-91f5-a2c762922184"
-
-
-[[r2_buckets]]
-binding = "ASSETS_STORAGE"
-bucket_name = "naimean-v3-assets"
-# -----------------------------------
 
 [[durable_objects.bindings]]
 name = "HOTSPOT_STORE"

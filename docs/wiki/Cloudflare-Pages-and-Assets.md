@@ -12,17 +12,16 @@ In older Cloudflare setups, Pages and Workers were separate products. In this pr
 
 The **Assets** binding is how the Worker accesses the static files in the `public/` folder. When the Worker calls `env.ASSETS.fetch(request)`, Cloudflare's infrastructure finds the matching file in the `public/` directory and returns it as an HTTP response — just like a traditional web server would.
 
-Configured in `wrangler.jsonc`:
+Configured in `wrangler.toml`:
 
-```jsonc
-"assets": {
-  "directory": "public",      // the local folder to deploy as static files
-  "binding": "ASSETS",        // the name used to access it in env (env.ASSETS)
-  "run_worker_first": ["/*"]  // run the Worker on ALL paths before checking assets
-}
+```toml
+[assets]
+directory = "public"       # local folder deployed as static files
+binding = "ASSETS"         # binding name in env (env.ASSETS)
+run_worker_first = ["/*"]  # run the Worker on ALL paths before checking assets
 ```
 
-The key line is `"run_worker_first": ["/*"]`. Without this, Cloudflare would serve matching static files directly without calling the Worker at all. With it, **every request goes through `src/worker.js` first** — allowing the worker to add security headers, enforce auth, rewrite paths, etc. before the file is returned.
+The key line is `run_worker_first = ["/*"]`. Without this, Cloudflare would serve matching static files directly without calling the Worker at all. With it, **every request goes through `src/worker.js` first** — allowing the worker to add security headers, enforce auth, rewrite paths, etc. before the file is returned.
 
 ---
 

@@ -25,7 +25,7 @@ The workflow fires automatically whenever commits are pushed to the `main` branc
 
 ```
 1. Checkout the code
-2. Run: npx wrangler deploy --config wrangler.jsonc
+2. Run: npx wrangler deploy --config wrangler.toml
 3. Save the deploy log to Google Drive
 ```
 
@@ -45,12 +45,12 @@ Clones the repository into the GitHub Actions runner (a temporary Linux VM).
     CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
     CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
   run: |
-    npx wrangler deploy --config wrangler.jsonc --color=always > raw-deploy.log 2>&1 || true
+    npx wrangler deploy --config wrangler.toml --color=always > raw-deploy.log 2>&1 || true
 ```
 
 - `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID` are GitHub repository secrets — they authenticate Wrangler to your Cloudflare account without needing to log in interactively.
 - `npx wrangler deploy` runs Wrangler without installing it globally (it downloads it from npm on demand).
-- `--config wrangler.jsonc` explicitly uses the JSON config file (rather than `wrangler.toml`).
+- `--config wrangler.toml` explicitly uses the repository's TOML config file.
 - `> raw-deploy.log 2>&1 || true` captures all output to a log file and ensures the step doesn't fail even if Wrangler exits with an error (the `|| true`). The outcome is checked from the log file instead.
 - The log is then stripped of ANSI colour codes and saved as `full-deploy-log.txt`.
 
@@ -104,7 +104,7 @@ npx wrangler secret put SECRET_NAME
 | `DISCORD_REDIRECT_URI` | (Optional) Override for the Discord OAuth callback URL |
 | `ROOM_STATE_REQUIRE_AUTH` | Set to `"true"` to require login for room state writes |
 
-These appear in `env` just like the `vars` in `wrangler.jsonc`, but are never stored in the repository.
+These appear in `env` just like the `vars` in `wrangler.toml`, but are never stored in the repository.
 
 ---
 
@@ -124,7 +124,7 @@ Cloudflare distributes these globally to all its edge data centres.
 You can validate the configuration locally without actually deploying:
 
 ```bash
-npx --yes wrangler@latest deploy --dry-run
+npx --yes wrangler@latest deploy --config wrangler.toml --dry-run
 ```
 
 This builds the Worker and validates the config but makes no changes to Cloudflare. Useful for catching config errors before pushing.
@@ -141,7 +141,7 @@ GitHub Actions starts runner (Linux VM)
 Checkout code
        ↓
 npx wrangler deploy
-  ├── Reads wrangler.jsonc
+  ├── Reads wrangler.toml
   ├── Bundles src/worker.js
   ├── Uploads Worker script to Cloudflare
   ├── Uploads public/ assets to Cloudflare

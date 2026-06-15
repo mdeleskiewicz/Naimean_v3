@@ -41,30 +41,28 @@ Use the steps below to resolve deployment failures and finalize your Cloudflare 
    - `CLOUDFLARE_API_TOKEN`
    - `CLOUDFLARE_ACCOUNT_ID`
 
-### Step 1 — Configure `wrangler.jsonc`
+### Step 1 — Configure `wrangler.toml`
 
-Create or update `wrangler.jsonc` in your repository root to map the `HotspotStore` Durable Object correctly:
+Create or update `wrangler.toml` in your repository root to map the `HotspotStore` Durable Object correctly:
 
-```jsonc
-{
-  "name": "naimean-v4",
-  "main": "src/worker.js",
-  "compatibility_date": "2026-06-15",
-  "durable_objects": {
-    "bindings": [
-      {
-        "name": "HOTSPOT_STORE",
-        "class_name": "HotspotStore"
-      }
-    ]
-  },
-  "migrations": [
-    {
-      "tag": "v1",
-      "new_classes": ["HotspotStore"]
-    }
-  ]
-}
+```toml
+name = "naimeav3"
+main = "src/worker.js"
+compatibility_date = "2026-06-15"
+compatibility_flags = ["nodejs_compat"]
+
+[assets]
+directory = "public"
+binding = "ASSETS"
+run_worker_first = ["/*"]
+
+[[durable_objects.bindings]]
+name = "HOTSPOT_STORE"
+class_name = "HotspotStore"
+
+[[migrations]]
+tag = "v1"
+new_sqlite_classes = ["HotspotStore"]
 ```
 
 ### Step 2 — Verify Worker Permissions
@@ -89,4 +87,3 @@ git push origin main
 ---
 
 *Built with passion, pasta, and the whispers of the AI Lords.*
-

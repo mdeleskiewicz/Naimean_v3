@@ -95,23 +95,16 @@ Browser → Worker (src/worker.js)
 
 ## The `HOTSPOT_STORE` Binding
 
-The Durable Object class is registered in `wrangler.jsonc`:
+The Durable Object class is registered in `wrangler.toml`:
 
-```jsonc
-"durable_objects": {
-  "bindings": [
-    {
-      "name": "HOTSPOT_STORE",    // name used in env (env.HOTSPOT_STORE)
-      "class_name": "HotspotStore" // the exported class in src/worker.js
-    }
-  ]
-},
-"migrations": [
-  {
-    "tag": "v1",
-    "new_sqlite_classes": ["HotspotStore"]  // creates with SQLite storage enabled
-  }
-]
+```toml
+[[durable_objects.bindings]]
+name = "HOTSPOT_STORE"     # name used in env (env.HOTSPOT_STORE)
+class_name = "HotspotStore" # exported class in src/worker.js
+
+[[migrations]]
+tag = "v1"
+new_sqlite_classes = ["HotspotStore"]  # creates with SQLite storage enabled
 ```
 
 The `migrations` block tells Cloudflare to create the `HotspotStore` instances with **SQLite storage** enabled (the new, recommended storage backend). This is the "v1" migration tag.

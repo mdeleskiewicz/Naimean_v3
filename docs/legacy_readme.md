@@ -36,4 +36,4 @@ Naimean V2 represented a foundational era in the project's development, establis
 ### Technical Legacy
 - **Configuration:** Relied on `wrangler.toml`.
 - **Data & State:** Initial transition from ephemeral state to persistent storage.
-- **Architectural Shift:** Migration to V3 involved an overhaul to `wrangler.jsonc` and refinement of system handoff protocols.
+- **Architectural Shift:** Migration to V3 involved major configuration and deployment workflow changes; the current repository standard is `wrangler.toml`.
