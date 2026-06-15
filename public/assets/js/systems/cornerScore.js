@@ -353,7 +353,6 @@ async function loadCornerScoreFromServer() {
     if (pbScore > 0 || pbTimeMs > 0 || pbBounces > 0 || pbNearMisses > 0) {
       state.cornerScorePersonalBest = { score: pbScore, timeMs: pbTimeMs, bounces: pbBounces, nearMisses: pbNearMisses };
     }
-    activateRightMonitorCornerScoreMode();
   } catch (_) {}
 }
 

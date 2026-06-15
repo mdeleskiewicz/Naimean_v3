@@ -840,6 +840,7 @@
       display: block;
       object-fit: cover;
       background: #040506;
+      transform: scaleY(-1);
     }
 
     .right-monitor-shrimp-logo-overlay {
@@ -2243,6 +2244,7 @@
       display: block;
       object-fit: cover;
       background: #040506;
+      transform: scaleY(-1);
     }
 
     .nedry-gate-overlay {
@@ -3028,11 +3030,11 @@
 
     .rc-selector-dot {
       position: absolute;
-      top: calc(8px * var(--fc-scale));
-      bottom: calc(8px * var(--fc-scale));
+      top: calc(4px * var(--fc-scale));
+      bottom: calc(4px * var(--fc-scale));
       left: var(--rc-tuning-position, 84%);
       transform: translateX(-50%);
-      width: calc(8px * var(--fc-scale));
+      width: calc(14px * var(--fc-scale));
       border: 0;
       border-radius: 999px;
       background: radial-gradient(circle at 35% 25%, #ffb6a8 0 32%, #f65244 33% 100%);
@@ -3044,7 +3046,7 @@
 
     @media (pointer: coarse) {
       .rc-selector-dot {
-        width: calc(16px * var(--fc-scale));
+        width: calc(22px * var(--fc-scale));
       }
     }
 
