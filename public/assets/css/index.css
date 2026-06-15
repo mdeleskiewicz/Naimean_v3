@@ -1769,11 +1769,11 @@
       opacity: 0;
       visibility: hidden;
       pointer-events: none;
-      transform: translate(0, 8px);
+      transform: none;
     }
 
     .left-monitor-github-quadrant-overlay .github-quadrant-btn {
-      font: 700 clamp(10px, min(7.2cqw, 8.4cqh), 22px) / 1 "Trebuchet MS", "Arial Black", sans-serif;
+      font: 700 clamp(8px, min(5.76cqw, 6.72cqh), 17.6px) / 1 "Trebuchet MS", "Arial Black", sans-serif;
       padding: clamp(3px, 1.2%, 8px) clamp(4px, 1.6%, 10px);
       letter-spacing: 0.04em;
     }
