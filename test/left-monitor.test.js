@@ -41,3 +41,18 @@ test('left monitor selector is not vertically shifted from center axis', () => {
     'Expected no fixed vertical translate offset on left monitor selector',
   );
 });
+
+test('left monitor github quadrant overlay is centered and uses reduced label font size', () => {
+  const source = fs.readFileSync(indexCssPath, 'utf8');
+
+  assert.match(
+    source,
+    /\.left-monitor-github-quadrant-overlay\s*\{[^}]*transform:\s*none;/,
+    'Expected left monitor GitHub quadrant overlay to avoid vertical offset transforms',
+  );
+  assert.match(
+    source,
+    /\.left-monitor-github-quadrant-overlay\s+\.github-quadrant-btn\s*\{[^}]*font:\s*700\s+clamp\(8px,\s*min\(5\.76cqw,\s*6\.72cqh\),\s*17\.6px\)\s*\/\s*1/,
+    'Expected left monitor GitHub quadrant labels to be reduced by 20%',
+  );
+});
