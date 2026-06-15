@@ -1466,6 +1466,10 @@
       mix-blend-mode: normal;
     }
 
+    .big-tv-dvd-logo.is-github-mode-logo {
+      width: clamp(78px, 15.5%, 168px);
+    }
+
     .big-tv-dvd-miss-indicator {
       position: absolute;
       z-index: 3;
