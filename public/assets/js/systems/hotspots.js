@@ -636,23 +636,32 @@ function createHotspots(hotspotList) {
       if (spot.id === 'chapel') return void window.location.assign(getHotspotEffectiveUrl(spot.id) || CHAPEL_URL);
       if (spot.id === COMMODORE_POWER_BUTTON_CONTROL_ID) return void state._cb.triggerCommodorePowerOnSequence?.();
       if (spot.id === MONITOR_GROUP_LEFT_CONTROL_ID) {
-        const hotspotRect = el.getBoundingClientRect();
-        const relX = (event.clientX - hotspotRect.left) / hotspotRect.width;
-        const relY = (event.clientY - hotspotRect.top) / hotspotRect.height;
-        const pos = `${relY < 0.5 ? 'top' : 'bottom'}-${relX < 0.5 ? 'left' : 'right'}`;
-        if (state.isGithubScreensaverMode && state.bigTvGithubQuadrantEl) {
-          const githubBtn = state.bigTvGithubQuadrantEl.querySelector(`.github-quadrant-btn-${pos}`);
-          if (!githubBtn) console.warn(`GitHub quadrant button not found for position: ${pos}`);
-          githubBtn?.click();
-          return;
-        }
         const monitorStateByPos = {
           'top-left': 'tools',
           'top-right': 'login',
           'bottom-left': 'calendar',
           'bottom-right': 'mail'
         };
-        state.leftMonitorSegmentButtonsByState.get(monitorStateByPos[pos])?.click();
+        const hotspotRect = el.getBoundingClientRect();
+        const relX = (event.clientX - hotspotRect.left) / hotspotRect.width;
+        const relY = (event.clientY - hotspotRect.top) / hotspotRect.height;
+        const pos = `${relY < 0.5 ? 'top' : 'bottom'}-${relX < 0.5 ? 'left' : 'right'}`;
+        void (async () => {
+          const isAuthenticated = await state._cb.ensureDiscordAuthForQuadrantAction?.();
+          if (!isAuthenticated) {
+            return;
+          }
+          if (state.isGithubScreensaverMode && state.bigTvGithubQuadrantEl) {
+            const githubBtn = state.bigTvGithubQuadrantEl.querySelector(`.github-quadrant-btn-${pos}`);
+            if (!githubBtn) {
+              console.warn(`GitHub quadrant button not found for position: ${pos}`);
+              return;
+            }
+            githubBtn.click();
+            return;
+          }
+          state.leftMonitorSegmentButtonsByState.get(monitorStateByPos[pos])?.click();
+        })();
         return;
       }
       if (spot.id === DISCORD_OVERLAY_CONTROL_ID) {
