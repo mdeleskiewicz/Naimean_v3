@@ -1464,8 +1464,14 @@
       letter-spacing: 0.06em;
       text-transform: uppercase;
       cursor: pointer;
-      transition: color 140ms ease, text-shadow 140ms ease;
+      transition: color 140ms ease, text-shadow 140ms ease, background-color 200ms ease;
       text-shadow: 0 0 8px rgba(0, 0, 0, 0.8);
+    }
+
+    .github-quadrant-btn.is-active {
+      background-color: rgba(22, 163, 74, 0.78);
+      color: #bde6ff;
+      text-shadow: 0 0 8px rgba(0, 0, 0, 0.5);
     }
 
     .github-quadrant-btn:hover,

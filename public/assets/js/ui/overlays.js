@@ -338,7 +338,6 @@ function deactivateGithubScreensaverMode() {
 }
 
 async function activateGithubScreensaverMode() {
-  if (!isBigTvMonitorInteractive()) return;
   state.githubScreensaverSequenceToken += 1;
   const sequenceToken = state.githubScreensaverSequenceToken;
   state._cb.stopAquariumPlaybackSequence?.();
@@ -347,6 +346,15 @@ async function activateGithubScreensaverMode() {
   state._cb.hideBigTvToolsOverlay?.({ cancelSequence: false });
   state._cb.hideLoginOverlay?.({ cancelSequence: false });
   hideCalendarBigTvOverlay();
+  // Wake monitors instantly if power was not already on so static is visible
+  if (state.bigTvShadowOverlayEl && !isBigTvMonitorInteractive()) {
+    state.bigTvShadowOverlayEl.classList.remove('tv-turning-on', 'tv-turning-off');
+    state.bigTvShadowOverlayEl.classList.add('is-monitor-on');
+  }
+  if (state.leftMonitorShadowOverlayEl && !isLeftMonitorInteractive()) {
+    state.leftMonitorShadowOverlayEl.classList.remove('tv-turning-on', 'tv-turning-off');
+    state.leftMonitorShadowOverlayEl.classList.add('is-monitor-on');
+  }
   // Play left monitor static concurrently
   state.leftMonitorTransitionToken += 1;
   void playLeftMonitorStaticPass(state.leftMonitorTransitionToken);
@@ -364,6 +372,8 @@ async function activateGithubScreensaverMode() {
     state.bigTvDvdLogoEl.classList.add('github-screensaver-logo');
   }
   if (state.bigTvGithubQuadrantEl) {
+    // Reset any previously-activated quadrant states each time mode is entered
+    state.bigTvGithubQuadrantEl.querySelectorAll('.github-quadrant-btn').forEach((btn) => btn.classList.remove('is-active'));
     state.bigTvGithubQuadrantEl.classList.add('is-active');
     state.bigTvGithubQuadrantEl.setAttribute('aria-hidden', 'false');
   }
@@ -449,6 +459,7 @@ function createOverlays() {
         btn.addEventListener('pointerdown', (e) => e.stopPropagation());
         btn.addEventListener('click', (e) => {
           e.stopPropagation();
+          btn.classList.add('is-active');
           window.open(url, '_blank', 'noopener,noreferrer');
         });
         state.bigTvGithubQuadrantEl.appendChild(btn);
