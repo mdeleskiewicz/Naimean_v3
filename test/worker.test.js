@@ -2262,7 +2262,23 @@ test('worker /api/discord/auth redirects to Discord OAuth with state cookie', as
   assert.ok(setCookie.includes('HttpOnly'));
   assert.ok(setCookie.includes('SameSite=Lax'));
   assert.ok(setCookie.includes('Secure'));
+  assert.ok(!setCookie.includes('Domain='));
   assert.equal(response.headers.get('x-content-type-options'), 'nosniff');
+});
+
+test('worker /api/discord/auth sets shared state cookie domain for explicit cross-subdomain redirect URI', async () => {
+  const env = {
+    DISCORD_CLIENT_ID: 'test-client-id',
+    DISCORD_REDIRECT_URI: 'https://naimean.com/api/discord/callback',
+    ASSETS: { async fetch() { return new Response(''); } }
+  };
+  const response = await router.fetch(new Request('https://www.naimean.com/api/discord/auth'), env);
+
+  assert.equal(response.status, 302);
+  const location = response.headers.get('Location');
+  assert.ok(location.includes('redirect_uri=https%3A%2F%2Fnaimean.com%2Fapi%2Fdiscord%2Fcallback'));
+  const setCookie = response.headers.get('Set-Cookie');
+  assert.ok(setCookie.includes('Domain=naimean.com'));
 });
 
 test('worker /api/discord/auth redirects to /?discord_error=configuration_error when DISCORD_CLIENT_ID is missing', async () => {
@@ -2439,6 +2455,52 @@ test('worker /api/discord/callback succeeds, sets session cookie and redirects t
     assert.equal(session.username, 'naimean_tester');
     assert.equal(session.isMember, true);
     assert.deepEqual(session.roles, ['role-alpha', 'role-beta']);
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
+
+test('worker /api/discord/callback clears state cookie on explicit redirect URI domain', async () => {
+  const env = {
+    DISCORD_CLIENT_ID: 'cid',
+    DISCORD_CLIENT_SECRET: 'secret',
+    SESSION_SECRET: TEST_SESSION_SECRET,
+    DISCORD_GUILD_ID: 'guild123',
+    DISCORD_REDIRECT_URI: 'https://naimean.com/api/discord/callback',
+    ASSETS: { async fetch() { return new Response(''); } }
+  };
+  const state = 'teststate123';
+
+  const originalFetch = globalThis.fetch;
+  globalThis.fetch = async (url) => {
+    const u = String(url);
+    if (u.includes('/oauth2/token')) {
+      return Response.json({ access_token: 'tok123', token_type: 'Bearer' });
+    }
+    if (u.includes('/users/@me/guilds/')) {
+      return Response.json({ roles: [] });
+    }
+    if (u.includes('/users/@me')) {
+      return Response.json({ id: 'user999', username: 'naimean_tester', avatar: 'avatarhash' });
+    }
+    throw new Error(`Unexpected fetch: ${u}`);
+  };
+
+  try {
+    const response = await router.fetch(
+      new Request(`https://naimean.com/api/discord/callback?code=code123&state=${state}`, {
+        headers: { Cookie: `naimean_oauth_state=${state}` }
+      }),
+      env
+    );
+
+    assert.equal(response.status, 302);
+    const cookies = response.headers.getSetCookie
+      ? response.headers.getSetCookie()
+      : [response.headers.get('Set-Cookie')];
+    const stateClearCookie = cookies.find((c) => c.startsWith('naimean_oauth_state=;'));
+    assert.ok(stateClearCookie, 'state cookie should be cleared');
+    assert.ok(stateClearCookie.includes('Domain=naimean.com'));
   } finally {
     globalThis.fetch = originalFetch;
   }
