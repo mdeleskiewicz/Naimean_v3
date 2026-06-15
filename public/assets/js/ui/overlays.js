@@ -341,6 +341,7 @@ function deactivateGithubScreensaverMode() {
   state.githubScreensaverSequenceToken += 1;
   if (state.bigTvDvdLogoEl) {
     state.bigTvDvdLogoEl.src = BIG_TV_SCREENSAVER_LOGO_URL;
+    state.bigTvDvdLogoEl.classList.remove('is-github-mode-logo');
   }
   syncGithubShelfObjectImage();
   syncGithubQuadrantOverlayVisibility();
@@ -379,6 +380,7 @@ async function activateGithubScreensaverMode() {
   state.isGithubScreensaverMode = true;
   if (state.bigTvDvdLogoEl) {
     state.bigTvDvdLogoEl.src = GITHUB_SCREENSAVER_LOGO_URL;
+    state.bigTvDvdLogoEl.classList.add('is-github-mode-logo');
   }
   syncGithubShelfObjectImage();
   if (state.bigTvGithubQuadrantEl) {
