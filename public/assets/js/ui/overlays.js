@@ -637,11 +637,13 @@ function createOverlays() {
       windowEl.appendChild(state.leftMonitorContentImageEl);
       const selector = document.createElement('div');
       selector.className = 'left-monitor-selector';
-      LEFT_MONITOR_SEGMENTS.forEach(({ state: segmentState, quadrant }) => {
+      LEFT_MONITOR_SEGMENTS.forEach(({ state: segmentState, label, quadrant }) => {
         const segment = document.createElement('button');
         segment.type = 'button';
         segment.className = 'left-monitor-segment';
         segment.dataset.quadrant = quadrant;
+        segment.textContent = label;
+        segment.setAttribute('aria-label', label);
         segment.addEventListener('click', () => {
           if (!isLeftMonitorInteractive()) return;
           const nextState = segmentState === state.leftMonitorSelectedState ? DEFAULT_LEFT_MONITOR_STATE : segmentState;
