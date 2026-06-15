@@ -31,6 +31,22 @@ function syncDiscordAuthBodyClass() {
   }
 }
 
+function handleDiscordJoinButtonAction() {
+  if (state.discordAuthState?.authenticated) {
+    const inviteWindow = window.open(DISCORD_GUEST_INVITE_URL, '_blank', 'noopener,noreferrer');
+    if (!inviteWindow) {
+      window.location.assign(DISCORD_GUEST_INVITE_URL);
+      return;
+    }
+    if (window.location.pathname !== '/') {
+      window.location.assign('/');
+    }
+    return;
+  }
+  state.shouldAutoStartDiscordLoginOnNextLoginActivation = true;
+  state._cb.setLeftMonitorState?.('login');
+}
+
 async function fetchDiscordAuthState() {
   try {
     const controller = new AbortController();
@@ -279,6 +295,7 @@ state._cb.activateLoginMode = activateLoginMode;
 state._cb.syncLoginOverlayUi = syncLoginOverlayUi;
 state._cb.syncDiscordButtonUi = syncDiscordButtonUi;
 state._cb.syncDiscordAuthBodyClass = syncDiscordAuthBodyClass;
+state._cb.handleDiscordJoinButtonAction = handleDiscordJoinButtonAction;
 state._cb.handleLoginPrimaryAction = handleLoginPrimaryAction;
 
-export { persistDiscordLoginFlowState, consumeDiscordLoginFlowState, getDiscordAvatarUrl, syncLoginStepUi, syncLoginOverlayUi, beginDiscordLoginFlow, handleLoginPrimaryAction, showLoginOverlay, hideLoginOverlay, fetchDiscordAuthState, syncDiscordButtonUi, syncDiscordAuthBodyClass, activateLoginMode };
+export { persistDiscordLoginFlowState, consumeDiscordLoginFlowState, getDiscordAvatarUrl, syncLoginStepUi, syncLoginOverlayUi, beginDiscordLoginFlow, handleDiscordJoinButtonAction, handleLoginPrimaryAction, showLoginOverlay, hideLoginOverlay, fetchDiscordAuthState, syncDiscordButtonUi, syncDiscordAuthBodyClass, activateLoginMode };

@@ -172,7 +172,7 @@ export const RADIO_TUNING_VOLUME_MIN = 0.08;
 export const NEDRY_GATE_VIDEO_URL = 'assets/video/nedrygate.mp4';
 export const BIG_TV_RICKROLL_VIDEO_URL = 'assets/video/notarickroll-piece-1.v20260424.mp4';
 export const ZELDA_SECRET_AUDIO_URL = 'assets/audio/zelda-secret.v20260424.mp3';
-export const DISCORD_GUEST_INVITE_URL = 'https://discord.gg/kTkD7N3JN';
+export const DISCORD_GUEST_INVITE_URL = 'https://discord.gg/8EdWyPGVRB';
 export const DISCORD_GUILD_ID = '';
 export const DISCORD_WIDGET_URL = DISCORD_GUILD_ID
   ? `https://discord.com/widget?id=${DISCORD_GUILD_ID}&theme=dark`
