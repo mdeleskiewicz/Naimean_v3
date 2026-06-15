@@ -787,18 +787,6 @@ function createOverlays() {
       imageEl.src = COMMODORE_DESK_IMAGE_URL;
       imageEl.alt = '';
       el.appendChild(imageEl);
-      state.middleMonitorStaticOverlayEl = document.createElement('div');
-      state.middleMonitorStaticOverlayEl.className = 'overlay-static-layer middle-monitor-static-layer';
-      state.middleMonitorStaticVideoEl = document.createElement('video');
-      state.middleMonitorStaticVideoEl.className = 'overlay-static-video';
-      state.middleMonitorStaticVideoEl.src = AQUARIUM_STATIC_VIDEO_URL;
-      state.middleMonitorStaticVideoEl.muted = true;
-      state.middleMonitorStaticVideoEl.defaultMuted = true;
-      state.middleMonitorStaticVideoEl.loop = true;
-      state.middleMonitorStaticVideoEl.playsInline = true;
-      state.middleMonitorStaticVideoEl.setAttribute('webkit-playsinline', '');
-      state.middleMonitorStaticOverlayEl.appendChild(state.middleMonitorStaticVideoEl);
-      el.appendChild(state.middleMonitorStaticOverlayEl);
     }
 
     if (overlay.id === MIDDLE_MONITOR_CORNER_SCORE_OVERLAY_ID) {
@@ -830,6 +818,18 @@ function createOverlays() {
         state.middleMonitorCornerScoreServerStatsEl.appendChild(rowEl);
       });
       state.middleMonitorCornerScoreOverlayEl.append(middleMonitorTitleEl, state.middleMonitorCornerScoreServerStatsEl);
+      state.middleMonitorStaticOverlayEl = document.createElement('div');
+      state.middleMonitorStaticOverlayEl.className = 'overlay-static-layer middle-monitor-static-layer';
+      state.middleMonitorStaticVideoEl = document.createElement('video');
+      state.middleMonitorStaticVideoEl.className = 'overlay-static-video';
+      state.middleMonitorStaticVideoEl.src = AQUARIUM_STATIC_VIDEO_URL;
+      state.middleMonitorStaticVideoEl.muted = true;
+      state.middleMonitorStaticVideoEl.defaultMuted = true;
+      state.middleMonitorStaticVideoEl.loop = true;
+      state.middleMonitorStaticVideoEl.playsInline = true;
+      state.middleMonitorStaticVideoEl.setAttribute('webkit-playsinline', '');
+      state.middleMonitorStaticOverlayEl.appendChild(state.middleMonitorStaticVideoEl);
+      state.middleMonitorCornerScoreOverlayEl.appendChild(state.middleMonitorStaticOverlayEl);
     }
 
     if (overlay.id === COMMODORE_POWER_BUTTON_OVERLAY_ID) {
