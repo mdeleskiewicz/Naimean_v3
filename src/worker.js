@@ -92,8 +92,39 @@ function serializeCookie(name, value, options = {}) {
   if (options.sameSite) cookie += `; SameSite=${options.sameSite}`;
   if (options.maxAge !== undefined) cookie += `; Max-Age=${options.maxAge}`;
   if (options.path) cookie += `; Path=${options.path}`;
+  if (options.domain) cookie += `; Domain=${options.domain}`;
   if (options.secure) cookie += '; Secure';
   return cookie;
+}
+
+function isIpHostname(hostname) {
+  return /^\d{1,3}(?:\.\d{1,3}){3}$/.test(hostname) || hostname.includes(':');
+}
+
+function isCookieDomainCandidate(hostname) {
+  if (!hostname || typeof hostname !== 'string') return false;
+  const normalized = hostname.toLowerCase();
+  if (normalized === 'localhost' || normalized.endsWith('.localhost')) return false;
+  if (!normalized.includes('.')) return false;
+  if (isIpHostname(normalized)) return false;
+  return true;
+}
+
+function resolveOAuthStateCookieDomain(requestUrl, redirectUri, forceRedirectHost = false) {
+  let redirectHost;
+  try {
+    redirectHost = new URL(redirectUri, requestUrl).hostname.toLowerCase();
+  } catch {
+    return null;
+  }
+  const requestHost = requestUrl.hostname.toLowerCase();
+  if (!isCookieDomainCandidate(redirectHost)) return null;
+  if (requestHost === redirectHost) {
+    return forceRedirectHost ? redirectHost : null;
+  }
+  if (requestHost.endsWith(`.${redirectHost}`)) return redirectHost;
+  if (redirectHost.endsWith(`.${requestHost}`) && isCookieDomainCandidate(requestHost)) return requestHost;
+  return null;
 }
 
 // ─── Response helpers ─────────────────────────────────────────────────────────
@@ -356,7 +387,9 @@ async function handleDiscordAuth(request, env) {
   const clientId = env.DISCORD_CLIENT_ID;
   if (!clientId) return errorRedirect(`${url.origin}/`, 'configuration_error');
   
-  const redirectUri = env.DISCORD_REDIRECT_URI || `${url.origin}/api/discord/callback`;
+  const redirectUriOverride = env.DISCORD_REDIRECT_URI;
+  const redirectUri = redirectUriOverride || `${url.origin}/api/discord/callback`;
+  const stateCookieDomain = resolveOAuthStateCookieDomain(url, redirectUri, Boolean(redirectUriOverride));
   const requestedReturnPath = normalizePostAuthPath(url.searchParams.get('state') || '/');
   const state = createOAuthState(requestedReturnPath);
   const params = new URLSearchParams({
@@ -374,6 +407,7 @@ async function handleDiscordAuth(request, env) {
       sameSite: 'Lax',
       path: '/',
       maxAge: 300,
+      domain: stateCookieDomain || undefined,
       secure: url.protocol === 'https:'
     }),
     'Access-Control-Allow-Origin': '*'
@@ -402,7 +436,9 @@ async function handleDiscordCallback(request, env) {
   const clientId = env.DISCORD_CLIENT_ID;
   const clientSecret = env.DISCORD_CLIENT_SECRET;
   const sessionSecret = env.SESSION_SECRET;
-  const targetRedirectUri = env.DISCORD_REDIRECT_URI || `${origin}/api/discord/callback`;
+  const redirectUriOverride = env.DISCORD_REDIRECT_URI;
+  const targetRedirectUri = redirectUriOverride || `${origin}/api/discord/callback`;
+  const stateCookieDomain = resolveOAuthStateCookieDomain(url, targetRedirectUri, Boolean(redirectUriOverride));
   if (!clientId || !clientSecret || !sessionSecret) {
     return errorRedirect(`${origin}/`, 'configuration_error');
   }
@@ -462,6 +498,7 @@ async function handleDiscordCallback(request, env) {
     sameSite: 'Lax',
     path: '/',
     maxAge: 0,
+    domain: stateCookieDomain || undefined,
     secure
   });
   const sessionCookieStr = serializeCookie(SESSION_COOKIE, sessionToken, {
