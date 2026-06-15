@@ -286,6 +286,8 @@ export const LEFT_MONITOR_OVERLAY_CONTROL_ID = 'overlay-left-monitor-control';
 export const LEFT_MONITOR_SHADOW_LAYER_ID = 'left_monitor_shadow_layer';
 export const LEFT_MONITOR_SHADOW_LAYER_CONTROL_ID = 'left_monitor_shadow_layer_control';
 export const COMMODORE_OVERLAY_CONTROL_ID = 'overlay-commodore-screen-control';
+export const MIDDLE_MONITOR_CORNER_SCORE_OVERLAY_ID = 'overlay-middle-monitor-corner-score';
+export const MIDDLE_MONITOR_CORNER_SCORE_CONTROL_ID = 'overlay-middle-monitor-corner-score-control';
 export const COMMODORE_SHADOW_OVERLAY_ID = 'overlay-commodore-shadow';
 export const COMMODORE_SHADOW_CONTROL_ID = 'overlay-commodore-shadow-control';
 export const COMMODORE_POWER_BUTTON_OVERLAY_ID = 'overlay-commodore-power-button';
@@ -330,6 +332,7 @@ export const RIGHT_MONITOR_SCREEN_WINDOW_INSETS = Object.freeze({ top: 0.29297, 
 export const LEFT_MONITOR_SCREEN_BOUNDS = Object.freeze(frameBoundsToScreenBoundsForConstants(LEFT_MONITOR_FRAME_BOUNDS, LEFT_MONITOR_SCREEN_WINDOW_INSETS));
 export const RIGHT_MONITOR_SCREEN_BOUNDS = Object.freeze(frameBoundsToScreenBoundsForConstants(RIGHT_MONITOR_FRAME_BOUNDS, RIGHT_MONITOR_SCREEN_WINDOW_INSETS));
 HOTSPOT_READABLE_LABELS.set(COMMODORE_OVERLAY_CONTROL_ID, 'Commodore Screen');
+HOTSPOT_READABLE_LABELS.set(MIDDLE_MONITOR_CORNER_SCORE_CONTROL_ID, 'CornerScore Server');
 HOTSPOT_READABLE_LABELS.set(COMMODORE_SHADOW_CONTROL_ID, 'Commodore Shadow');
 HOTSPOT_READABLE_LABELS.set(COMMODORE_POWER_BUTTON_CONTROL_ID, 'Commodore Power Button');
 HOTSPOT_READABLE_LABELS.set(DISCORD_OVERLAY_CONTROL_ID, 'Fullscreen Big TV');
@@ -355,6 +358,7 @@ export const OVERLAY_CONTROL_BINDINGS = [
   { controlId: LEFT_MONITOR_SHADOW_LAYER_CONTROL_ID, overlayId: LEFT_MONITOR_SHADOW_LAYER_ID },
   { controlId: LEFT_MONITOR_SIDE_FRAME_CONTROL_ID, overlayId: LEFT_MONITOR_SIDE_FRAME_OVERLAY_ID },
   { controlId: COMMODORE_OVERLAY_CONTROL_ID, overlayId: 'overlay-commodore-screen' },
+  { controlId: MIDDLE_MONITOR_CORNER_SCORE_CONTROL_ID, overlayId: MIDDLE_MONITOR_CORNER_SCORE_OVERLAY_ID },
   { controlId: COMMODORE_SHADOW_CONTROL_ID, overlayId: COMMODORE_SHADOW_OVERLAY_ID },
   { controlId: COMMODORE_POWER_BUTTON_CONTROL_ID, overlayId: COMMODORE_POWER_BUTTON_OVERLAY_ID },
   { controlId: RIGHT_MONITOR_OVERLAY_CONTROL_ID, overlayId: 'overlay-right-monitor' },
@@ -401,7 +405,8 @@ export const defaultHotspots = [
   { id: 'pencil-sharpener', x: 2538, y: 1362, w: 153, h: 217 },
   { id: DISCORD_OVERLAY_CONTROL_ID, x: 1316, y: 378, w: 886, h: 646 },
   { id: COMMODORE_OVERLAY_CONTROL_ID, x: 1323, y: 982, w: 923, h: 665 },
-  { id: COMMODORE_SHADOW_CONTROL_ID, x: 1579, y: 1093, w: 423, h: 235 },
+  { id: MIDDLE_MONITOR_CORNER_SCORE_CONTROL_ID, x: 1720, y: 1004, w: 338, h: 226 },
+  { id: COMMODORE_SHADOW_CONTROL_ID, x: 1579, y: 1088, w: 423, h: 240 },
   { id: COMMODORE_POWER_BUTTON_CONTROL_ID, x: 1977, y: 1528, w: 55, h: 39 },
   { id: RIGHT_MONITOR_OVERLAY_CONTROL_ID, x: 2044, y: 1077, w: 414, h: 266 },
   { id: RIGHT_MONITOR_SHADOW_LAYER_CONTROL_ID, x: 2059, y: 1077, w: 388, h: 265 },
@@ -410,7 +415,7 @@ export const defaultHotspots = [
   { id: ASHTRAY_SMOKE_CONTROL_ID, x: 2925, y: 45, w: 280, h: 1680 },
   { id: ASHTRAY_CIGARETTE_CONTROL_ID, x: 2922, y: 1682, w: 148, h: 44 },
   { id: LEFT_MONITOR_OVERLAY_CONTROL_ID, x: 1127, y: 1056, w: 386, h: 282 },
-  { id: LEFT_MONITOR_SHADOW_LAYER_CONTROL_ID, x: 1130, y: 1075, w: 387, h: 268 },
+  { id: LEFT_MONITOR_SHADOW_LAYER_CONTROL_ID, x: 1130, y: 1070, w: 387, h: 273 },
   { id: LEFT_MONITOR_SIDE_FRAME_CONTROL_ID, x: 929, y: 987, w: 776, h: 495 },
   { id: GITHUB_SHELF_OBJECT_CONTROL_ID, x: 2379, y: 497, w: 130, h: 130 }
 ];
@@ -424,6 +429,7 @@ export const overlayDefaults = [
   { id: LEFT_MONITOR_SIDE_FRAME_OVERLAY_ID, ...LEFT_MONITOR_FRAME_BOUNDS },
   { id: COMMODORE_SHADOW_OVERLAY_ID, x: 1682, y: 1095, w: 414, h: 198 },
   { id: 'overlay-commodore-screen', x: 1703, y: 994, w: 372, h: 246 },
+  { id: MIDDLE_MONITOR_CORNER_SCORE_OVERLAY_ID, x: 1720, y: 1004, w: 338, h: 226 },
   { id: COMMODORE_POWER_BUTTON_OVERLAY_ID, ...COMMODORE_POWER_BUTTON_BOUNDS },
   { id: 'overlay-right-monitor', ...RIGHT_MONITOR_FRAME_BOUNDS },
   { id: RIGHT_MONITOR_SHADOW_LAYER_ID, ...RIGHT_MONITOR_FRAME_BOUNDS },
