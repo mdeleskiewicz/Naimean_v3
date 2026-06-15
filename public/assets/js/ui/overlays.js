@@ -412,6 +412,7 @@ function createOverlays() {
   state.bigTvDvdMissTimeoutIdsByCorner.clear();
   state.bigTvDvdMissIndicatorsByCorner.clear();
   state.githubShelfImageEl = null;
+  state.discordWidgetFrameEl = null;
   state.aquariumOverlayEl = null;
   state.commodorePowerButtonEl = null;
   state.commodoreShadowOverlayEl = null;
@@ -483,6 +484,7 @@ function createOverlays() {
         widgetFrame.className = 'discord-widget-frame';
         widgetFrame.src = DISCORD_WIDGET_URL;
         widgetFrame.title = 'Discord server widget';
+        state.discordWidgetFrameEl = widgetFrame;
         el.appendChild(widgetFrame);
       }
       el.appendChild(createBigTvFullscreenExitButton());
@@ -721,6 +723,12 @@ function createOverlays() {
       state.discordJoinButtonEl = document.createElement('button');
       state.discordJoinButtonEl.className = 'join-discord-button';
       state.discordJoinButtonEl.type = 'button';
+      state.discordJoinButtonEl.addEventListener('pointerdown', (event) => event.stopPropagation());
+      state.discordJoinButtonEl.addEventListener('click', (event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        state._cb.handleDiscordJoinButtonAction?.();
+      });
       state.discordButtonImgEl = document.createElement('img');
       state.discordButtonImgEl.className = 'join-discord-button-image';
       state.discordButtonImgEl.src = DISCORD_BUTTON_IMAGE_URL;
