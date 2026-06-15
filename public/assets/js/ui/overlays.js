@@ -664,6 +664,7 @@ function createOverlays() {
       state.leftMonitorStaticOverlayEl = document.createElement('div');
       state.leftMonitorStaticOverlayEl.className = 'overlay-static-layer';
       state.leftMonitorStaticVideoEl = document.createElement('video');
+      state.leftMonitorStaticVideoEl.className = 'overlay-static-video';
       state.leftMonitorStaticVideoEl.src = AQUARIUM_STATIC_VIDEO_URL;
       state.leftMonitorStaticVideoEl.muted = true;
       state.leftMonitorStaticVideoEl.defaultMuted = true;
@@ -771,6 +772,7 @@ function createOverlays() {
       state.rightMonitorStaticOverlayEl = document.createElement('div');
       state.rightMonitorStaticOverlayEl.className = 'overlay-static-layer';
       state.rightMonitorStaticVideoEl = document.createElement('video');
+      state.rightMonitorStaticVideoEl.className = 'overlay-static-video';
       state.rightMonitorStaticVideoEl.src = AQUARIUM_STATIC_VIDEO_URL;
       state.rightMonitorStaticVideoEl.muted = true;
       state.rightMonitorStaticVideoEl.loop = true;
