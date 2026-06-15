@@ -2559,6 +2559,86 @@
       }
     }
 
+    /* ── Aquarium Tank Overlay — shrimp & filter bubbles ───── */
+    .aquarium-fish-effect {
+      position: absolute;
+      overflow: hidden;
+      border-radius: 4px;
+      pointer-events: none;
+      z-index: 2;
+    }
+
+    /* --- filter bubbles --- */
+    .aquarium-bubble {
+      position: absolute;
+      border-radius: 50%;
+      background: radial-gradient(
+        circle at 35% 32%,
+        rgba(255, 255, 255, 0.72) 0%,
+        rgba(180, 218, 255, 0.36) 40%,
+        rgba(110, 178, 240, 0.12) 72%,
+        rgba(60, 140, 220, 0) 100%
+      );
+      box-shadow: inset 0 0 0 1px rgba(180, 220, 255, 0.44);
+      opacity: 0;
+      will-change: transform, opacity;
+      animation: aquarium-bubble-rise var(--bubble-duration, 5s) ease-in infinite;
+      animation-delay: var(--bubble-delay, 0s);
+    }
+
+    @keyframes aquarium-bubble-rise {
+      0% {
+        opacity: 0;
+        transform: translate3d(0, 0, 0);
+      }
+      8% {
+        opacity: 0.82;
+      }
+      46% {
+        transform: translate3d(var(--bubble-wobble, 5px), calc(var(--bubble-rise, 500px) * -0.46), 0);
+      }
+      74% {
+        transform: translate3d(calc(var(--bubble-wobble, 5px) * -0.6), calc(var(--bubble-rise, 500px) * -0.74), 0);
+        opacity: 0.56;
+      }
+      92% {
+        opacity: 0.24;
+      }
+      100% {
+        opacity: 0;
+        transform: translate3d(calc(var(--bubble-wobble, 5px) * 0.3), calc(var(--bubble-rise, 500px) * -1), 0);
+      }
+    }
+
+    /* --- shrimp --- */
+    .aquarium-shrimp {
+      position: absolute;
+      line-height: 1;
+      user-select: none;
+      will-change: transform;
+      animation: aquarium-shrimp-swim var(--shrimp-duration, 13s) ease-in-out infinite;
+      animation-delay: var(--shrimp-delay, 0s);
+    }
+
+    @keyframes aquarium-shrimp-swim {
+      0%   { transform: translate3d(0, 0, 0) scaleX(1); }
+      12%  { transform: translate3d(calc(var(--shrimp-swim-dist, 240px) * 0.12), -5px, 0) scaleX(1); }
+      26%  { transform: translate3d(calc(var(--shrimp-swim-dist, 240px) * 0.26),  4px, 0) scaleX(1); }
+      39%  { transform: translate3d(calc(var(--shrimp-swim-dist, 240px) * 0.39), -4px, 0) scaleX(1); }
+      48%  { transform: translate3d(var(--shrimp-swim-dist, 240px), 0, 0) scaleX(1); }
+      50%  { transform: translate3d(var(--shrimp-swim-dist, 240px), 0, 0) scaleX(-1); }
+      62%  { transform: translate3d(calc(var(--shrimp-swim-dist, 240px) * 0.88), -5px, 0) scaleX(-1); }
+      75%  { transform: translate3d(calc(var(--shrimp-swim-dist, 240px) * 0.74),  4px, 0) scaleX(-1); }
+      88%  { transform: translate3d(calc(var(--shrimp-swim-dist, 240px) * 0.61), -4px, 0) scaleX(-1); }
+      98%  { transform: translate3d(0, 0, 0) scaleX(-1); }
+      100% { transform: translate3d(0, 0, 0) scaleX(1); }
+    }
+
+    body.lite-rendering .aquarium-bubble,
+    body.lite-rendering .aquarium-shrimp {
+      animation-play-state: paused;
+    }
+
     /* ── Retro Desk Clock Overlay ──────────────────────────── */
     .flip-clock-overlay {
       --fc-scale: 0.72;

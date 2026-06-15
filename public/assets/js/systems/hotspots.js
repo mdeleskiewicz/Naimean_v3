@@ -1,5 +1,6 @@
 import {
   API_TIMEOUT_MS,
+  AQUARIUM_FISH_EFFECT_ID,
   AQUARIUM_HOTSPOT_IDS,
   AQUARIUM_OVERLAY_ID,
   CHAPEL_URL,
@@ -243,6 +244,16 @@ function syncControlledOverlaysFromHotspots() {
     aquariumOverlayEl.style.top = discordOverlayEl.style.top;
     aquariumOverlayEl.style.width = discordOverlayEl.style.width;
     aquariumOverlayEl.style.height = discordOverlayEl.style.height;
+  }
+  const fishEffectEl = state.overlayElementsById.get(AQUARIUM_FISH_EFFECT_ID);
+  if (fishEffectEl) {
+    const aquariumHotspotEl = document.getElementById('aquarium');
+    if (aquariumHotspotEl) {
+      fishEffectEl.style.left = aquariumHotspotEl.style.left;
+      fishEffectEl.style.top = aquariumHotspotEl.style.top;
+      fishEffectEl.style.width = aquariumHotspotEl.style.width;
+      fishEffectEl.style.height = aquariumHotspotEl.style.height;
+    }
   }
 }
 
