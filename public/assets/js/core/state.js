@@ -47,6 +47,7 @@ export const state = {
   bigTvCornerScoreInitialsInputEl: null,
   bigTvCornerScoreInitialsSubmitButtonEl: null,
   isBigTvDvdLoopInterrupted: false,
+  bigTvDiscordSequenceToken: 0,
   isGithubScreensaverMode: false,
   githubScreensaverSequenceToken: 0,
   bigTvGithubQuadrantEl: null,
