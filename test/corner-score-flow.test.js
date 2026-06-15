@@ -45,6 +45,16 @@ test('dvd scoring flow persists new high score to server immediately without wai
   );
 });
 
+test('dvd run timer starts when the first wall bounce is detected', () => {
+  const source = fs.readFileSync(dvdJsPath, 'utf8');
+
+  assert.match(
+    source,
+    /if \(hitHorizontalEdge \|\| hitVerticalEdge\) \{\s*startRunStats\(\);\s*state\.dvdColorStepIndex = \(state\.dvdColorStepIndex \+ 1\) % DVD_COLOR_STEPS\.length;\s*applyDvdColorStep\(\);\s*recordBounce\(\);/s,
+    'Expected first wall bounce handling to start run timing before updating bounce stats',
+  );
+});
+
 test('server score hydration does not pre-activate right monitor corner score overlays', () => {
   const source = fs.readFileSync(cornerScoreJsPath, 'utf8');
 

@@ -213,6 +213,7 @@ function tickBigTvDvdAnimation(timestamp) {
   }
 
   if (hitHorizontalEdge || hitVerticalEdge) {
+    startRunStats();
     state.dvdColorStepIndex = (state.dvdColorStepIndex + 1) % DVD_COLOR_STEPS.length;
     applyDvdColorStep();
     recordBounce();
