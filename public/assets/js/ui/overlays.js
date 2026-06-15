@@ -412,6 +412,7 @@ function createOverlays() {
   state.bigTvDvdMissTimeoutIdsByCorner.clear();
   state.bigTvDvdMissIndicatorsByCorner.clear();
   state.githubShelfImageEl = null;
+  state.discordWidgetFrameEl = null;
   state.aquariumOverlayEl = null;
   state.commodorePowerButtonEl = null;
   state.commodoreShadowOverlayEl = null;
@@ -483,6 +484,7 @@ function createOverlays() {
         widgetFrame.className = 'discord-widget-frame';
         widgetFrame.src = DISCORD_WIDGET_URL;
         widgetFrame.title = 'Discord server widget';
+        state.discordWidgetFrameEl = widgetFrame;
         el.appendChild(widgetFrame);
       }
       el.appendChild(createBigTvFullscreenExitButton());

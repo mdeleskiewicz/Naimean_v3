@@ -268,15 +268,40 @@ function startBigTvDvdAnimation() {
   state.dvdAnimationFrameId = window.requestAnimationFrame(tickBigTvDvdAnimation);
 }
 
+function toggleRightMonitorDisplayMode() {
+  if (!isRightMonitorInteractive()) {
+    return false;
+  }
+  state.rightMonitorDisplayMode = state.rightMonitorDisplayMode === 'corner-score'
+    ? 'join-discord'
+    : 'corner-score';
+  syncDvdScreensaverState();
+  return true;
+}
+
 function syncDvdScreensaverState() {
   const isScreensaverActive = isBigTvDefaultScreensaverActive();
-  const isCornerScoreActive = isScreensaverActive && state.isDvdCornerCountEnabled && isRightMonitorInteractive();
+  const canShowRightMonitorOverlayContent =
+    isScreensaverActive &&
+    state.isDvdCornerCountEnabled &&
+    isRightMonitorInteractive();
+  const isCornerScoreActive = canShowRightMonitorOverlayContent && state.rightMonitorDisplayMode === 'corner-score';
+  const isJoinDiscordActive = canShowRightMonitorOverlayContent && state.rightMonitorDisplayMode !== 'corner-score';
   if (state.rightMonitorCornerScoreOverlayEl) {
     state.rightMonitorCornerScoreOverlayEl.classList.toggle('is-active', isCornerScoreActive);
     state.rightMonitorCornerScoreOverlayEl.setAttribute('aria-hidden', isCornerScoreActive ? 'false' : 'true');
   }
   if (state.rightMonitorScreenWindowEl) {
     state.rightMonitorScreenWindowEl.classList.toggle('is-corner-score-active', isCornerScoreActive);
+    state.rightMonitorScreenWindowEl.classList.toggle('is-join-discord-active', isJoinDiscordActive);
+  }
+  if (state.discordJoinButtonEl) {
+    state.discordJoinButtonEl.setAttribute('aria-hidden', isJoinDiscordActive ? 'false' : 'true');
+    state.discordJoinButtonEl.tabIndex = isJoinDiscordActive ? 0 : -1;
+  }
+  if (state.discordWidgetFrameEl) {
+    state.discordWidgetFrameEl.setAttribute('aria-hidden', isScreensaverActive ? 'true' : 'false');
+    state.discordWidgetFrameEl.tabIndex = isScreensaverActive ? -1 : 0;
   }
   if (state.bigTvDvdOverlayEl) {
     state.bigTvDvdOverlayEl.setAttribute('aria-label', 'CornerScore screensaver');
@@ -314,6 +339,14 @@ function restoreBigTvDvdLoop({ enableCornerScore = false } = {}) {
   syncDvdScreensaverState();
 }
 
+function toggleBigTvCornerScoreWidgetMode() {
+  if (state.isBigTvDvdLoopInterrupted) {
+    restoreBigTvDvdLoop({ enableCornerScore: true });
+    return;
+  }
+  interruptBigTvDvdLoop();
+}
+
 state._cb.syncDvdScreensaverState = syncDvdScreensaverState;
 state._cb.interruptBigTvDvdLoop = interruptBigTvDvdLoop;
 state._cb.restoreBigTvDvdLoop = restoreBigTvDvdLoop;
@@ -321,5 +354,7 @@ state._cb.startBigTvDvdAnimation = startBigTvDvdAnimation;
 state._cb.stopBigTvDvdAnimation = stopBigTvDvdAnimation;
 state._cb.adjustDvdSpeed = adjustDvdSpeed;
 state._cb.activateRightMonitorCornerScoreMode = activateRightMonitorCornerScoreMode;
+state._cb.toggleRightMonitorDisplayMode = toggleRightMonitorDisplayMode;
+state._cb.toggleBigTvCornerScoreWidgetMode = toggleBigTvCornerScoreWidgetMode;
 
-export { getDvdCornerSide, getCornerCollisionName, getCurrentDvdColorStep, applyDvdColorStep, stopBigTvDvdAnimation, getDvdLogoDimensions, adjustDvdSpeed, tickBigTvDvdAnimation, startBigTvDvdAnimation, syncDvdScreensaverState, interruptBigTvDvdLoop, restoreBigTvDvdLoop, activateRightMonitorCornerScoreMode, hasActiveBigTvContentOverlay, hasDefaultMonitorOverlays, getCurrentRightMonitorOverlayState, isBigTvDefaultScreensaverActive };
+export { getDvdCornerSide, getCornerCollisionName, getCurrentDvdColorStep, applyDvdColorStep, stopBigTvDvdAnimation, getDvdLogoDimensions, adjustDvdSpeed, tickBigTvDvdAnimation, startBigTvDvdAnimation, toggleRightMonitorDisplayMode, syncDvdScreensaverState, interruptBigTvDvdLoop, restoreBigTvDvdLoop, toggleBigTvCornerScoreWidgetMode, activateRightMonitorCornerScoreMode, hasActiveBigTvContentOverlay, hasDefaultMonitorOverlays, getCurrentRightMonitorOverlayState, isBigTvDefaultScreensaverActive };
