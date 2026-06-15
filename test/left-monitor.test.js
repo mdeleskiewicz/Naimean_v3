@@ -31,3 +31,13 @@ test('left monitor selector uses equal-width columns for quadrant boundaries', (
     'Expected no rightward-biased column width in left monitor selector',
   );
 });
+
+test('left monitor selector is not vertically shifted from center axis', () => {
+  const source = fs.readFileSync(indexCssPath, 'utf8');
+
+  assert.doesNotMatch(
+    source,
+    /\.left-monitor-screen-window\s*>\s*\.left-monitor-selector\s*\{[^}]*transform:\s*translate\(\s*0\s*,\s*8px\s*\)/,
+    'Expected no fixed vertical translate offset on left monitor selector',
+  );
+});
