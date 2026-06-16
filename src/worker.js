@@ -1165,6 +1165,27 @@ export class HotspotStore {
             ? 'notes'
             : 'hotspots';
     if (request.method === 'OPTIONS') return new Response(null, { status: 204, headers: HOTSPOT_JSON_HEADERS });
+    if (request.method === 'DELETE' && isCornerScore) {
+      const resetRecord = {
+        score: 0,
+        initials: '',
+        totalBounces: 0,
+        totalNearMisses: 0,
+        totalScores: 0,
+        totalTimeMs: 0,
+        totalRuns: 0,
+        pbScore: 0,
+        pbTimeMs: 0,
+        pbBounces: 0,
+        pbNearMisses: 0
+      };
+      try {
+        await this.state.storage.put(storageKey, resetRecord);
+      } catch (err) {
+        return hotspotJson({ error: `Failed to reset corner score: ${err?.message || 'Unknown error'}` }, 500);
+      }
+      return hotspotJson({ ok: true, ...resetRecord });
+    }
     if (request.method === 'GET') {
       let saved;
       try {
@@ -1442,7 +1463,13 @@ export default {
     if (pathname === '/api/hotspots') return dispatchToHotspotStore(env, request, 'den-hotspots');
     if (pathname === '/api/chapel-hotspots') return dispatchToHotspotStore(env, request, 'chapel-hotspots');
     if (pathname === '/api/arcade-url-overrides') return dispatchToHotspotStore(env, request, 'arcade-url-overrides');
-    if (pathname === '/api/corner-score') return dispatchToHotspotStore(env, request, 'corner-score');
+    if (pathname === '/api/corner-score') {
+      if (request.method === 'DELETE') {
+        const session = await getRequestSession(request, env);
+        if (!session?.userId) return jsonResponse({ error: 'Unauthorized' }, 401);
+      }
+      return dispatchToHotspotStore(env, request, 'corner-score');
+    }
 
     // Per-user notes store
     if (pathname === '/api/notes') return handleNotes(request, env);

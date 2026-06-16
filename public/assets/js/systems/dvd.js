@@ -243,7 +243,6 @@ function tickBigTvDvdAnimation(timestamp) {
       } else if (nextCornerScore > previousHighScore) {
         showCornerScoreStatus('New High-Score', nextCornerScore);
         showCornerScoreInitialsPrompt(nextCornerScore);
-        void queueCornerScoreUpdate(nextCornerScore);
       }
     }
     if (!isRightMonitorInteractive() && !state.isRightMonitorCornerScoreWakeSequenceRunning) {

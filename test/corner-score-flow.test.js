@@ -35,13 +35,18 @@ test('dvd scoring flow does not preemptively overwrite high score before initial
   );
 });
 
-test('dvd scoring flow persists new high score to server immediately without waiting for initials', () => {
+test('dvd scoring flow does not auto-persist new high score before initials submit', () => {
   const source = fs.readFileSync(dvdJsPath, 'utf8');
 
+  assert.doesNotMatch(
+    source,
+    /else if \(nextCornerScore > previousHighScore\) \{[^}]*void queueCornerScoreUpdate\(nextCornerScore\)/s,
+    'Expected new high-score path to NOT automatically queue a server persist — server score only updates on initials submit',
+  );
   assert.match(
     source,
-    /else if \(nextCornerScore > previousHighScore\) \{\s*showCornerScoreStatus\('New High-Score', nextCornerScore\);\s*showCornerScoreInitialsPrompt\(nextCornerScore\);\s*void queueCornerScoreUpdate\(nextCornerScore\);/s,
-    'Expected new high-score path to immediately queue a server persist so the score survives a page reload',
+    /else if \(nextCornerScore > previousHighScore\) \{\s*showCornerScoreStatus\('New High-Score', nextCornerScore\);\s*showCornerScoreInitialsPrompt\(nextCornerScore\);\s*\}/s,
+    'Expected new high-score path to show status and prompt only, without queuing a server update',
   );
 });
 
