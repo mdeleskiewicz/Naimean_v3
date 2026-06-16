@@ -44,7 +44,7 @@ import { loadCommodorePowerState, syncStoredCommodorePowerState, handlePageShow,
 import { playWrongAudio, unlockCornerScoreScoringAudioFromGesture } from './cornerScore.js';
 import { adjustDvdSpeed, stopBigTvDvdAnimation } from './dvd.js';
 import { stopRadioTuningLoopPlayback } from './flipClock.js';
-import { createHotspots, getRuntimeHotspotById, syncControlledOverlaysFromHotspots, consumeSaveResultFlash, hydrateHotspotsFromServer, hydrateNonCriticalSceneData, refreshDebugObjectActions, refreshDebugObjectSelectOptions, setHotspotDebugLockState, getSelectedDebugHotspotElement, saveDenUrlOverride, saveHotspots, hideSaveModal, encodeDebugSavePassword, hasMatchingDebugSaveCipher } from './hotspots.js';
+import { createHotspots, getRuntimeHotspotById, syncControlledOverlaysFromHotspots, consumeSaveResultFlash, hydrateHotspotsFromServer, hydrateNonCriticalSceneData, refreshDebugObjectActions, refreshDebugObjectSelectOptions, setHotspotDebugLockState, getSelectedDebugHotspotElement, saveDenUrlOverride, saveHotspots, hideSaveModal } from './hotspots.js';
 
 const hasCoarsePointer = window.matchMedia('(pointer: coarse)').matches;
 const isIOSDevice =
@@ -574,23 +574,7 @@ function toggleDebugMode() {
 }
 
 function onDebugButtonClick() {
-  if (document.body.classList.contains('debug')) {
-    setDebugMode(false);
-    return;
-  }
-  const attempt = window.prompt('Password required.');
-  if (attempt === null) {
-    if (dom.debugStatus) dom.debugStatus.textContent = 'Debug cancelled.';
-    return;
-  }
-  const isValid = hasMatchingDebugSaveCipher(encodeDebugSavePassword(attempt.trim()));
-  if (!isValid) {
-    if (dom.debugStatus) dom.debugStatus.textContent = 'Incorrect password.';
-    playWrongAudio();
-    return;
-  }
-  state.hasDebugSaveAccess = true;
-  setDebugMode(true);
+  setDebugMode(!document.body.classList.contains('debug'));
 }
 
 function cleanup() {
