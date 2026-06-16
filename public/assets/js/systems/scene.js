@@ -207,8 +207,7 @@ function createAquariumFishEffect() {
   }
 
   // Shrimp: weighted random count favoring 2–3 (2–5 possible), distributed evenly across the tank height with jitter
-  // Color palette mirrors real aquarium shrimp morphs (cherry red, orange sakura,
-  // yellow neon, green jade, blue dream, violet, pink sakura)
+  // Color palette blends warm and cool shrimp morph-inspired hues for variety.
   const shrimpHues = [0, 22, 55, 115, 200, 260, 330];
   // Shuffle a copy so each session gets a different color ordering
   const shrimpHuePool = [...shrimpHues].sort(() => Math.random() - 0.5);
