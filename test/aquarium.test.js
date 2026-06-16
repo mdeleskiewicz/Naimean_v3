@@ -9,6 +9,7 @@ import { getAquariumShrimpCount } from '../public/assets/js/systems/aquariumEffe
 
 const repoRoot = path.resolve(import.meta.dirname, '..');
 const sceneJsPath = path.join(repoRoot, 'public', 'assets', 'js', 'systems', 'scene.js');
+const indexCssPath = path.join(repoRoot, 'public', 'assets', 'css', 'index.css');
 
 function getBlock(source, startMarker, endMarker) {
   const start = source.indexOf(startMarker);
@@ -103,4 +104,27 @@ test('aquarium shrimp count favors 2 and 3, with 4 uncommon and 5 rare', () => {
   } finally {
     Math.random = originalRandom;
   }
+});
+
+test('lite rendering keeps aquarium bubbles and animals animating', () => {
+  const cssSource = fs.readFileSync(indexCssPath, 'utf8');
+  const pausedInLiteRenderingSelectors = [
+    '.aquarium-bubble',
+    '.aquarium-shrimp',
+    '.aquarium-betta',
+    '.aquarium-snail',
+    '.aquarium-starfish',
+    '.aquarium-turtle',
+    '.aquarium-jellyfish',
+    '.aquarium-nautilus',
+    '.aquarium-octopus',
+  ];
+
+  pausedInLiteRenderingSelectors.forEach((selector) => {
+    assert.doesNotMatch(
+      cssSource,
+      new RegExp(`body\\.lite-rendering\\s+${selector.replace('.', '\\.')}`),
+      `Expected ${selector} to keep animating on lite rendering (mobile)`,
+    );
+  });
 });
