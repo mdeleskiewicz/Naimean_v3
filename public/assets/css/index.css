@@ -36,6 +36,146 @@
       cursor: grabbing;
     }
 
+    .discord-session-chip {
+      position: absolute;
+      top: calc(env(safe-area-inset-top, 0px) + clamp(18px, 2.8vw, 30px));
+      right: calc(env(safe-area-inset-right, 0px) + clamp(18px, 2.8vw, 30px));
+      z-index: 80;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 10px;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 140ms ease;
+    }
+
+    .discord-session-chip.is-visible {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .discord-session-chip-button {
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+      min-height: 58px;
+      padding: 8px 16px 8px 10px;
+      border: 1px solid rgba(57, 255, 20, 0.78);
+      border-radius: 999px;
+      background:
+        linear-gradient(135deg, rgba(3, 18, 10, 0.96), rgba(7, 31, 17, 0.92)),
+        rgba(0, 0, 0, 0.88);
+      color: #dfffe1;
+      cursor: pointer;
+      box-shadow:
+        0 0 0 1px rgba(57, 255, 20, 0.34),
+        0 0 18px rgba(57, 255, 20, 0.58),
+        0 0 34px rgba(57, 255, 20, 0.24),
+        inset 0 0 20px rgba(57, 255, 20, 0.08);
+      backdrop-filter: blur(10px);
+    }
+
+    .discord-session-chip-button::before {
+      content: '';
+      position: absolute;
+      inset: -2px;
+      border-radius: inherit;
+      border: 1px solid rgba(148, 255, 129, 0.72);
+      opacity: 0.9;
+      pointer-events: none;
+      box-shadow: 0 0 16px rgba(57, 255, 20, 0.48);
+    }
+
+    .discord-session-chip-button:hover,
+    .discord-session-chip.is-open .discord-session-chip-button {
+      transform: translateY(-1px);
+      box-shadow:
+        0 0 0 1px rgba(57, 255, 20, 0.38),
+        0 0 24px rgba(57, 255, 20, 0.68),
+        0 0 40px rgba(57, 255, 20, 0.3),
+        inset 0 0 26px rgba(57, 255, 20, 0.12);
+    }
+
+    .discord-session-chip-button:focus-visible,
+    .discord-session-logout-btn:focus-visible {
+      outline: 2px solid rgba(148, 255, 129, 0.92);
+      outline-offset: 3px;
+    }
+
+    .discord-session-chip-avatar {
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      object-fit: cover;
+      background: rgba(0, 0, 0, 0.35);
+      border: 1px solid rgba(148, 255, 129, 0.82);
+      box-shadow:
+        0 0 12px rgba(57, 255, 20, 0.44),
+        inset 0 0 10px rgba(57, 255, 20, 0.14);
+    }
+
+    .discord-session-chip-label {
+      font-size: clamp(16px, 1.5vw, 19px);
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+
+    .discord-session-chip-menu {
+      min-width: 100%;
+      padding: 8px;
+      border: 1px solid rgba(57, 255, 20, 0.62);
+      border-radius: 18px;
+      background: rgba(4, 16, 10, 0.96);
+      box-shadow:
+        0 0 22px rgba(57, 255, 20, 0.28),
+        inset 0 0 18px rgba(57, 255, 20, 0.08);
+    }
+
+    .discord-session-logout-btn {
+      width: 100%;
+      padding: 10px 14px;
+      border: 1px solid rgba(57, 255, 20, 0.4);
+      border-radius: 12px;
+      background: rgba(7, 28, 16, 0.92);
+      color: #dfffe1;
+      font: inherit;
+      font-size: clamp(15px, 1.3vw, 17px);
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      cursor: pointer;
+      box-shadow: inset 0 0 16px rgba(57, 255, 20, 0.08);
+    }
+
+    .discord-session-logout-btn:hover {
+      background: rgba(11, 40, 23, 0.96);
+      box-shadow:
+        0 0 16px rgba(57, 255, 20, 0.18),
+        inset 0 0 18px rgba(57, 255, 20, 0.14);
+    }
+
+    @media (max-width: 700px) {
+      .discord-session-chip {
+        top: calc(env(safe-area-inset-top, 0px) + 14px);
+        right: calc(env(safe-area-inset-right, 0px) + 14px);
+      }
+
+      .discord-session-chip-button {
+        min-height: 52px;
+        padding-right: 14px;
+      }
+
+      .discord-session-chip-label {
+        max-width: 28vw;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+    }
+
     /* Stage keeps all scene layers in the fixed 3840x2160 coordinate world space. */
     #stage {
       position: absolute;

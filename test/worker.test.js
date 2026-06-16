@@ -2509,6 +2509,9 @@ test('worker /api/discord/callback clears state cookie on explicit redirect URI 
     const cookies = response.headers.getSetCookie
       ? response.headers.getSetCookie()
       : [response.headers.get('Set-Cookie')];
+    const sessionCookie = cookies.find((c) => c.startsWith('naimean_session='));
+    assert.ok(sessionCookie, 'session cookie should be set');
+    assert.ok(sessionCookie.includes('Domain=naimean.com'));
     const stateClearCookie = cookies.find((c) => c.startsWith('naimean_oauth_state=;'));
     assert.ok(stateClearCookie, 'state cookie should be cleared');
     assert.ok(stateClearCookie.includes('Domain=naimean.com'));
@@ -2557,6 +2560,9 @@ test('worker /api/discord/callback on www host uses apex callback redirect URI b
     const cookies = response.headers.getSetCookie
       ? response.headers.getSetCookie()
       : [response.headers.get('Set-Cookie')];
+    const sessionCookie = cookies.find((c) => c.startsWith('naimean_session='));
+    assert.ok(sessionCookie, 'session cookie should be set');
+    assert.ok(sessionCookie.includes('Domain=naimean.com'));
     const stateClearCookie = cookies.find((c) => c.startsWith('naimean_oauth_state=;'));
     assert.ok(stateClearCookie.includes('Domain=naimean.com'));
   } finally {
