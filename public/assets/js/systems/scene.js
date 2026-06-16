@@ -207,6 +207,11 @@ function createAquariumFishEffect() {
   }
 
   // Shrimp: weighted random count favoring 2–3 (2–5 possible), distributed evenly across the tank height with jitter
+  // Color palette mirrors real aquarium shrimp morphs (cherry red, orange sakura,
+  // yellow neon, green jade, blue dream, violet, pink sakura)
+  const shrimpHues = [0, 22, 55, 115, 200, 260, 330];
+  // Shuffle a copy so each session gets a different color ordering
+  const shrimpHuePool = [...shrimpHues].sort(() => Math.random() - 0.5);
   const shrimpCount = getAquariumShrimpCount();
   const slotHeight = 70 / shrimpCount; // divide 15–85% range into equal slots
   for (let i = 0; i < shrimpCount; i++) {
@@ -217,12 +222,14 @@ function createAquariumFishEffect() {
     const swimDist = 170 + Math.floor(Math.random() * 130); // 170–299 px
     const duration = 10 + Math.random() * 8;
     const delay = Math.random() * 8;
+    const hue = shrimpHuePool[i % shrimpHuePool.length];
     const shrimp = document.createElement('span');
     shrimp.className = 'aquarium-shrimp';
     shrimp.textContent = '🦐';
     shrimp.style.fontSize = `${size}px`;
     shrimp.style.top = `${top}%`;
     shrimp.style.left = '4%';
+    shrimp.style.filter = `hue-rotate(${hue}deg)`;
     shrimp.style.setProperty('--shrimp-swim-dist', `${swimDist}px`);
     shrimp.style.setProperty('--shrimp-duration', `${duration.toFixed(2)}s`);
     shrimp.style.setProperty('--shrimp-delay', `${delay.toFixed(2)}s`);
@@ -230,7 +237,7 @@ function createAquariumFishEffect() {
   }
 
   // Special guest: one random creature per load
-  const guests = ['snail', 'starfish', 'betta', 'turtle', 'jellyfish'];
+  const guests = ['snail', 'starfish', 'betta', 'turtle', 'jellyfish', 'nautilus', 'octopus'];
   const guestType = guests[Math.floor(Math.random() * guests.length)];
 
   if (guestType === 'snail') {
@@ -322,6 +329,42 @@ function createAquariumFishEffect() {
     jelly.style.setProperty('--jelly-duration', `${duration.toFixed(2)}s`);
     jelly.style.setProperty('--jelly-delay', `${delay.toFixed(2)}s`);
     el.appendChild(jelly);
+
+  } else if (guestType === 'nautilus') {
+    // Glides slowly across the mid-tank with a gentle bob
+    const size = 26 + Math.floor(Math.random() * 12);
+    const top = 25 + Math.floor(Math.random() * 40);
+    const swimDist = 160 + Math.floor(Math.random() * 100);
+    const duration = 18 + Math.random() * 12;
+    const delay = Math.random() * 7;
+    const nautilus = document.createElement('span');
+    nautilus.className = 'aquarium-nautilus';
+    nautilus.textContent = '🐚';
+    nautilus.style.fontSize = `${size}px`;
+    nautilus.style.top = `${top}%`;
+    nautilus.style.left = '8%';
+    nautilus.style.setProperty('--nautilus-swim-dist', `${swimDist}px`);
+    nautilus.style.setProperty('--nautilus-duration', `${duration.toFixed(2)}s`);
+    nautilus.style.setProperty('--nautilus-delay', `${delay.toFixed(2)}s`);
+    el.appendChild(nautilus);
+
+  } else if (guestType === 'octopus') {
+    // Octopus: drifts from one side to the other with a subtle pulse
+    const size = 28 + Math.floor(Math.random() * 14);
+    const top = 20 + Math.floor(Math.random() * 50);
+    const swimDist = 180 + Math.floor(Math.random() * 110);
+    const duration = 14 + Math.random() * 10;
+    const delay = Math.random() * 6;
+    const octopus = document.createElement('span');
+    octopus.className = 'aquarium-octopus';
+    octopus.textContent = '🐙';
+    octopus.style.fontSize = `${size}px`;
+    octopus.style.top = `${top}%`;
+    octopus.style.left = '5%';
+    octopus.style.setProperty('--octopus-swim-dist', `${swimDist}px`);
+    octopus.style.setProperty('--octopus-duration', `${duration.toFixed(2)}s`);
+    octopus.style.setProperty('--octopus-delay', `${delay.toFixed(2)}s`);
+    el.appendChild(octopus);
   }
 
   dom.effectsLayer.appendChild(el);
@@ -575,23 +618,7 @@ function toggleDebugMode() {
 }
 
 function onDebugButtonClick() {
-  if (document.body.classList.contains('debug')) {
-    setDebugMode(false);
-    return;
-  }
-  const attempt = window.prompt('Password required.');
-  if (attempt === null) {
-    if (dom.debugStatus) dom.debugStatus.textContent = 'Debug cancelled.';
-    return;
-  }
-  const isValid = hasMatchingDebugSaveCipher(encodeDebugSavePassword(attempt.trim()));
-  if (!isValid) {
-    if (dom.debugStatus) dom.debugStatus.textContent = 'Incorrect password.';
-    playWrongAudio();
-    return;
-  }
-  state.hasDebugSaveAccess = true;
-  setDebugMode(true);
+  setDebugMode(!document.body.classList.contains('debug'));
 }
 
 function cleanup() {
