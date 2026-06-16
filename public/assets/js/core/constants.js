@@ -265,6 +265,7 @@ export const PENCIL_SHARPENER_HOTSPOT_ID = 'pencil-sharpener';
 export const DISCORD_OVERLAY_ID = 'overlay-big-tv';
 export const AQUARIUM_OVERLAY_ID = 'overlay-aquarium-video';
 export const AQUARIUM_FISH_EFFECT_ID = 'aquarium-fish-effect';
+export const AQUARIUM_WALL_GLOW_CLASS = 'aquarium-wall-glow-effect';
 export const BIG_TV_FULLSCREEN_OVERLAY_IDS = new Set([DISCORD_OVERLAY_ID, AQUARIUM_OVERLAY_ID]);
 export const FLIP_CLOCK_OVERLAY_ID = 'overlay-flip-clock';
 export const CLOCK_URL_WINDOWS = 'ms-clock://';

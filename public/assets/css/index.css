@@ -3254,9 +3254,120 @@
       100% { transform: translate3d(0, 0, 0) scaleX(-1) scale(1); }
     }
 
+    /* --- aquarium bottom LED lamp fixtures (inside the tank) --- */
+    .aquarium-lamp {
+      position: absolute;
+      bottom: 3%;
+      width: 17%;
+      height: 3px;
+      border-radius: 2px;
+      background: linear-gradient(90deg,
+        transparent 0%,
+        rgba(160, 235, 255, 0.90) 18%,
+        rgba(220, 248, 255, 1.00) 50%,
+        rgba(160, 235, 255, 0.90) 82%,
+        transparent 100%
+      );
+      box-shadow:
+        0 0 6px 3px rgba(140, 225, 255, 0.55),
+        0 0 14px 7px rgba(80, 190, 255, 0.22),
+        0 -5px 14px 5px rgba(100, 215, 255, 0.32);
+      will-change: opacity, box-shadow;
+      animation: aquarium-lamp-pulse 4.2s ease-in-out infinite;
+    }
+
+    .aquarium-lamp-left  { left: 3%; }
+    .aquarium-lamp-right { right: 4%; animation-delay: 1.9s; }
+
+    @keyframes aquarium-lamp-pulse {
+      0%,100% {
+        opacity: 0.80;
+        box-shadow: 0 0 6px 3px rgba(140,225,255,0.50), 0 0 14px 7px rgba(80,190,255,0.20), 0 -5px 14px 5px rgba(100,215,255,0.28);
+      }
+      38% {
+        opacity: 1.00;
+        box-shadow: 0 0 9px 5px rgba(160,240,255,0.72), 0 0 22px 11px rgba(90,205,255,0.34), 0 -8px 20px 7px rgba(120,225,255,0.44);
+      }
+      68% {
+        opacity: 0.88;
+        box-shadow: 0 0 7px 4px rgba(140,230,255,0.60), 0 0 16px 8px rgba(80,190,255,0.26), 0 -6px 16px 6px rgba(100,215,255,0.34);
+      }
+    }
+
+    /* --- wall light projections (aurora/caustic glow on surrounding walls) --- */
+    .aquarium-wall-glow {
+      position: absolute;
+      pointer-events: none;
+      z-index: 1;
+      overflow: hidden;
+      will-change: opacity;
+    }
+
+    .aquarium-wall-glow-left {
+      background: linear-gradient(
+        to left,
+        rgba(50, 180, 230, 0.20) 0%,
+        rgba(30, 155, 215, 0.12) 35%,
+        rgba(15, 120, 200, 0.05) 70%,
+        transparent 100%
+      );
+      animation: aquarium-wall-aurora 8.2s ease-in-out infinite;
+    }
+
+    .aquarium-wall-glow-right {
+      background: linear-gradient(
+        to right,
+        rgba(50, 180, 230, 0.20) 0%,
+        rgba(30, 155, 215, 0.12) 35%,
+        rgba(15, 120, 200, 0.05) 70%,
+        transparent 100%
+      );
+      animation: aquarium-wall-aurora 8.8s ease-in-out infinite;
+      animation-delay: 1.4s;
+    }
+
+    @keyframes aquarium-wall-aurora {
+      0%   { opacity: 0.65; filter: hue-rotate(0deg)   brightness(1.0); }
+      22%  { opacity: 1.00; filter: hue-rotate(18deg)  brightness(1.18); }
+      45%  { opacity: 0.78; filter: hue-rotate(-12deg) brightness(0.92); }
+      68%  { opacity: 0.95; filter: hue-rotate(22deg)  brightness(1.12); }
+      85%  { opacity: 0.72; filter: hue-rotate(-6deg)  brightness(0.96); }
+      100% { opacity: 0.65; filter: hue-rotate(0deg)   brightness(1.0); }
+    }
+
+    /* --- ripple bands drifting upward inside the wall glow --- */
+    .aquarium-wall-ripple {
+      position: absolute;
+      left: 0;
+      width: 100%;
+      background: linear-gradient(
+        180deg,
+        transparent 0%,
+        rgba(110, 215, 255, 0.16) 28%,
+        rgba(160, 238, 255, 0.26) 50%,
+        rgba(110, 215, 255, 0.16) 72%,
+        transparent 100%
+      );
+      will-change: transform, opacity;
+      animation: aquarium-wall-ripple-rise var(--ripple-duration, 6s) ease-in-out infinite;
+      animation-delay: var(--ripple-delay, 0s);
+    }
+
+    @keyframes aquarium-wall-ripple-rise {
+      0%   { transform: translateY(0)    scaleX(1.00); opacity: 0.00; }
+      12%  { opacity: 0.85; }
+      45%  { transform: translateY(-10%) scaleX(0.96); opacity: 0.78; }
+      70%  { transform: translateY(-22%) scaleX(1.04); opacity: 0.55; }
+      88%  { opacity: 0.22; }
+      100% { transform: translateY(-34%) scaleX(1.00); opacity: 0.00; }
+    }
+
     body.lite-rendering .aquarium-water-line,
     body.lite-rendering .aquarium-caustic,
-    body.lite-rendering .aquarium-filter {
+    body.lite-rendering .aquarium-filter,
+    body.lite-rendering .aquarium-lamp,
+    body.lite-rendering .aquarium-wall-glow,
+    body.lite-rendering .aquarium-wall-ripple {
       animation-play-state: paused;
     }
 

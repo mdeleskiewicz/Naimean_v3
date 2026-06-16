@@ -1,5 +1,6 @@
 import {
   AQUARIUM_FISH_EFFECT_ID,
+  AQUARIUM_WALL_GLOW_CLASS,
   ASHTRAY_CIGARETTE_CONTROL_ID,
   ASHTRAY_CIGARETTE_DEFAULT_BOUNDS,
   ASHTRAY_CIGARETTE_EFFECT_ID,
@@ -169,6 +170,9 @@ function createAquariumFishEffect() {
   if (!dom.effectsLayer) return;
   dom.effectsLayer.querySelector(`#${AQUARIUM_FISH_EFFECT_ID}`)?.remove();
   state.overlayElementsById.delete(AQUARIUM_FISH_EFFECT_ID);
+  for (const old of dom.effectsLayer.querySelectorAll(`.${AQUARIUM_WALL_GLOW_CLASS}`)) {
+    old.remove();
+  }
   const spot = getRuntimeHotspotById('aquarium');
   if (!spot) return;
   const el = document.createElement('div');
@@ -459,7 +463,50 @@ function createAquariumFishEffect() {
     el.appendChild(octopus);
   }
 
+  // ── Bottom LED lamp fixtures (light sources at bottom-left and bottom-right) ─
+  for (const side of ['left', 'right']) {
+    const lamp = document.createElement('div');
+    lamp.className = `aquarium-lamp aquarium-lamp-${side}`;
+    el.appendChild(lamp);
+  }
+
   dom.effectsLayer.appendChild(el);
+
+  // ── Wall light projections (aurora/caustic glow on surrounding walls) ────────
+  const wallGlowW = Math.round(spot.w * 0.36);
+  const wallGlowH = Math.round(spot.h * 1.25);
+  const wallGlowTop = Math.round(spot.y + spot.h - wallGlowH);
+
+  const rippleDefs = [
+    { topPct: 5,  heightPct: 22, delay: 0.0, duration: 5.4 },
+    { topPct: 25, heightPct: 26, delay: 2.1, duration: 6.8 },
+    { topPct: 48, heightPct: 20, delay: 3.8, duration: 5.0 },
+    { topPct: 68, heightPct: 24, delay: 1.3, duration: 7.2 },
+  ];
+
+  for (const side of ['left', 'right']) {
+    const wg = document.createElement('div');
+    wg.className = `${AQUARIUM_WALL_GLOW_CLASS} aquarium-wall-glow aquarium-wall-glow-${side}`;
+    wg.style.width = `${wallGlowW}px`;
+    wg.style.height = `${wallGlowH}px`;
+    wg.style.top = `${wallGlowTop}px`;
+    if (side === 'left') {
+      wg.style.left = `${Math.round(spot.x - wallGlowW)}px`;
+    } else {
+      wg.style.left = `${Math.round(spot.x + spot.w)}px`;
+    }
+    for (const { topPct, heightPct, delay, duration } of rippleDefs) {
+      const ripple = document.createElement('div');
+      ripple.className = 'aquarium-wall-ripple';
+      ripple.style.top = `${topPct}%`;
+      ripple.style.height = `${heightPct}%`;
+      ripple.style.setProperty('--ripple-delay', `${delay.toFixed(2)}s`);
+      ripple.style.setProperty('--ripple-duration', `${duration.toFixed(2)}s`);
+      wg.appendChild(ripple);
+    }
+    dom.effectsLayer.appendChild(wg);
+  }
+
   state.overlayElementsById.set(AQUARIUM_FISH_EFFECT_ID, el);
 }
 
