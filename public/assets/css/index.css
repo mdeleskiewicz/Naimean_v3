@@ -3254,15 +3254,6 @@
       100% { transform: translate3d(0, 0, 0) scaleX(-1) scale(1); }
     }
 
-    body.lite-rendering .aquarium-bubble,
-    body.lite-rendering .aquarium-shrimp,
-    body.lite-rendering .aquarium-betta,
-    body.lite-rendering .aquarium-snail,
-    body.lite-rendering .aquarium-starfish,
-    body.lite-rendering .aquarium-turtle,
-    body.lite-rendering .aquarium-jellyfish,
-    body.lite-rendering .aquarium-nautilus,
-    body.lite-rendering .aquarium-octopus,
     body.lite-rendering .aquarium-water-line,
     body.lite-rendering .aquarium-caustic,
     body.lite-rendering .aquarium-filter {
