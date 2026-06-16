@@ -3147,8 +3147,8 @@
       28%  { transform: translate3d(calc(var(--octopus-swim-dist, 210px) * 0.28),  6px, 0) scaleX(1) scale(0.97); }
       48%  { transform: translate3d(var(--octopus-swim-dist, 210px), 0, 0) scaleX(1) scale(1); }
       50%  { transform: translate3d(var(--octopus-swim-dist, 210px), 0, 0) scaleX(-1) scale(1); }
-      65%  { transform: translate3d(calc(var(--octopus-swim-dist, 210px) * 0.82), -8px, 0) scaleX(-1) scale(1.05); }
-      82%  { transform: translate3d(calc(var(--octopus-swim-dist, 210px) * 0.55),  6px, 0) scaleX(-1) scale(0.97); }
+      65%  { transform: translate3d(calc(var(--octopus-swim-dist, 210px) * 0.80), -8px, 0) scaleX(-1) scale(1.05); }
+      80%  { transform: translate3d(calc(var(--octopus-swim-dist, 210px) * 0.50),  6px, 0) scaleX(-1) scale(0.97); }
       100% { transform: translate3d(0, 0, 0) scaleX(-1) scale(1); }
     }
 
