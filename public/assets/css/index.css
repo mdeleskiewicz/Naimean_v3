@@ -316,8 +316,7 @@
       inset: 0;
       width: 100%;
       height: 100%;
-      object-fit: contain;
-      object-position: center;
+      object-fit: fill;
       pointer-events: none;
       user-select: none;
       -webkit-user-drag: none;
@@ -388,7 +387,9 @@
         linear-gradient(90deg, rgba(7, 16, 37, 0.22) 0%, rgba(7, 16, 37, 0) 16%, rgba(7, 16, 37, 0) 84%, rgba(7, 16, 37, 0.26) 100%);
     }
 
-    /* These insets map every screen-window edge to the inner screen-hole edge of L_Frame.png (accounting for object-fit:contain letterboxing). */
+    /* These insets map every screen-window edge to the inner screen-hole edge of L_Frame.png.
+       Percentages are taken directly from the PNG pixel coordinates so they are correct when
+       object-fit:fill is used (frame image stretches to fill the element with no letterboxing). */
     .left-monitor-screen-window {
       inset: 17.09% 24.414% 29.297% 25.20%;
       transform: none;
@@ -398,6 +399,16 @@
     .right-monitor-screen-window {
       inset: 17.09% 25.26% 29.297% 24.414%;
       transform: none;
+    }
+
+    /* Shadow layers must be inset to the screen hole so the TV turn-on/off animation
+       (clip-path shrink and white-line pseudo-elements) are centred on the screen, not the bezel. */
+    .monitor-group-left > .monitor-shadow-layer {
+      inset: 17.09% 24.414% 29.297% 25.20%;
+    }
+
+    .monitor-group-right > .monitor-shadow-layer {
+      inset: 17.09% 25.26% 29.297% 24.414%;
     }
 
     .monitor-group-right .monitor-frame-image {
