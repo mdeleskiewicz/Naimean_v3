@@ -463,7 +463,7 @@ function createAquariumFishEffect() {
     el.appendChild(octopus);
   }
 
-  // ── Nemo and Dory — always-present fish ──────────────────────────────────
+  // ── Nemo and Dory — always-present fish (reuse aquarium-betta swim animation) ──
   const nemoSize = 26 + Math.floor(Math.random() * 8);
   const nemoTop  = 22 + Math.floor(Math.random() * 28);
   const nemoSwimDist = 180 + Math.floor(Math.random() * 100);
