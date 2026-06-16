@@ -475,6 +475,7 @@ function createAquariumFishEffect() {
   nemo.style.fontSize = `${nemoSize}px`;
   nemo.style.top = `${nemoTop}%`;
   nemo.style.left = '5%';
+  nemo.style.filter = 'hue-rotate(-30deg) saturate(2) brightness(1.05)';
   nemo.style.setProperty('--betta-swim-dist', `${nemoSwimDist}px`);
   nemo.style.setProperty('--betta-duration', `${nemoDuration.toFixed(2)}s`);
   nemo.style.setProperty('--betta-delay', `${nemoDelay.toFixed(2)}s`);
