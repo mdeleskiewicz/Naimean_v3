@@ -311,7 +311,7 @@ function createAquariumFishEffect() {
     turtle.style.setProperty('--turtle-delay', `${delay.toFixed(2)}s`);
     el.appendChild(turtle);
 
-  } else {
+  } else if (guestType === 'jellyfish') {
     // Jellyfish: pulses gently and drifts up and down
     const size = 24 + Math.floor(Math.random() * 14);
     const left = 15 + Math.floor(Math.random() * 65);
@@ -347,7 +347,7 @@ function createAquariumFishEffect() {
     nautilus.style.setProperty('--nautilus-delay', `${delay.toFixed(2)}s`);
     el.appendChild(nautilus);
 
-  } else {
+  } else if (guestType === 'octopus') {
     // Octopus: drifts from one side to the other with a subtle pulse
     const size = 28 + Math.floor(Math.random() * 14);
     const top = 20 + Math.floor(Math.random() * 50);
