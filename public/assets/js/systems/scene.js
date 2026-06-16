@@ -268,8 +268,20 @@ function createPixelSpriteDataUrl({ pixels, palette }) {
   };
 }
 
+function createShuffledCopy(items) {
+  const shuffled = [...items];
+  for (let index = shuffled.length - 1; index > 0; index -= 1) {
+    const swapIndex = Math.floor(Math.random() * (index + 1));
+    [shuffled[index], shuffled[swapIndex]] = [shuffled[swapIndex], shuffled[index]];
+  }
+  return shuffled;
+}
+
 function takeAquariumDisneyFishSpec(specPool) {
-  return specPool.pop() ?? AQUARIUM_DISNEY_CHARACTER_SPECS[Math.floor(Math.random() * AQUARIUM_DISNEY_CHARACTER_SPECS.length)];
+  if (specPool.length === 0) {
+    specPool.push(...createShuffledCopy(AQUARIUM_DISNEY_CHARACTER_SPECS));
+  }
+  return specPool.pop();
 }
 
 function appendAquariumDisneyFish(el, specPool, overrides = {}) {
@@ -545,7 +557,7 @@ function createAquariumFishEffect() {
   // Shrimp: weighted random count favoring 3–4 (3–6 possible), distributed evenly across the bottom third of the tank with jitter.
   // Color palette blends warm and cool shrimp morph-inspired hues for variety.
   const shrimpHues = [0, 22, 55, 115, 200, 260, 330];
-  const shrimpHuePool = [...shrimpHues].sort(() => Math.random() - 0.5);
+  const shrimpHuePool = createShuffledCopy(shrimpHues);
   const shrimpCount = getAquariumShrimpCount();
   const slotHeight = 23 / shrimpCount;
   const shrimpSizeTiers = [10, 14, 20, 26, 31];
@@ -570,7 +582,7 @@ function createAquariumFishEffect() {
     el.appendChild(shrimp);
   }
 
-  const disneyFishPool = [...AQUARIUM_DISNEY_CHARACTER_SPECS].sort(() => Math.random() - 0.5);
+  const disneyFishPool = createShuffledCopy(AQUARIUM_DISNEY_CHARACTER_SPECS);
 
   // Special guest: one random creature per load.
   const guests = ['snail', 'starfish', 'betta', 'turtle', 'jellyfish', 'nautilus', 'octopus'];
