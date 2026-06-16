@@ -87,3 +87,23 @@ test('left monitor content image element has left-monitor-content-image class ap
     'Expected leftMonitorContentImageEl to be assigned the left-monitor-content-image class so CSS positioning rules apply',
   );
 });
+
+test('left monitor group is stacked above the commodore center overlays', () => {
+  const source = fs.readFileSync(indexCssPath, 'utf8');
+
+  assert.match(
+    source,
+    /#overlay-commodore-screen\s*\{[^}]*z-index:\s*1;/s,
+    'Expected the commodore desk overlay to remain below the left monitor group',
+  );
+  assert.match(
+    source,
+    /#monitor-group-middle\s*\{[^}]*z-index:\s*2;/s,
+    'Expected the commodore monitor shadow group to remain below the left monitor group',
+  );
+  assert.match(
+    source,
+    /#monitor-group-left\s*\{[^}]*z-index:\s*3;/s,
+    'Expected the left monitor group to stack above the commodore center overlays',
+  );
+});
