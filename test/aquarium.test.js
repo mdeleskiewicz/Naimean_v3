@@ -106,18 +106,34 @@ test('aquarium shrimp count favors 3 and 4, with 5 uncommon and 6 rare', () => {
   }
 });
 
+test('aquarium Disney sprite roster includes the requested character lineup', () => {
+  const source = fs.readFileSync(sceneJsPath, 'utf8');
+  const aquariumBlock = getBlock(
+    source,
+    'const AQUARIUM_DISNEY_CHARACTER_SPECS = Object.freeze([',
+    'function createPixelSpriteDataUrl({ pixels, palette }) {',
+  );
+
+  [
+    'Nemo & Marlin',
+    'Dory',
+    'Flounder',
+    'Cleo',
+    'Bubbles',
+    'Gurgle',
+    'Gill'
+  ].forEach((name) => {
+    assert.match(aquariumBlock, new RegExp(name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));
+  });
+  assert.match(source, /aquarium-disney-fish/, 'Expected aquarium fish to render as Disney pixel sprites');
+  assert.match(source, /createPixelSpriteDataUrl/, 'Expected aquarium fish sprites to be generated from pixel art data');
+});
+
 test('lite rendering keeps aquarium bubbles and animals animating', () => {
   const cssSource = fs.readFileSync(indexCssPath, 'utf8');
   const pausedInLiteRenderingSelectors = [
     '.aquarium-bubble',
-    '.aquarium-shrimp',
-    '.aquarium-betta',
-    '.aquarium-snail',
-    '.aquarium-starfish',
-    '.aquarium-turtle',
-    '.aquarium-jellyfish',
-    '.aquarium-nautilus',
-    '.aquarium-octopus',
+    '.aquarium-disney-fish',
   ];
 
   pausedInLiteRenderingSelectors.forEach((selector) => {
