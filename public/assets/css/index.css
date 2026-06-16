@@ -323,10 +323,6 @@
       -webkit-user-drag: none;
     }
 
-    #monitor-group-right .monitor-frame-image {
-      transform: scaleY(-1);
-    }
-
     .monitor-shadow-layer {
       position: absolute;
       inset: 0;
