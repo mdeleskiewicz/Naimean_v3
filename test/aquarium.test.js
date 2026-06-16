@@ -159,3 +159,18 @@ test('lite rendering keeps aquarium bubbles and animals animating', () => {
     );
   });
 });
+
+test('aquarium restored creature swim loops return to their starting orientation', () => {
+  const cssSource = fs.readFileSync(indexCssPath, 'utf8');
+
+  assert.match(
+    cssSource,
+    /@keyframes aquarium-nautilus-glide \{[\s\S]*100% \{ transform: translate3d\(0, 0, 0\) scaleX\(1\); \}/,
+    'Expected nautilus glide loop to end facing its starting direction',
+  );
+  assert.match(
+    cssSource,
+    /@keyframes aquarium-octopus-swim \{[\s\S]*100% \{ transform: translate3d\(0, 0, 0\) scaleX\(1\) scale\(1\); \}/,
+    'Expected octopus swim loop to end facing its starting direction',
+  );
+});
