@@ -206,7 +206,7 @@ function createAquariumFishEffect() {
     el.appendChild(bubble);
   }
 
-  // Shrimp: weighted random count (2–5), distributed evenly across the tank height with jitter
+  // Shrimp: weighted random count favoring 2–3 (2–5 possible), distributed evenly across the tank height with jitter
   const shrimpCount = getAquariumShrimpCount();
   const slotHeight = 70 / shrimpCount; // divide 15–85% range into equal slots
   for (let i = 0; i < shrimpCount; i++) {
