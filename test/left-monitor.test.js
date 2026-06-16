@@ -5,6 +5,7 @@ import path from 'node:path';
 
 const repoRoot = path.resolve(import.meta.dirname, '..');
 const indexCssPath = path.join(repoRoot, 'public', 'assets', 'css', 'index.css');
+const overlaysJsPath = path.join(repoRoot, 'public', 'assets', 'js', 'ui', 'overlays.js');
 
 function getLeftMonitorSelectorBlock(source) {
   const startMarker = '.left-monitor-selector {';
@@ -74,5 +75,15 @@ test('left monitor content bleeds 1px past the frame transparency', () => {
     source,
     /\.left-monitor-screen-window\s*>\s*\.left-monitor-content-image\s*\{[^}]*top:\s*calc\(var\(--left-monitor-inner-boundary-top\) - var\(--monitor-content-bleed\)\);[^}]*left:\s*calc\(var\(--left-monitor-inner-boundary-left\) - var\(--monitor-content-bleed\)\);[^}]*width:\s*calc\(100% - var\(--left-monitor-inner-boundary-left\) - var\(--left-monitor-inner-boundary-right\) \+ \(var\(--monitor-content-bleed\) \* 2\)\);[^}]*height:\s*calc\(100% - var\(--left-monitor-inner-boundary-top\) - var\(--left-monitor-inner-boundary-bottom\) \+ \(var\(--monitor-content-bleed\) \* 2\)\);/s,
     'Expected the left monitor content image to extend 1px past the frame transparency on every side',
+  );
+});
+
+test('left monitor content image element has left-monitor-content-image class applied', () => {
+  const source = fs.readFileSync(overlaysJsPath, 'utf8');
+
+  assert.match(
+    source,
+    /state\.leftMonitorContentImageEl\.className\s*=\s*'left-monitor-content-image';/,
+    'Expected leftMonitorContentImageEl to be assigned the left-monitor-content-image class so CSS positioning rules apply',
   );
 });
