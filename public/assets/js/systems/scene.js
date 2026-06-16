@@ -206,16 +206,16 @@ function createAquariumFishEffect() {
     el.appendChild(bubble);
   }
 
-  // Shrimp: weighted random count favoring 2–3 (2–5 possible), distributed evenly across the tank height with jitter
+  // Shrimp: weighted random count favoring 2–3 (2–5 possible), distributed evenly across the bottom third of the tank with jitter
   // Color palette blends warm and cool shrimp morph-inspired hues for variety.
   const shrimpHues = [0, 22, 55, 115, 200, 260, 330];
   // Shuffle a copy so each session gets a different color ordering
   const shrimpHuePool = [...shrimpHues].sort(() => Math.random() - 0.5);
   const shrimpCount = getAquariumShrimpCount();
-  const slotHeight = 70 / shrimpCount; // divide 15–85% range into equal slots
+  const slotHeight = 23 / shrimpCount; // divide 67–90% range into equal slots (bottom 1/3 of tank)
   for (let i = 0; i < shrimpCount; i++) {
     // Place each shrimp in its own vertical slot to guarantee no overlap
-    const slotStart = 15 + i * slotHeight;
+    const slotStart = 67 + i * slotHeight;
     const top = Math.floor(slotStart + Math.random() * (slotHeight * 0.7));
     const size = 18 + Math.floor(Math.random() * 14);   // 18–31 px
     const swimDist = 170 + Math.floor(Math.random() * 130); // 170–299 px
