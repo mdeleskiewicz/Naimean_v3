@@ -5,6 +5,7 @@ import path from 'node:path';
 
 import { state } from '../public/assets/js/core/state.js';
 import { getRandomShrimpClipUrl } from '../public/assets/js/systems/aquarium.js';
+import { getAquariumShrimpCount } from '../public/assets/js/systems/aquariumEffect.js';
 
 const repoRoot = path.resolve(import.meta.dirname, '..');
 const sceneJsPath = path.join(repoRoot, 'public', 'assets', 'js', 'systems', 'scene.js');
@@ -65,20 +66,26 @@ test('aquarium bubbles are biased toward the left side', () => {
 });
 
 test('aquarium shrimp count favors 2 and 3, with 4 uncommon and 5 rare', () => {
-  const source = fs.readFileSync(sceneJsPath, 'utf8');
-  const helperBlock = getBlock(
-    source,
-    'function getAquariumShrimpCount() {',
-    'function createAquariumFishEffect() {',
-  );
-  const createCount = new Function('Math', `${helperBlock}; return getAquariumShrimpCount;`);
+  const originalRandom = Math.random;
 
-  assert.equal(createCount({ random: () => 0 })(), 2);
-  assert.equal(createCount({ random: () => 0.39 })(), 2);
-  assert.equal(createCount({ random: () => 0.4 })(), 3);
-  assert.equal(createCount({ random: () => 0.79 })(), 3);
-  assert.equal(createCount({ random: () => 0.8 })(), 4);
-  assert.equal(createCount({ random: () => 0.94 })(), 4);
-  assert.equal(createCount({ random: () => 0.95 })(), 5);
-  assert.equal(createCount({ random: () => 0.999 })(), 5);
+  try {
+    Math.random = () => 0;
+    assert.equal(getAquariumShrimpCount(), 2);
+    Math.random = () => 0.39;
+    assert.equal(getAquariumShrimpCount(), 2);
+    Math.random = () => 0.4;
+    assert.equal(getAquariumShrimpCount(), 3);
+    Math.random = () => 0.79;
+    assert.equal(getAquariumShrimpCount(), 3);
+    Math.random = () => 0.8;
+    assert.equal(getAquariumShrimpCount(), 4);
+    Math.random = () => 0.94;
+    assert.equal(getAquariumShrimpCount(), 4);
+    Math.random = () => 0.95;
+    assert.equal(getAquariumShrimpCount(), 5);
+    Math.random = () => 0.999;
+    assert.equal(getAquariumShrimpCount(), 5);
+  } finally {
+    Math.random = originalRandom;
+  }
 });

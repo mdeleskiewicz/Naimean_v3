@@ -45,6 +45,7 @@ import { playWrongAudio, unlockCornerScoreScoringAudioFromGesture } from './corn
 import { adjustDvdSpeed, stopBigTvDvdAnimation } from './dvd.js';
 import { stopRadioTuningLoopPlayback } from './flipClock.js';
 import { createHotspots, getRuntimeHotspotById, syncControlledOverlaysFromHotspots, consumeSaveResultFlash, hydrateHotspotsFromServer, hydrateNonCriticalSceneData, refreshDebugObjectActions, refreshDebugObjectSelectOptions, setHotspotDebugLockState, getSelectedDebugHotspotElement, saveDenUrlOverride, saveHotspots, hideSaveModal, encodeDebugSavePassword, hasMatchingDebugSaveCipher } from './hotspots.js';
+import { getAquariumShrimpCount } from './aquariumEffect.js';
 
 const hasCoarsePointer = window.matchMedia('(pointer: coarse)').matches;
 const isIOSDevice =
@@ -162,14 +163,6 @@ function createAshtrayCigaretteEffect() {
   el.appendChild(cigarette);
   dom.effectsLayer.appendChild(el);
   state.overlayElementsById.set(ASHTRAY_CIGARETTE_EFFECT_ID, el);
-}
-
-function getAquariumShrimpCount() {
-  const roll = Math.random();
-  if (roll < 0.4) return 2;
-  if (roll < 0.8) return 3;
-  if (roll < 0.95) return 4;
-  return 5;
 }
 
 function createAquariumFishEffect() {
@@ -312,7 +305,7 @@ function createAquariumFishEffect() {
     turtle.style.setProperty('--turtle-delay', `${delay.toFixed(2)}s`);
     el.appendChild(turtle);
 
-  } else {
+  } else if (guestType === 'jellyfish') {
     // Jellyfish: pulses gently and drifts up and down
     const size = 24 + Math.floor(Math.random() * 14);
     const left = 15 + Math.floor(Math.random() * 65);
