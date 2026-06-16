@@ -564,13 +564,16 @@
       z-index: 1;
     }
 
-    #monitor-group-left,
     #monitor-group-right {
       z-index: 1;
     }
 
     #monitor-group-middle {
       z-index: 2;
+    }
+
+    #monitor-group-left {
+      z-index: 3;
     }
 
     .commodore-desk-image {
