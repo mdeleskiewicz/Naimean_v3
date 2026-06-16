@@ -178,22 +178,20 @@ function createAquariumFishEffect() {
   el.style.width = `${Math.round(spot.w)}px`;
   el.style.height = `${Math.round(spot.h)}px`;
 
-  const rng = () => Math.random();
-
   // Filter bubbles: main cluster in the lower-right (filter), plus a few scattered bubbles
-  const bubbleCount = 10 + Math.floor(rng() * 9); // 10–18 bubbles
+  const bubbleCount = 10 + Math.floor(Math.random() * 9); // 10–18 bubbles
   for (let i = 0; i < bubbleCount; i++) {
     // Most bubbles stay in the right-side filter cluster, a few scatter elsewhere
-    const inCluster = i < 8 || rng() < 0.55;
+    const inCluster = i < 8 || Math.random() < 0.55;
     const leftPct = inCluster
-      ? 74 + rng() * 17           // 74–91 %
-      : 15 + rng() * 55;          // 15–70 % (scattered)
-    const bottomPct = 2 + rng() * 6;
-    const size = 3 + Math.floor(rng() * 7);  // 3–9 px
-    const rise = 510 + Math.floor(rng() * 160);
-    const wobble = (rng() < 0.5 ? -1 : 1) * (3 + Math.floor(rng() * 8));
-    const duration = 4.4 + rng() * 3.6;
-    const delay = rng() * 5.5;
+      ? 74 + Math.random() * 17           // 74–91 %
+      : 15 + Math.random() * 55;          // 15–70 % (scattered)
+    const bottomPct = 2 + Math.random() * 6;
+    const size = 3 + Math.floor(Math.random() * 7);  // 3–9 px
+    const rise = 510 + Math.floor(Math.random() * 160);
+    const wobble = (Math.random() < 0.5 ? -1 : 1) * (3 + Math.floor(Math.random() * 8));
+    const duration = 4.4 + Math.random() * 3.6;
+    const delay = Math.random() * 5.5;
     const bubble = document.createElement('span');
     bubble.className = 'aquarium-bubble';
     bubble.style.width = `${size}px`;
@@ -207,22 +205,17 @@ function createAquariumFishEffect() {
     el.appendChild(bubble);
   }
 
-  // Shrimp: random count (2–5) at varied vertical depths
-  const shrimpCount = 2 + Math.floor(rng() * 4); // 2–5
-  const usedTops = [];
+  // Shrimp: random count (2–5), distributed evenly across the tank height with jitter
+  const shrimpCount = 2 + Math.floor(Math.random() * 4); // 2–5
+  const slotHeight = 70 / shrimpCount; // divide 15–85% range into equal slots
   for (let i = 0; i < shrimpCount; i++) {
-    // Spread tops evenly with some jitter, avoiding collisions
-    let top;
-    let tries = 0;
-    do {
-      top = 15 + Math.floor(rng() * 68); // 15–82 %
-      tries++;
-    } while (tries < 20 && usedTops.some((t) => Math.abs(t - top) < 14));
-    usedTops.push(top);
-    const size = 18 + Math.floor(rng() * 14);   // 18–31 px
-    const swimDist = 170 + Math.floor(rng() * 130); // 170–299 px
-    const duration = 10 + rng() * 8;
-    const delay = rng() * 8;
+    // Place each shrimp in its own vertical slot to guarantee no overlap
+    const slotStart = 15 + i * slotHeight;
+    const top = Math.floor(slotStart + Math.random() * (slotHeight * 0.7));
+    const size = 18 + Math.floor(Math.random() * 14);   // 18–31 px
+    const swimDist = 170 + Math.floor(Math.random() * 130); // 170–299 px
+    const duration = 10 + Math.random() * 8;
+    const delay = Math.random() * 8;
     const shrimp = document.createElement('span');
     shrimp.className = 'aquarium-shrimp';
     shrimp.textContent = '🦐';
@@ -237,15 +230,15 @@ function createAquariumFishEffect() {
 
   // Special guest: one random creature per load
   const guests = ['snail', 'starfish', 'betta', 'turtle', 'jellyfish'];
-  const guestType = guests[Math.floor(rng() * guests.length)];
+  const guestType = guests[Math.floor(Math.random() * guests.length)];
 
   if (guestType === 'snail') {
     // Crawls slowly along the bottom
-    const size = 20 + Math.floor(rng() * 10);
-    const left = 5 + Math.floor(rng() * 30);
-    const crawlDist = 120 + Math.floor(rng() * 100);
-    const duration = 22 + rng() * 14;
-    const delay = rng() * 6;
+    const size = 20 + Math.floor(Math.random() * 10);
+    const left = 5 + Math.floor(Math.random() * 30);
+    const crawlDist = 120 + Math.floor(Math.random() * 100);
+    const duration = 22 + Math.random() * 14;
+    const delay = Math.random() * 6;
     const snail = document.createElement('span');
     snail.className = 'aquarium-snail';
     snail.textContent = '🐌';
@@ -259,10 +252,10 @@ function createAquariumFishEffect() {
 
   } else if (guestType === 'starfish') {
     // Gently drifts near the sandy bottom
-    const size = 22 + Math.floor(rng() * 12);
-    const left = 20 + Math.floor(rng() * 55);
-    const duration = 18 + rng() * 10;
-    const delay = rng() * 7;
+    const size = 22 + Math.floor(Math.random() * 12);
+    const left = 20 + Math.floor(Math.random() * 55);
+    const duration = 18 + Math.random() * 10;
+    const delay = Math.random() * 7;
     const star = document.createElement('span');
     star.className = 'aquarium-starfish';
     star.textContent = '⭐';
@@ -275,12 +268,12 @@ function createAquariumFishEffect() {
 
   } else if (guestType === 'betta') {
     // Swims like a shrimp but with a random hue-rotate for color variety
-    const size = 26 + Math.floor(rng() * 12);
-    const top = 20 + Math.floor(rng() * 45);
-    const swimDist = 190 + Math.floor(rng() * 110);
-    const duration = 9 + rng() * 7;
-    const delay = rng() * 5;
-    const hue = Math.floor(rng() * 360);
+    const size = 26 + Math.floor(Math.random() * 12);
+    const top = 20 + Math.floor(Math.random() * 45);
+    const swimDist = 190 + Math.floor(Math.random() * 110);
+    const duration = 9 + Math.random() * 7;
+    const delay = Math.random() * 5;
+    const hue = Math.floor(Math.random() * 360);
     const betta = document.createElement('span');
     betta.className = 'aquarium-betta';
     betta.textContent = '🐠';
@@ -295,11 +288,11 @@ function createAquariumFishEffect() {
 
   } else if (guestType === 'turtle') {
     // Plods slowly across the mid-tank
-    const size = 30 + Math.floor(rng() * 12);
-    const top = 30 + Math.floor(rng() * 35);
-    const swimDist = 150 + Math.floor(rng() * 100);
-    const duration = 20 + rng() * 14;
-    const delay = rng() * 8;
+    const size = 30 + Math.floor(Math.random() * 12);
+    const top = 30 + Math.floor(Math.random() * 35);
+    const swimDist = 150 + Math.floor(Math.random() * 100);
+    const duration = 20 + Math.random() * 14;
+    const delay = Math.random() * 8;
     const turtle = document.createElement('span');
     turtle.className = 'aquarium-turtle';
     turtle.textContent = '🐢';
@@ -313,16 +306,16 @@ function createAquariumFishEffect() {
 
   } else {
     // Jellyfish: pulses gently and drifts up and down
-    const size = 24 + Math.floor(rng() * 14);
-    const left = 15 + Math.floor(rng() * 65);
-    const driftAmt = 30 + Math.floor(rng() * 30);
-    const duration = 6 + rng() * 5;
-    const delay = rng() * 4;
+    const size = 24 + Math.floor(Math.random() * 14);
+    const left = 15 + Math.floor(Math.random() * 65);
+    const driftAmt = 30 + Math.floor(Math.random() * 30);
+    const duration = 6 + Math.random() * 5;
+    const delay = Math.random() * 4;
     const jelly = document.createElement('span');
     jelly.className = 'aquarium-jellyfish';
     jelly.textContent = '🪼';
     jelly.style.fontSize = `${size}px`;
-    jelly.style.top = `${15 + Math.floor(rng() * 50)}%`;
+    jelly.style.top = `${15 + Math.floor(Math.random() * 50)}%`;
     jelly.style.left = `${left}%`;
     jelly.style.setProperty('--jelly-drift', `${driftAmt}px`);
     jelly.style.setProperty('--jelly-duration', `${duration.toFixed(2)}s`);
