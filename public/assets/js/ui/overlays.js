@@ -739,6 +739,7 @@ function createOverlays() {
       const windowEl = document.createElement('div');
       windowEl.className = 'monitor-overlay-layer monitor-screen-window left-monitor-screen-window';
       state.leftMonitorContentImageEl = document.createElement('img');
+      state.leftMonitorContentImageEl.className = 'left-monitor-content-image';
       windowEl.appendChild(state.leftMonitorContentImageEl);
       const selector = document.createElement('div');
       selector.className = 'left-monitor-selector';
