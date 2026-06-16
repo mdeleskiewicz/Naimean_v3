@@ -213,11 +213,12 @@ function createAquariumFishEffect() {
   const shrimpHuePool = [...shrimpHues].sort(() => Math.random() - 0.5);
   const shrimpCount = getAquariumShrimpCount();
   const slotHeight = 23 / shrimpCount; // divide 67–90% range into equal slots (bottom 1/3 of tank)
+  const shrimpSizeTiers = [10, 14, 20, 26, 31]; // tiny → max (~31px); each shrimp picks one randomly
   for (let i = 0; i < shrimpCount; i++) {
     // Place each shrimp in its own vertical slot to guarantee no overlap
     const slotStart = 67 + i * slotHeight;
     const top = Math.floor(slotStart + Math.random() * (slotHeight * 0.7));
-    const size = 18 + Math.floor(Math.random() * 14);   // 18–31 px
+    const size = shrimpSizeTiers[Math.floor(Math.random() * shrimpSizeTiers.length)] + Math.floor(Math.random() * 3); // slight jitter within tier
     const swimDist = 170 + Math.floor(Math.random() * 130); // 170–299 px
     const duration = 10 + Math.random() * 8;
     const delay = Math.random() * 8;
