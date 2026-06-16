@@ -55,6 +55,258 @@ const isIOSDevice =
 const useLiteRendering = isIOSDevice || hasCoarsePointer;
 let sceneEventsBound = false;
 
+const AQUARIUM_DISNEY_CHARACTER_SPECS = Object.freeze([
+  {
+    name: 'Nemo & Marlin',
+    palette: Object.freeze({
+      k: '#161616',
+      o: '#ff7a00',
+      w: '#fff4e0'
+    }),
+    pixels: Object.freeze([
+      '....................',
+      '..koook.....koook...',
+      '.koowook...koowook..',
+      'koowwoook.koowwoook.',
+      'koowwoook.koowwoook.',
+      '.koowook...koowook..',
+      '..koook.....koook...',
+      '....kk.......kk.....'
+    ]),
+    leftPct: 5,
+    topPct: 19,
+    widthPx: 58,
+    swimDistPx: 170,
+    durationSec: 12.4,
+    delaySec: -1.8,
+    bobA: -5,
+    bobB: 4,
+    bobC: -3
+  },
+  {
+    name: 'Dory',
+    palette: Object.freeze({
+      k: '#162748',
+      b: '#2f7cff',
+      y: '#ffd54a'
+    }),
+    pixels: Object.freeze([
+      '................',
+      '....kbbbbbyy....',
+      '..kbbbbbbbyyyy..',
+      '.kbbbkbbbbyyyyy.',
+      'kbbbbkbbbbyyyyyy',
+      '.kbbbkbbbbyyyyy.',
+      '..kbbbbbbbyyyy..',
+      '....kbbbbbyy....'
+    ]),
+    leftPct: 8,
+    topPct: 34,
+    widthPx: 42,
+    swimDistPx: 212,
+    durationSec: 15.6,
+    delaySec: -6.2,
+    bobA: -6,
+    bobB: 5,
+    bobC: -4
+  },
+  {
+    name: 'Flounder',
+    palette: Object.freeze({
+      y: '#ffe347',
+      b: '#2b71ff'
+    }),
+    pixels: Object.freeze([
+      '................',
+      '....yyyyyyyy....',
+      '..yybbyyyybbyy..',
+      '.yybbbyyybbbbyy.',
+      'yybbbbyyyybbbbby',
+      '.yybbbyyybbbbyy.',
+      '..yybbyyyybbyy..',
+      '....yyyyyyyy....'
+    ]),
+    leftPct: 11,
+    topPct: 55,
+    widthPx: 46,
+    swimDistPx: 194,
+    durationSec: 13.7,
+    delaySec: -3.1,
+    bobA: -4,
+    bobB: 3,
+    bobC: -3
+  },
+  {
+    name: 'Cleo',
+    palette: Object.freeze({
+      g: '#ffab32',
+      h: '#ffd877',
+      f: 'rgba(238, 247, 255, 0.85)'
+    }),
+    pixels: Object.freeze([
+      '................',
+      '.....gggg.......',
+      '...ggghggff.....',
+      '..ggghggggfff...',
+      '.ggghggggggffff.',
+      '..ggggggggfff...',
+      '...ggggggff.....',
+      '.....ff.........'
+    ]),
+    leftPct: 24,
+    topPct: 70,
+    widthPx: 38,
+    swimDistPx: 148,
+    durationSec: 18.8,
+    delaySec: -9.4,
+    bobA: -3,
+    bobB: 2,
+    bobC: -2
+  },
+  {
+    name: 'Bubbles',
+    palette: Object.freeze({
+      d: '#d2b300',
+      y: '#fff22d'
+    }),
+    pixels: Object.freeze([
+      '.................',
+      '.......d.........',
+      '.....dyyyd.......',
+      '...dyyyyyyyd.....',
+      '.dyyyyyyyyyyyd...',
+      '...dyyyyyyyd.....',
+      '.....dyyyd.......',
+      '.......d.........'
+    ]),
+    leftPct: 10,
+    topPct: 44,
+    widthPx: 34,
+    swimDistPx: 132,
+    durationSec: 16.1,
+    delaySec: -8.3,
+    bobA: -4,
+    bobB: 3,
+    bobC: -2
+  },
+  {
+    name: 'Gurgle',
+    palette: Object.freeze({
+      p: '#6e3bdb',
+      y: '#ffd24a'
+    }),
+    pixels: Object.freeze([
+      '................',
+      '....ppppyy......',
+      '..ppppppyyyy....',
+      '.pppppppyyyyyy..',
+      'pppppppyyyyyyyy.',
+      '.pppppppyyyyyy..',
+      '..ppppppyyyy....',
+      '....ppppyy......'
+    ]),
+    leftPct: 6,
+    topPct: 27,
+    widthPx: 45,
+    swimDistPx: 176,
+    durationSec: 14.8,
+    delaySec: -4.7,
+    bobA: -5,
+    bobB: 4,
+    bobC: -3
+  },
+  {
+    name: 'Gill',
+    palette: Object.freeze({
+      k: '#151515',
+      w: '#f8f8f3',
+      y: '#ffcd38'
+    }),
+    pixels: Object.freeze([
+      '..................',
+      '......yy..........',
+      '....kkwwkk..yy....',
+      '..kkwwwkkwyyyyy...',
+      '.kwwwkkwwwyyyyyy..',
+      '..kkwwwkkwyyyyy...',
+      '....kkwwkk..yy....',
+      '......yy..........'
+    ]),
+    leftPct: 7,
+    topPct: 61,
+    widthPx: 48,
+    swimDistPx: 188,
+    durationSec: 17.2,
+    delaySec: -11.1,
+    bobA: -5,
+    bobB: 4,
+    bobC: -3
+  }
+]);
+
+function createPixelSpriteDataUrl({ pixels, palette }) {
+  const rowCount = pixels.length;
+  const columnCount = pixels.reduce((max, row) => Math.max(max, row.length), 0);
+  const rects = [];
+
+  pixels.forEach((row, rowIndex) => {
+    for (let columnIndex = 0; columnIndex < columnCount; columnIndex += 1) {
+      const token = row[columnIndex] ?? '.';
+      const fill = palette[token];
+      if (!fill) {
+        continue;
+      }
+      rects.push(`<rect x="${columnIndex}" y="${rowIndex}" width="1" height="1" fill="${fill}"/>`);
+    }
+  });
+
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${columnCount} ${rowCount}" shape-rendering="crispEdges">${rects.join('')}</svg>`;
+  return {
+    columnCount,
+    rowCount,
+    dataUrl: `url("data:image/svg+xml,${encodeURIComponent(svg)}")`
+  };
+}
+
+function createShuffledCopy(items) {
+  const shuffled = [...items];
+  for (let index = shuffled.length - 1; index > 0; index -= 1) {
+    const swapIndex = Math.floor(Math.random() * (index + 1));
+    [shuffled[index], shuffled[swapIndex]] = [shuffled[swapIndex], shuffled[index]];
+  }
+  return shuffled;
+}
+
+function takeAquariumDisneyFishSpec(specPool) {
+  if (specPool.length === 0) {
+    specPool.push(...createShuffledCopy(AQUARIUM_DISNEY_CHARACTER_SPECS));
+  }
+  return specPool.pop();
+}
+
+function appendAquariumDisneyFish(el, specPool, overrides = {}) {
+  const spec = takeAquariumDisneyFishSpec(specPool);
+  const spriteData = createPixelSpriteDataUrl(spec);
+  const widthPx = overrides.widthPx ?? spec.widthPx;
+  const fish = document.createElement('span');
+  fish.className = 'aquarium-disney-fish';
+  fish.dataset.character = spec.name;
+  fish.setAttribute('aria-hidden', 'true');
+  fish.style.left = `${overrides.leftPct ?? spec.leftPct}%`;
+  fish.style.top = `${overrides.topPct ?? spec.topPct}%`;
+  fish.style.width = `${widthPx}px`;
+  fish.style.height = `${Math.round((spriteData.rowCount / spriteData.columnCount) * widthPx)}px`;
+  fish.style.backgroundImage = spriteData.dataUrl;
+  fish.style.setProperty('--fish-swim-dist', `${overrides.swimDistPx ?? spec.swimDistPx}px`);
+  fish.style.setProperty('--fish-duration', `${(overrides.durationSec ?? spec.durationSec).toFixed(2)}s`);
+  fish.style.setProperty('--fish-delay', `${(overrides.delaySec ?? spec.delaySec).toFixed(2)}s`);
+  fish.style.setProperty('--fish-bob-a', `${overrides.bobA ?? spec.bobA}px`);
+  fish.style.setProperty('--fish-bob-b', `${overrides.bobB ?? spec.bobB}px`);
+  fish.style.setProperty('--fish-bob-c', `${overrides.bobC ?? spec.bobC}px`);
+  el.appendChild(fish);
+  return fish;
+}
+
 function createSceneTiles() {
   dom.sceneLayer.textContent = '';
   SCENE_TILE_IMAGE_URLS.forEach((sources, index) => {
@@ -302,20 +554,18 @@ function createAquariumFishEffect() {
     }
   }
 
-  // Shrimp: weighted random count favoring 2–3 (2–5 possible), distributed evenly across the bottom third of the tank with jitter
+  // Shrimp: weighted random count favoring 3–4 (3–6 possible), distributed evenly across the bottom third of the tank with jitter.
   // Color palette blends warm and cool shrimp morph-inspired hues for variety.
   const shrimpHues = [0, 22, 55, 115, 200, 260, 330];
-  // Shuffle a copy so each session gets a different color ordering
-  const shrimpHuePool = [...shrimpHues].sort(() => Math.random() - 0.5);
+  const shrimpHuePool = createShuffledCopy(shrimpHues);
   const shrimpCount = getAquariumShrimpCount();
-  const slotHeight = 23 / shrimpCount; // divide 67–90% range into equal slots (bottom 1/3 of tank)
-  const shrimpSizeTiers = [10, 14, 20, 26, 31]; // tiny → max (~31px); each shrimp picks one randomly
+  const slotHeight = 23 / shrimpCount;
+  const shrimpSizeTiers = [10, 14, 20, 26, 31];
   for (let i = 0; i < shrimpCount; i++) {
-    // Place each shrimp in its own vertical slot to guarantee no overlap
     const slotStart = 67 + i * slotHeight;
     const top = Math.floor(slotStart + Math.random() * (slotHeight * 0.7));
-    const size = shrimpSizeTiers[Math.floor(Math.random() * shrimpSizeTiers.length)] + Math.floor(Math.random() * 3); // slight jitter within tier
-    const swimDist = 170 + Math.floor(Math.random() * 130); // 170–299 px
+    const size = shrimpSizeTiers[Math.floor(Math.random() * shrimpSizeTiers.length)] + Math.floor(Math.random() * 3);
+    const swimDist = 170 + Math.floor(Math.random() * 130);
     const duration = 10 + Math.random() * 8;
     const delay = -(Math.random() * duration);
     const hue = shrimpHuePool[i % shrimpHuePool.length];
@@ -332,12 +582,13 @@ function createAquariumFishEffect() {
     el.appendChild(shrimp);
   }
 
-  // Special guest: one random creature per load
+  const disneyFishPool = createShuffledCopy(AQUARIUM_DISNEY_CHARACTER_SPECS);
+
+  // Special guest: one random creature per load.
   const guests = ['snail', 'starfish', 'betta', 'turtle', 'jellyfish', 'nautilus', 'octopus'];
   const guestType = guests[Math.floor(Math.random() * guests.length)];
 
   if (guestType === 'snail') {
-    // Crawls slowly along the bottom
     const size = 20 + Math.floor(Math.random() * 10);
     const left = 5 + Math.floor(Math.random() * 30);
     const crawlDist = 120 + Math.floor(Math.random() * 100);
@@ -353,9 +604,7 @@ function createAquariumFishEffect() {
     snail.style.setProperty('--snail-duration', `${duration.toFixed(2)}s`);
     snail.style.setProperty('--snail-delay', `${delay.toFixed(2)}s`);
     el.appendChild(snail);
-
   } else if (guestType === 'starfish') {
-    // Gently drifts near the sandy bottom
     const size = 22 + Math.floor(Math.random() * 12);
     const left = 20 + Math.floor(Math.random() * 55);
     const duration = 18 + Math.random() * 10;
@@ -369,29 +618,21 @@ function createAquariumFishEffect() {
     star.style.setProperty('--starfish-duration', `${duration.toFixed(2)}s`);
     star.style.setProperty('--starfish-delay', `${delay.toFixed(2)}s`);
     el.appendChild(star);
-
   } else if (guestType === 'betta') {
-    // Swims like a shrimp but with a random hue-rotate for color variety
-    const size = 26 + Math.floor(Math.random() * 12);
+    const widthPx = 36 + Math.floor(Math.random() * 12);
     const top = 20 + Math.floor(Math.random() * 45);
     const swimDist = 190 + Math.floor(Math.random() * 110);
     const duration = 9 + Math.random() * 7;
     const delay = -(Math.random() * duration);
-    const hue = Math.floor(Math.random() * 360);
-    const betta = document.createElement('span');
-    betta.className = 'aquarium-betta';
-    betta.textContent = '🐠';
-    betta.style.fontSize = `${size}px`;
-    betta.style.top = `${top}%`;
-    betta.style.left = '6%';
-    betta.style.filter = `hue-rotate(${hue}deg)`;
-    betta.style.setProperty('--betta-swim-dist', `${swimDist}px`);
-    betta.style.setProperty('--betta-duration', `${duration.toFixed(2)}s`);
-    betta.style.setProperty('--betta-delay', `${delay.toFixed(2)}s`);
-    el.appendChild(betta);
-
+    appendAquariumDisneyFish(el, disneyFishPool, {
+      widthPx,
+      topPct: top,
+      leftPct: 6,
+      swimDistPx: swimDist,
+      durationSec: duration,
+      delaySec: delay
+    });
   } else if (guestType === 'turtle') {
-    // Plods slowly across the mid-tank
     const size = 30 + Math.floor(Math.random() * 12);
     const top = 30 + Math.floor(Math.random() * 35);
     const swimDist = 150 + Math.floor(Math.random() * 100);
@@ -407,9 +648,7 @@ function createAquariumFishEffect() {
     turtle.style.setProperty('--turtle-duration', `${duration.toFixed(2)}s`);
     turtle.style.setProperty('--turtle-delay', `${delay.toFixed(2)}s`);
     el.appendChild(turtle);
-
   } else if (guestType === 'jellyfish') {
-    // Jellyfish: pulses gently and drifts up and down
     const size = 24 + Math.floor(Math.random() * 14);
     const left = 15 + Math.floor(Math.random() * 65);
     const driftAmt = 30 + Math.floor(Math.random() * 30);
@@ -425,9 +664,7 @@ function createAquariumFishEffect() {
     jelly.style.setProperty('--jelly-duration', `${duration.toFixed(2)}s`);
     jelly.style.setProperty('--jelly-delay', `${delay.toFixed(2)}s`);
     el.appendChild(jelly);
-
   } else if (guestType === 'nautilus') {
-    // Glides slowly across the mid-tank with a gentle bob
     const size = 26 + Math.floor(Math.random() * 12);
     const top = 25 + Math.floor(Math.random() * 40);
     const swimDist = 160 + Math.floor(Math.random() * 100);
@@ -443,9 +680,7 @@ function createAquariumFishEffect() {
     nautilus.style.setProperty('--nautilus-duration', `${duration.toFixed(2)}s`);
     nautilus.style.setProperty('--nautilus-delay', `${delay.toFixed(2)}s`);
     el.appendChild(nautilus);
-
   } else if (guestType === 'octopus') {
-    // Octopus: drifts from one side to the other with a subtle pulse
     const size = 28 + Math.floor(Math.random() * 14);
     const top = 20 + Math.floor(Math.random() * 50);
     const swimDist = 180 + Math.floor(Math.random() * 110);
@@ -463,40 +698,29 @@ function createAquariumFishEffect() {
     el.appendChild(octopus);
   }
 
-  // ── Nemo and Dory — always-present fish (reuse aquarium-betta swim animation) ──
-  const nemoSize = 26 + Math.floor(Math.random() * 8);
-  const nemoTop  = 22 + Math.floor(Math.random() * 28);
-  const nemoSwimDist = 180 + Math.floor(Math.random() * 100);
-  const nemoDuration = 9 + Math.random() * 6;
-  const nemoDelay    = -(Math.random() * nemoDuration);
-  const nemo = document.createElement('span');
-  nemo.className = 'aquarium-betta';
-  nemo.textContent = '🐠';
-  nemo.style.fontSize = `${nemoSize}px`;
-  nemo.style.top = `${nemoTop}%`;
-  nemo.style.left = '5%';
-  nemo.style.filter = 'hue-rotate(-30deg) saturate(2) brightness(1.05)';
-  nemo.style.setProperty('--betta-swim-dist', `${nemoSwimDist}px`);
-  nemo.style.setProperty('--betta-duration', `${nemoDuration.toFixed(2)}s`);
-  nemo.style.setProperty('--betta-delay', `${nemoDelay.toFixed(2)}s`);
-  el.appendChild(nemo);
-
-  const dorySize = 24 + Math.floor(Math.random() * 8);
-  const doryTop  = 30 + Math.floor(Math.random() * 30);
-  const dorySwimDist = 170 + Math.floor(Math.random() * 110);
-  const doryDuration = 10 + Math.random() * 7;
-  const doryDelay    = -(Math.random() * doryDuration);
-  const dory = document.createElement('span');
-  dory.className = 'aquarium-betta';
-  dory.textContent = '🐟';
-  dory.style.fontSize = `${dorySize}px`;
-  dory.style.top = `${doryTop}%`;
-  dory.style.left = '7%';
-  dory.style.filter = 'hue-rotate(215deg) saturate(1.6)';
-  dory.style.setProperty('--betta-swim-dist', `${dorySwimDist}px`);
-  dory.style.setProperty('--betta-duration', `${doryDuration.toFixed(2)}s`);
-  dory.style.setProperty('--betta-delay', `${doryDelay.toFixed(2)}s`);
-  el.appendChild(dory);
+  // Generic fish slots now draw from the Disney sprite roster instead of emoji fish.
+  const leadingFishConfigs = [
+    {
+      widthPx: 40 + Math.floor(Math.random() * 8),
+      topPct: 22 + Math.floor(Math.random() * 28),
+      leftPct: 5,
+      swimDistPx: 180 + Math.floor(Math.random() * 100),
+      durationSec: 9 + Math.random() * 6,
+      delaySec: 0
+    },
+    {
+      widthPx: 38 + Math.floor(Math.random() * 8),
+      topPct: 30 + Math.floor(Math.random() * 30),
+      leftPct: 7,
+      swimDistPx: 170 + Math.floor(Math.random() * 110),
+      durationSec: 10 + Math.random() * 7,
+      delaySec: 0
+    }
+  ];
+  for (const fishConfig of leadingFishConfigs) {
+    fishConfig.delaySec = -(Math.random() * fishConfig.durationSec);
+    appendAquariumDisneyFish(el, disneyFishPool, fishConfig);
+  }
 
   // ── Left-side filter (hang-on-back style, upper-left of tank) ────────────
   const leftFilterEl = document.createElement('div');
