@@ -81,26 +81,26 @@ test('aquarium uses fixed right-side filter bubbles and bubble-rock streams', ()
   );
 });
 
-test('aquarium shrimp count favors 5 and 6, with 7 uncommon and 8 rare', () => {
+test('aquarium shrimp count favors 3 and 4, with 5 uncommon and 6 rare', () => {
   const originalRandom = Math.random;
 
   try {
     Math.random = () => 0;
-    assert.equal(getAquariumShrimpCount(), 5);
+    assert.equal(getAquariumShrimpCount(), 3);
     Math.random = () => 0.39;
-    assert.equal(getAquariumShrimpCount(), 5);
+    assert.equal(getAquariumShrimpCount(), 3);
     Math.random = () => 0.4;
-    assert.equal(getAquariumShrimpCount(), 6);
+    assert.equal(getAquariumShrimpCount(), 4);
     Math.random = () => 0.79;
-    assert.equal(getAquariumShrimpCount(), 6);
+    assert.equal(getAquariumShrimpCount(), 4);
     Math.random = () => 0.8;
-    assert.equal(getAquariumShrimpCount(), 7);
+    assert.equal(getAquariumShrimpCount(), 5);
     Math.random = () => 0.94;
-    assert.equal(getAquariumShrimpCount(), 7);
+    assert.equal(getAquariumShrimpCount(), 5);
     Math.random = () => 0.95;
-    assert.equal(getAquariumShrimpCount(), 8);
+    assert.equal(getAquariumShrimpCount(), 6);
     Math.random = () => 0.999;
-    assert.equal(getAquariumShrimpCount(), 8);
+    assert.equal(getAquariumShrimpCount(), 6);
   } finally {
     Math.random = originalRandom;
   }
