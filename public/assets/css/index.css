@@ -394,10 +394,15 @@
       transform: none;
     }
 
-    /* These insets map every screen-window edge to the inner screen-hole edge of R_Frame.png (accounting for object-fit:contain letterboxing). */
+    /* These insets map every screen-window edge to the corrected right screen-hole edge after vertically flipping R_Frame.png in CSS. */
     .right-monitor-screen-window {
-      inset: 29.297% 25.26% 17.09% 24.414%;
+      inset: 17.09% 25.26% 29.297% 24.414%;
       transform: none;
+    }
+
+    .monitor-group-right .monitor-frame-image {
+      transform: scaleY(-1);
+      transform-origin: center;
     }
 
     #overlay-commodore-screen {
