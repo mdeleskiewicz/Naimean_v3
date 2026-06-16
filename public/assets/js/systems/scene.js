@@ -44,7 +44,8 @@ import { loadCommodorePowerState, syncStoredCommodorePowerState, handlePageShow,
 import { playWrongAudio, unlockCornerScoreScoringAudioFromGesture } from './cornerScore.js';
 import { adjustDvdSpeed, stopBigTvDvdAnimation } from './dvd.js';
 import { stopRadioTuningLoopPlayback } from './flipClock.js';
-import { createHotspots, getRuntimeHotspotById, syncControlledOverlaysFromHotspots, consumeSaveResultFlash, hydrateHotspotsFromServer, hydrateNonCriticalSceneData, refreshDebugObjectActions, refreshDebugObjectSelectOptions, setHotspotDebugLockState, getSelectedDebugHotspotElement, saveDenUrlOverride, saveHotspots, hideSaveModal } from './hotspots.js';
+import { createHotspots, getRuntimeHotspotById, syncControlledOverlaysFromHotspots, consumeSaveResultFlash, hydrateHotspotsFromServer, hydrateNonCriticalSceneData, refreshDebugObjectActions, refreshDebugObjectSelectOptions, setHotspotDebugLockState, getSelectedDebugHotspotElement, saveDenUrlOverride, saveHotspots, hideSaveModal, encodeDebugSavePassword, hasMatchingDebugSaveCipher } from './hotspots.js';
+import { getAquariumShrimpCount } from './aquariumEffect.js';
 
 const hasCoarsePointer = window.matchMedia('(pointer: coarse)').matches;
 const isIOSDevice =
@@ -178,14 +179,14 @@ function createAquariumFishEffect() {
   el.style.width = `${Math.round(spot.w)}px`;
   el.style.height = `${Math.round(spot.h)}px`;
 
-  // Filter bubbles: main cluster in the lower-right (filter), plus a few scattered bubbles
+  // Filter bubbles: main cluster on the left side, plus a few scattered bubbles
   const bubbleCount = 10 + Math.floor(Math.random() * 9); // 10–18 bubbles
   for (let i = 0; i < bubbleCount; i++) {
-    // Most bubbles stay in the right-side filter cluster, a few scatter elsewhere
-    const inCluster = i < 8 || Math.random() < 0.55;
+    // Most bubbles stay in the left-side cluster, a few scatter elsewhere
+    const inCluster = i < 9 || Math.random() < 0.6;
     const leftPct = inCluster
-      ? 74 + Math.random() * 17           // 74–91 %
-      : 15 + Math.random() * 55;          // 15–70 % (scattered)
+      ? 9 + Math.random() * 22            // 9–31 %
+      : 34 + Math.random() * 54;          // 34–88 % (scattered)
     const bottomPct = 2 + Math.random() * 6;
     const size = 3 + Math.floor(Math.random() * 7);  // 3–9 px
     const rise = 510 + Math.floor(Math.random() * 160);
@@ -205,13 +206,12 @@ function createAquariumFishEffect() {
     el.appendChild(bubble);
   }
 
-  // Shrimp: random count (2–5), distributed evenly across the tank height with jitter
-  // Color palette mirrors real aquarium shrimp morphs (cherry red, orange sakura,
-  // yellow neon, green jade, blue dream, violet, pink sakura)
+  // Shrimp: weighted random count favoring 2–3 (2–5 possible), distributed evenly across the tank height with jitter
+  // Color palette blends warm and cool shrimp morph-inspired hues for variety.
   const shrimpHues = [0, 22, 55, 115, 200, 260, 330];
   // Shuffle a copy so each session gets a different color ordering
   const shrimpHuePool = [...shrimpHues].sort(() => Math.random() - 0.5);
-  const shrimpCount = 2 + Math.floor(Math.random() * 4); // 2–5
+  const shrimpCount = getAquariumShrimpCount();
   const slotHeight = 70 / shrimpCount; // divide 15–85% range into equal slots
   for (let i = 0; i < shrimpCount; i++) {
     // Place each shrimp in its own vertical slot to guarantee no overlap
