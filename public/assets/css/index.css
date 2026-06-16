@@ -3024,6 +3024,12 @@
       animation: aquarium-filter-hum 3.5s ease-in-out infinite;
     }
 
+    /* left filter: mirrored on the upper-left */
+    .aquarium-filter-left {
+      right: auto;
+      left: 3%;
+    }
+
     @keyframes aquarium-filter-hum {
       0%, 100% { transform: translate3d(0, 0, 0); }
       20%  { transform: translate3d(0.6px, -0.4px, 0); }
@@ -3088,6 +3094,21 @@
         opacity: 0;
         transform: translate3d(calc(var(--bubble-wobble, 5px) * 0.3), calc(var(--bubble-rise, 500px) * -1), 0);
       }
+    }
+
+    /* --- current-pushed bubbles from left filter outflow — drift rightward --- */
+    .aquarium-current-bubble {
+      animation: aquarium-current-bubble-rise var(--bubble-duration, 2s) ease-in infinite;
+      animation-delay: var(--bubble-delay, 0s);
+    }
+
+    @keyframes aquarium-current-bubble-rise {
+      0%   { opacity: 0; transform: translate3d(0, 0, 0); }
+      8%   { opacity: 0.76; }
+      40%  { transform: translate3d(calc(var(--bubble-current, 40px) * 0.4), calc(var(--bubble-rise, 50px) * -0.4), 0); opacity: 0.64; }
+      74%  { transform: translate3d(calc(var(--bubble-current, 40px) * 0.74), calc(var(--bubble-rise, 50px) * -0.74), 0); opacity: 0.36; }
+      92%  { opacity: 0.14; }
+      100% { opacity: 0; transform: translate3d(var(--bubble-current, 40px), calc(var(--bubble-rise, 50px) * -1), 0); }
     }
 
     /* --- shrimp --- */
@@ -3254,168 +3275,10 @@
       100% { transform: translate3d(0, 0, 0) scaleX(-1) scale(1); }
     }
 
-    /* --- aquarium LED lamp strips — colors matched to STARSHRIMPnet neon sign --- */
-    .aquarium-lamp {
-      position: absolute;
-      bottom: 3%;
-      width: 17%;
-      height: 3px;
-      border-radius: 2px;
-      background: linear-gradient(90deg,
-        transparent 0%,
-        var(--lamp-edge, rgba(120, 230, 255, 0.90)) 15%,
-        var(--lamp-peak, rgba(220, 248, 255, 1.00)) 50%,
-        var(--lamp-edge, rgba(120, 230, 255, 0.90)) 85%,
-        transparent 100%
-      );
-      box-shadow:
-        0 0 9px 4px var(--lamp-near, rgba(0, 200, 255, 0.70)),
-        0 0 22px 11px var(--lamp-far, rgba(0, 150, 255, 0.30)),
-        0 -12px 24px 8px var(--lamp-up, rgba(0, 180, 255, 0.44));
-      will-change: opacity, box-shadow;
-      animation: aquarium-lamp-neon-pulse 3.6s ease-in-out infinite;
-    }
-
-    /* left lamp: electric blue — matches the neon bar above the sign */
-    .aquarium-lamp-left {
-      left: 3%;
-      --lamp-edge: rgba(100, 225, 255, 0.90);
-      --lamp-peak: rgba(210, 248, 255, 1.00);
-      --lamp-near: rgba(0, 200, 255, 0.72);
-      --lamp-far:  rgba(0, 140, 255, 0.28);
-      --lamp-up:   rgba(0, 180, 255, 0.46);
-    }
-
-    /* right lamp: hot pink — matches the LED strip on the aquarium rim */
-    .aquarium-lamp-right {
-      right: 4%;
-      animation-delay: 1.6s;
-      --lamp-edge: rgba(255, 130, 220, 0.90);
-      --lamp-peak: rgba(255, 230, 255, 1.00);
-      --lamp-near: rgba(255, 48, 204, 0.72);
-      --lamp-far:  rgba(220, 0, 140, 0.28);
-      --lamp-up:   rgba(255, 60, 200, 0.46);
-    }
-
-    @keyframes aquarium-lamp-neon-pulse {
-      0%, 100% {
-        opacity: 0.76;
-        box-shadow:
-          0 0 8px 3px var(--lamp-near, rgba(0, 200, 255, 0.60)),
-          0 0 18px 9px var(--lamp-far,  rgba(0, 150, 255, 0.22)),
-          0 -10px 20px 6px var(--lamp-up, rgba(0, 180, 255, 0.36));
-      }
-      25% {
-        opacity: 1.00;
-        box-shadow:
-          0 0 14px 7px var(--lamp-near, rgba(0, 200, 255, 0.92)),
-          0 0 34px 17px var(--lamp-far,  rgba(0, 150, 255, 0.44)),
-          0 -18px 34px 12px var(--lamp-up, rgba(0, 180, 255, 0.62));
-      }
-      52% {
-        opacity: 0.84;
-        box-shadow:
-          0 0 9px 4px var(--lamp-near, rgba(0, 200, 255, 0.68)),
-          0 0 22px 11px var(--lamp-far,  rgba(0, 150, 255, 0.28)),
-          0 -12px 24px 8px var(--lamp-up, rgba(0, 180, 255, 0.42));
-      }
-      78% {
-        opacity: 0.96;
-        box-shadow:
-          0 0 12px 6px var(--lamp-near, rgba(0, 200, 255, 0.82)),
-          0 0 28px 14px var(--lamp-far,  rgba(0, 150, 255, 0.36)),
-          0 -15px 28px 10px var(--lamp-up, rgba(0, 180, 255, 0.52));
-      }
-    }
-
-    /* --- wall light projections — neon palette dancing like water reflections --- */
-    .aquarium-wall-glow {
-      position: absolute;
-      pointer-events: none;
-      z-index: 1;
-      overflow: hidden;
-      will-change: opacity, filter;
-    }
-
-    /* left wall: blue/cyan — matches the neon bar */
-    .aquarium-wall-glow-left {
-      background: linear-gradient(
-        to left,
-        rgba(0, 190, 255, 0.32) 0%,
-        rgba(0, 140, 255, 0.18) 30%,
-        rgba(0, 80, 210, 0.07) 65%,
-        transparent 100%
-      );
-      animation: aquarium-wall-neon-blue 7.2s ease-in-out infinite;
-    }
-
-    /* right wall: red/pink — matches STARSHRIMP letters + tank rim strip */
-    .aquarium-wall-glow-right {
-      background: linear-gradient(
-        to right,
-        rgba(255, 40, 160, 0.30) 0%,
-        rgba(255, 20, 80, 0.16) 30%,
-        rgba(200, 0, 60, 0.06) 65%,
-        transparent 100%
-      );
-      animation: aquarium-wall-neon-red 8.0s ease-in-out infinite;
-      animation-delay: 0.9s;
-    }
-
-    @keyframes aquarium-wall-neon-blue {
-      0%   { opacity: 0.55; filter: brightness(1.00); }
-      14%  { opacity: 0.98; filter: brightness(1.40); }
-      30%  { opacity: 0.68; filter: brightness(0.88); }
-      48%  { opacity: 1.00; filter: brightness(1.55); }
-      64%  { opacity: 0.62; filter: brightness(0.82); }
-      80%  { opacity: 0.90; filter: brightness(1.28); }
-      100% { opacity: 0.55; filter: brightness(1.00); }
-    }
-
-    @keyframes aquarium-wall-neon-red {
-      0%   { opacity: 0.50; filter: brightness(1.00); }
-      18%  { opacity: 0.94; filter: brightness(1.45); }
-      35%  { opacity: 0.64; filter: brightness(0.85); }
-      52%  { opacity: 0.98; filter: brightness(1.58); }
-      70%  { opacity: 0.58; filter: brightness(0.80); }
-      85%  { opacity: 0.88; filter: brightness(1.32); }
-      100% { opacity: 0.50; filter: brightness(1.00); }
-    }
-
-    /* --- water-surface reflection bands dancing on the walls --- */
-    .aquarium-wall-ripple {
-      position: absolute;
-      left: 0;
-      width: 100%;
-      background: linear-gradient(
-        180deg,
-        transparent 0%,
-        var(--ripple-tint,   rgba(0, 220, 255, 0.18)) 25%,
-        var(--ripple-bright, rgba(0, 245, 255, 0.48)) 50%,
-        var(--ripple-tint,   rgba(0, 220, 255, 0.18)) 75%,
-        transparent 100%
-      );
-      will-change: transform, opacity;
-      animation: aquarium-wall-dance var(--ripple-duration, 5s) ease-in-out infinite;
-      animation-delay: var(--ripple-delay, 0s);
-    }
-
-    @keyframes aquarium-wall-dance {
-      0%   { transform: translateY(0%)   translateX(0%)  scaleX(1.00); opacity: 0.00; }
-      10%  { opacity: var(--ripple-peak, 0.88); }
-      28%  { transform: translateY(-8%)  translateX(5%)  scaleX(0.93); opacity: var(--ripple-peak, 0.88); }
-      52%  { transform: translateY(-20%) translateX(-4%) scaleX(1.10); opacity: calc(var(--ripple-peak, 0.88) * 0.82); }
-      74%  { transform: translateY(-32%) translateX(6%)  scaleX(0.88); opacity: calc(var(--ripple-peak, 0.88) * 0.38); }
-      88%  { opacity: 0.10; }
-      100% { transform: translateY(-44%) translateX(0%)  scaleX(1.00); opacity: 0.00; }
-    }
-
     body.lite-rendering .aquarium-water-line,
     body.lite-rendering .aquarium-caustic,
     body.lite-rendering .aquarium-filter,
-    body.lite-rendering .aquarium-lamp,
-    body.lite-rendering .aquarium-wall-glow,
-    body.lite-rendering .aquarium-wall-ripple {
+    body.lite-rendering .aquarium-current-bubble {
       animation-play-state: paused;
     }
 

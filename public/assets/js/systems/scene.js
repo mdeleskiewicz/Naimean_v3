@@ -463,66 +463,112 @@ function createAquariumFishEffect() {
     el.appendChild(octopus);
   }
 
-  // ── LED lamp strips — neon-matched colors (left=blue, right=pink) ──────────
-  for (const side of ['left', 'right']) {
-    const lamp = document.createElement('div');
-    lamp.className = `aquarium-lamp aquarium-lamp-${side}`;
-    el.appendChild(lamp);
+  // ── Nemo and Dory — always-present fish ──────────────────────────────────
+  const nemoSize = 26 + Math.floor(Math.random() * 8);
+  const nemoTop  = 22 + Math.floor(Math.random() * 28);
+  const nemoSwimDist = 180 + Math.floor(Math.random() * 100);
+  const nemoDuration = 9 + Math.random() * 6;
+  const nemoDelay    = -(Math.random() * nemoDuration);
+  const nemo = document.createElement('span');
+  nemo.className = 'aquarium-betta';
+  nemo.textContent = '🐠';
+  nemo.style.fontSize = `${nemoSize}px`;
+  nemo.style.top = `${nemoTop}%`;
+  nemo.style.left = '5%';
+  nemo.style.setProperty('--betta-swim-dist', `${nemoSwimDist}px`);
+  nemo.style.setProperty('--betta-duration', `${nemoDuration.toFixed(2)}s`);
+  nemo.style.setProperty('--betta-delay', `${nemoDelay.toFixed(2)}s`);
+  el.appendChild(nemo);
+
+  const dorySize = 24 + Math.floor(Math.random() * 8);
+  const doryTop  = 30 + Math.floor(Math.random() * 30);
+  const dorySwimDist = 170 + Math.floor(Math.random() * 110);
+  const doryDuration = 10 + Math.random() * 7;
+  const doryDelay    = -(Math.random() * doryDuration);
+  const dory = document.createElement('span');
+  dory.className = 'aquarium-betta';
+  dory.textContent = '🐟';
+  dory.style.fontSize = `${dorySize}px`;
+  dory.style.top = `${doryTop}%`;
+  dory.style.left = '7%';
+  dory.style.filter = 'hue-rotate(215deg) saturate(1.6)';
+  dory.style.setProperty('--betta-swim-dist', `${dorySwimDist}px`);
+  dory.style.setProperty('--betta-duration', `${doryDuration.toFixed(2)}s`);
+  dory.style.setProperty('--betta-delay', `${doryDelay.toFixed(2)}s`);
+  el.appendChild(dory);
+
+  // ── Left-side filter (hang-on-back style, upper-left of tank) ────────────
+  const leftFilterEl = document.createElement('div');
+  leftFilterEl.className = 'aquarium-filter aquarium-filter-left';
+  el.appendChild(leftFilterEl);
+
+  // Current-pushed bubbles from left filter outflow — drift rightward
+  const leftFilterCurrentBubbles = [
+    { size: 2, left: '8%',  bottom: '90%', rise: 50,  current:  38, duration: 1.8, delay: 0.0 },
+    { size: 3, left: '6%',  bottom: '88%', rise: 55,  current:  52, duration: 2.2, delay: 0.6 },
+    { size: 2, left: '9%',  bottom: '91%', rise: 45,  current:  44, duration: 1.6, delay: 1.2 },
+    { size: 3, left: '7%',  bottom: '89%', rise: 58,  current:  48, duration: 2.0, delay: 1.9 },
+  ];
+  for (const { size, left, bottom, rise, current, duration, delay } of leftFilterCurrentBubbles) {
+    const bubble = document.createElement('span');
+    bubble.className = 'aquarium-bubble aquarium-current-bubble';
+    bubble.style.width = `${size}px`;
+    bubble.style.height = `${size}px`;
+    bubble.style.left = left;
+    bubble.style.bottom = bottom;
+    bubble.style.setProperty('--bubble-rise', `${rise}px`);
+    bubble.style.setProperty('--bubble-current', `${current}px`);
+    bubble.style.setProperty('--bubble-duration', `${duration}s`);
+    bubble.style.setProperty('--bubble-delay', `${delay}s`);
+    el.appendChild(bubble);
+  }
+
+  // ── Constant bubble streams — left side and right side of tank ───────────
+  const leftStreamBubbles = [
+    { size: 4, left: '3%',  rise: 520, wobble: -4, duration: 6.1, delay: 0.0 },
+    { size: 6, left: '5%',  rise: 560, wobble:  5, duration: 7.0, delay: 0.9 },
+    { size: 3, left: '2%',  rise: 490, wobble: -3, duration: 5.5, delay: 1.8 },
+    { size: 5, left: '4%',  rise: 540, wobble:  4, duration: 6.6, delay: 2.6 },
+    { size: 4, left: '3%',  rise: 505, wobble: -5, duration: 5.9, delay: 3.5 },
+    { size: 6, left: '5%',  rise: 575, wobble:  3, duration: 7.3, delay: 4.4 },
+  ];
+  for (const { size, left, rise, wobble, duration, delay } of leftStreamBubbles) {
+    const bubble = document.createElement('span');
+    bubble.className = 'aquarium-bubble';
+    bubble.style.width = `${size}px`;
+    bubble.style.height = `${size}px`;
+    bubble.style.left = left;
+    bubble.style.bottom = '3%';
+    bubble.style.setProperty('--bubble-rise', `${rise}px`);
+    bubble.style.setProperty('--bubble-wobble', `${wobble}px`);
+    bubble.style.setProperty('--bubble-duration', `${duration}s`);
+    bubble.style.setProperty('--bubble-delay', `${delay}s`);
+    el.appendChild(bubble);
+  }
+
+  const rightStreamBubbles = [
+    { size: 5, left: '93%', rise: 535, wobble: -5, duration: 6.3, delay: 0.0 },
+    { size: 4, left: '96%', rise: 510, wobble:  4, duration: 5.8, delay: 1.1 },
+    { size: 6, left: '94%', rise: 570, wobble: -3, duration: 7.1, delay: 2.0 },
+    { size: 3, left: '95%', rise: 490, wobble:  5, duration: 5.4, delay: 2.9 },
+    { size: 5, left: '93%', rise: 550, wobble: -4, duration: 6.8, delay: 3.8 },
+    { size: 4, left: '96%', rise: 520, wobble:  3, duration: 6.0, delay: 4.7 },
+  ];
+  for (const { size, left, rise, wobble, duration, delay } of rightStreamBubbles) {
+    const bubble = document.createElement('span');
+    bubble.className = 'aquarium-bubble';
+    bubble.style.width = `${size}px`;
+    bubble.style.height = `${size}px`;
+    bubble.style.left = left;
+    bubble.style.bottom = '3%';
+    bubble.style.setProperty('--bubble-rise', `${rise}px`);
+    bubble.style.setProperty('--bubble-wobble', `${wobble}px`);
+    bubble.style.setProperty('--bubble-duration', `${duration}s`);
+    bubble.style.setProperty('--bubble-delay', `${delay}s`);
+    el.appendChild(bubble);
   }
 
   dom.effectsLayer.appendChild(el);
-
-  // ── Wall light projections (aurora/caustic glow on surrounding walls) ────────
-  const wallGlowW = Math.round(spot.w * 0.36);
-  const wallGlowH = Math.round(spot.h * 1.25);
-  const wallGlowTop = Math.round(spot.y + spot.h - wallGlowH);
-
-  const rippleDefs = [
-    { topPct:  5, heightPct: 18, delay: 0.0, duration: 4.2 },
-    { topPct: 22, heightPct: 22, delay: 1.4, duration: 5.8 },
-    { topPct: 42, heightPct: 18, delay: 2.7, duration: 4.6 },
-    { topPct: 58, heightPct: 24, delay: 0.8, duration: 6.2 },
-    { topPct: 14, heightPct: 14, delay: 3.4, duration: 3.8 },
-    { topPct: 72, heightPct: 20, delay: 1.9, duration: 5.0 },
-  ];
-
-  // neon palette: blue, pink, red — cycles through for each ripple
-  const neonRippleColors = [
-    { tint: 'rgba(0,200,255,0.22)',   bright: 'rgba(0,245,255,0.52)',   peak: '0.92' },
-    { tint: 'rgba(255,48,204,0.20)',  bright: 'rgba(255,80,220,0.50)',  peak: '0.88' },
-    { tint: 'rgba(255,32,32,0.18)',   bright: 'rgba(255,70,40,0.46)',   peak: '0.84' },
-    { tint: 'rgba(0,180,255,0.20)',   bright: 'rgba(20,230,255,0.48)',  peak: '0.90' },
-    { tint: 'rgba(255,60,200,0.20)',  bright: 'rgba(255,100,230,0.48)', peak: '0.86' },
-    { tint: 'rgba(0,220,255,0.22)',   bright: 'rgba(0,248,255,0.50)',   peak: '0.90' },
-  ];
-
-  for (const side of ['left', 'right']) {
-    const wg = document.createElement('div');
-    wg.className = `${AQUARIUM_WALL_GLOW_CLASS} aquarium-wall-glow aquarium-wall-glow-${side}`;
-    wg.style.width = `${wallGlowW}px`;
-    wg.style.height = `${wallGlowH}px`;
-    wg.style.top = `${wallGlowTop}px`;
-    if (side === 'left') {
-      wg.style.left = `${Math.round(spot.x - wallGlowW)}px`;
-    } else {
-      wg.style.left = `${Math.round(spot.x + spot.w)}px`;
-    }
-    for (let ri = 0; ri < rippleDefs.length; ri++) {
-      const { topPct, heightPct, delay, duration } = rippleDefs[ri];
-      const ripple = document.createElement('div');
-      ripple.className = 'aquarium-wall-ripple';
-      ripple.style.top = `${topPct}%`;
-      ripple.style.height = `${heightPct}%`;
-      ripple.style.setProperty('--ripple-delay',    `${delay.toFixed(2)}s`);
-      ripple.style.setProperty('--ripple-duration', `${duration.toFixed(2)}s`);
-      const nc = neonRippleColors[ri % neonRippleColors.length];
-      ripple.style.setProperty('--ripple-tint',   nc.tint);
-      ripple.style.setProperty('--ripple-bright', nc.bright);
-      ripple.style.setProperty('--ripple-peak',   nc.peak);
-      wg.appendChild(ripple);
-    }
-    dom.effectsLayer.appendChild(wg);
-  }
 
   state.overlayElementsById.set(AQUARIUM_FISH_EFFECT_ID, el);
 }
