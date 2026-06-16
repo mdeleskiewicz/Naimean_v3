@@ -445,7 +445,7 @@ async function handleDiscordCallback(request, env) {
   const sessionSecret = env.SESSION_SECRET;
   const redirectUriOverride = env.DISCORD_REDIRECT_URI;
   const targetRedirectUri = redirectUriOverride || resolveDefaultDiscordRedirectUri(url);
-  const stateCookieDomain = resolveOAuthStateCookieDomain(url, targetRedirectUri, Boolean(redirectUriOverride));
+  const authCookieDomain = resolveOAuthStateCookieDomain(url, targetRedirectUri, Boolean(redirectUriOverride));
   if (!clientId || !clientSecret || !sessionSecret) {
     return errorRedirect(`${origin}/`, 'configuration_error');
   }
@@ -505,13 +505,14 @@ async function handleDiscordCallback(request, env) {
     sameSite: 'Lax',
     path: '/',
     maxAge: 0,
-    domain: stateCookieDomain || undefined,
+    domain: authCookieDomain || undefined,
     secure
   });
   const sessionCookieStr = serializeCookie(SESSION_COOKIE, sessionToken, {
     httpOnly: true,
     sameSite: 'Lax',
     path: '/',
+    domain: authCookieDomain || undefined,
     secure
   });
   

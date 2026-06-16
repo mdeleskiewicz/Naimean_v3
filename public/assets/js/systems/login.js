@@ -61,6 +61,7 @@ function syncDiscordButtonUi() {
   if (state.discordButtonImgEl) {
     state.discordButtonImgEl.src = state.rightMonitorOverlayImageUrl;
   }
+  syncViewportAuthChipUi();
   syncLoginOverlayUi();
   state._cb.syncDvdScreensaverState?.();
 }
@@ -100,7 +101,11 @@ async function fetchDiscordAuthState() {
   try {
     const controller = new AbortController();
     const timeoutId = window.setTimeout(() => controller.abort(), API_TIMEOUT_MS);
-    const res = await fetch('/api/discord/me', { signal: controller.signal });
+    const res = await fetch('/api/discord/me', {
+      cache: 'no-store',
+      credentials: 'include',
+      signal: controller.signal
+    });
     window.clearTimeout(timeoutId);
     if (res.ok) {
       state.discordAuthState = await res.json();
@@ -110,6 +115,103 @@ async function fetchDiscordAuthState() {
     // Auth state remains null if request fails
   }
   syncLoginOverlayUi();
+}
+
+function ensureViewportAuthChipRefs() {
+  if (state.hasInitializedViewportAuthChip) {
+    return;
+  }
+  state.hasInitializedViewportAuthChip = true;
+  state.viewportAuthChipEl = document.getElementById('discord-session-chip');
+  state.viewportAuthChipButtonEl = document.getElementById('discord-session-chip-button');
+  state.viewportAuthChipAvatarEl = document.getElementById('discord-session-chip-avatar');
+  state.viewportAuthChipLabelEl = document.getElementById('discord-session-chip-label');
+  state.viewportAuthChipMenuEl = document.getElementById('discord-session-chip-menu');
+  state.viewportAuthLogoutButtonEl = document.getElementById('discord-session-logout-btn');
+  if (!state.viewportAuthChipButtonEl || !state.viewportAuthChipMenuEl || !state.viewportAuthLogoutButtonEl) {
+    return;
+  }
+  state.viewportAuthChipButtonEl.addEventListener('click', (event) => {
+    event.preventDefault();
+    event.stopPropagation();
+    setViewportAuthChipMenuOpen(!state.isViewportAuthChipMenuOpen);
+  });
+  state.viewportAuthLogoutButtonEl.addEventListener('click', async (event) => {
+    event.preventDefault();
+    event.stopPropagation();
+    await logoutDiscordSession();
+  });
+  document.addEventListener('pointerdown', (event) => {
+    if (state.isViewportAuthChipMenuOpen && !state.viewportAuthChipEl?.contains(event.target)) {
+      setViewportAuthChipMenuOpen(false);
+    }
+  });
+  document.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape') {
+      setViewportAuthChipMenuOpen(false);
+    }
+  });
+}
+
+function setViewportAuthChipMenuOpen(isOpen) {
+  ensureViewportAuthChipRefs();
+  state.isViewportAuthChipMenuOpen = !!(isOpen && state.discordAuthState?.authenticated);
+  if (!state.viewportAuthChipButtonEl || !state.viewportAuthChipMenuEl || !state.viewportAuthChipEl) {
+    return;
+  }
+  state.viewportAuthChipEl.classList.toggle('is-open', state.isViewportAuthChipMenuOpen);
+  state.viewportAuthChipButtonEl.setAttribute('aria-expanded', state.isViewportAuthChipMenuOpen ? 'true' : 'false');
+  state.viewportAuthChipMenuEl.hidden = !state.isViewportAuthChipMenuOpen;
+}
+
+function syncViewportAuthChipUi() {
+  ensureViewportAuthChipRefs();
+  if (
+    !state.viewportAuthChipEl ||
+    !state.viewportAuthChipButtonEl ||
+    !state.viewportAuthChipAvatarEl ||
+    !state.viewportAuthChipLabelEl
+  ) {
+    return;
+  }
+
+  if (!state.discordAuthState?.authenticated) {
+    state.viewportAuthChipEl.hidden = true;
+    state.viewportAuthChipEl.classList.remove('is-visible');
+    state.viewportAuthChipAvatarEl.removeAttribute('src');
+    state.viewportAuthChipAvatarEl.alt = 'Discord avatar';
+    state.viewportAuthChipLabelEl.textContent = '';
+    setViewportAuthChipMenuOpen(false);
+    return;
+  }
+
+  const avatarUrl = getDiscordAvatarUrl(state.discordAuthState);
+  state.viewportAuthChipEl.hidden = false;
+  state.viewportAuthChipEl.classList.add('is-visible');
+  state.viewportAuthChipButtonEl.title = `Signed in as ${state.discordAuthState.username || 'Discord user'}`;
+  state.viewportAuthChipLabelEl.textContent = state.discordAuthState.username || 'Discord';
+  state.viewportAuthChipAvatarEl.src = avatarUrl || DISCORD_BUTTON_IMAGE_URL;
+  state.viewportAuthChipAvatarEl.alt = avatarUrl && state.discordAuthState.username
+    ? `${state.discordAuthState.username} Discord avatar`
+    : 'Discord avatar';
+}
+
+async function logoutDiscordSession() {
+  try {
+    const res = await fetch('/api/discord/logout', {
+      method: 'POST',
+      credentials: 'include'
+    });
+    if (!res.ok) {
+      return;
+    }
+    state.discordAuthState = { authenticated: false };
+    setViewportAuthChipMenuOpen(false);
+    syncDiscordAuthBodyClass();
+    syncDiscordButtonUi();
+  } catch {
+    // Leave the current session UI unchanged if logout fails.
+  }
 }
 
 function persistDiscordLoginFlowState(value) {

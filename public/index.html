@@ -29,6 +29,22 @@
       </div>
     </div>
   </div>
+  <div id="discord-session-chip" class="discord-session-chip" hidden>
+    <button
+      id="discord-session-chip-button"
+      class="discord-session-chip-button"
+      type="button"
+      aria-haspopup="true"
+      aria-expanded="false"
+      aria-label="Discord session"
+    >
+      <img id="discord-session-chip-avatar" class="discord-session-chip-avatar" alt="Discord avatar" />
+      <span id="discord-session-chip-label" class="discord-session-chip-label"></span>
+    </button>
+    <div id="discord-session-chip-menu" class="discord-session-chip-menu" hidden>
+      <button id="discord-session-logout-btn" class="discord-session-logout-btn" type="button">Log Out</button>
+    </div>
+  </div>
   <button id="debug-toggle-btn" type="button" aria-label="Toggle debug mode">🐛</button>
   <button id="save-hotspots-btn" type="button" aria-label="Save hotspot positions">Save</button>
   <div id="debug-object-controls" aria-label="Debug object controls">
