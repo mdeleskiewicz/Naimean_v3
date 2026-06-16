@@ -3111,6 +3111,148 @@
       100% { opacity: 0; transform: translate3d(var(--bubble-current, 40px), calc(var(--bubble-rise, 50px) * -1), 0); }
     }
 
+    /* --- shrimp --- */
+    .aquarium-shrimp {
+      position: absolute;
+      line-height: 1;
+      user-select: none;
+      will-change: transform;
+      animation: aquarium-shrimp-swim var(--shrimp-duration, 13s) ease-in-out infinite;
+      animation-delay: var(--shrimp-delay, 0s);
+    }
+
+    @keyframes aquarium-shrimp-swim {
+      0%   { transform: translate3d(0, 0, 0) scaleX(1); }
+      12%  { transform: translate3d(calc(var(--shrimp-swim-dist, 240px) * 0.12), -5px, 0) scaleX(1); }
+      26%  { transform: translate3d(calc(var(--shrimp-swim-dist, 240px) * 0.26),  4px, 0) scaleX(1); }
+      39%  { transform: translate3d(calc(var(--shrimp-swim-dist, 240px) * 0.39), -4px, 0) scaleX(1); }
+      48%  { transform: translate3d(var(--shrimp-swim-dist, 240px), 0, 0) scaleX(1); }
+      50%  { transform: translate3d(var(--shrimp-swim-dist, 240px), 0, 0) scaleX(-1); }
+      62%  { transform: translate3d(calc(var(--shrimp-swim-dist, 240px) * 0.88), -5px, 0) scaleX(-1); }
+      75%  { transform: translate3d(calc(var(--shrimp-swim-dist, 240px) * 0.74),  4px, 0) scaleX(-1); }
+      88%  { transform: translate3d(calc(var(--shrimp-swim-dist, 240px) * 0.61), -4px, 0) scaleX(-1); }
+      98%  { transform: translate3d(0, 0, 0) scaleX(-1); }
+      100% { transform: translate3d(0, 0, 0) scaleX(1); }
+    }
+
+    /* --- snail — slow crawl along the bottom --- */
+    .aquarium-snail {
+      position: absolute;
+      line-height: 1;
+      user-select: none;
+      will-change: transform;
+      animation: aquarium-snail-crawl var(--snail-duration, 28s) linear infinite;
+      animation-delay: var(--snail-delay, 0s);
+    }
+
+    @keyframes aquarium-snail-crawl {
+      0%   { transform: translate3d(0, 0, 0) scaleX(1); }
+      46%  { transform: translate3d(var(--snail-crawl-dist, 140px), 0, 0) scaleX(1); }
+      50%  { transform: translate3d(var(--snail-crawl-dist, 140px), 0, 0) scaleX(-1); }
+      96%  { transform: translate3d(0, 0, 0) scaleX(-1); }
+      100% { transform: translate3d(0, 0, 0) scaleX(1); }
+    }
+
+    /* --- starfish — gentle rocking drift near the bottom --- */
+    .aquarium-starfish {
+      position: absolute;
+      line-height: 1;
+      user-select: none;
+      will-change: transform;
+      animation: aquarium-starfish-drift var(--starfish-duration, 20s) ease-in-out infinite;
+      animation-delay: var(--starfish-delay, 0s);
+    }
+
+    @keyframes aquarium-starfish-drift {
+      0%   { transform: translate3d(0, 0, 0) rotate(0deg); }
+      25%  { transform: translate3d(4px, -3px, 0) rotate(6deg); }
+      50%  { transform: translate3d(-2px, 2px, 0) rotate(-4deg); }
+      75%  { transform: translate3d(3px, -2px, 0) rotate(5deg); }
+      100% { transform: translate3d(0, 0, 0) rotate(0deg); }
+    }
+
+    /* --- turtle — slow, steady swim --- */
+    .aquarium-turtle {
+      position: absolute;
+      line-height: 1;
+      user-select: none;
+      will-change: transform;
+      animation: aquarium-turtle-swim var(--turtle-duration, 24s) ease-in-out infinite;
+      animation-delay: var(--turtle-delay, 0s);
+    }
+
+    @keyframes aquarium-turtle-swim {
+      0%   { transform: translate3d(0, 0, 0) scaleX(1); }
+      20%  { transform: translate3d(calc(var(--turtle-swim-dist, 170px) * 0.20), -4px, 0) scaleX(1); }
+      40%  { transform: translate3d(calc(var(--turtle-swim-dist, 170px) * 0.40),  3px, 0) scaleX(1); }
+      48%  { transform: translate3d(var(--turtle-swim-dist, 170px), 0, 0) scaleX(1); }
+      50%  { transform: translate3d(var(--turtle-swim-dist, 170px), 0, 0) scaleX(-1); }
+      70%  { transform: translate3d(calc(var(--turtle-swim-dist, 170px) * 0.70), -4px, 0) scaleX(-1); }
+      90%  { transform: translate3d(calc(var(--turtle-swim-dist, 170px) * 0.20),  3px, 0) scaleX(-1); }
+      98%  { transform: translate3d(0, 0, 0) scaleX(-1); }
+      100% { transform: translate3d(0, 0, 0) scaleX(1); }
+    }
+
+    /* --- jellyfish — gentle vertical pulse and drift --- */
+    .aquarium-jellyfish {
+      position: absolute;
+      line-height: 1;
+      user-select: none;
+      will-change: transform;
+      animation: aquarium-jellyfish-pulse var(--jelly-duration, 8s) ease-in-out infinite;
+      animation-delay: var(--jelly-delay, 0s);
+    }
+
+    @keyframes aquarium-jellyfish-pulse {
+      0%   { transform: translate3d(0, 0, 0) scale(1); }
+      20%  { transform: translate3d(3px, calc(var(--jelly-drift, 35px) * -0.35), 0) scale(1.06); }
+      50%  { transform: translate3d(-2px, calc(var(--jelly-drift, 35px) * -1), 0) scale(0.96); }
+      80%  { transform: translate3d(3px, calc(var(--jelly-drift, 35px) * -0.55), 0) scale(1.04); }
+      100% { transform: translate3d(0, 0, 0) scale(1); }
+    }
+
+    /* --- nautilus — glides across mid-tank with a lazy bob --- */
+    .aquarium-nautilus {
+      position: absolute;
+      line-height: 1;
+      user-select: none;
+      will-change: transform;
+      animation: aquarium-nautilus-glide var(--nautilus-duration, 22s) ease-in-out infinite;
+      animation-delay: var(--nautilus-delay, 0s);
+    }
+
+    @keyframes aquarium-nautilus-glide {
+      0%   { transform: translate3d(0, 0, 0) scaleX(1); }
+      15%  { transform: translate3d(calc(var(--nautilus-swim-dist, 200px) * 0.15), -6px, 0) scaleX(1); }
+      35%  { transform: translate3d(calc(var(--nautilus-swim-dist, 200px) * 0.35),  5px, 0) scaleX(1); }
+      48%  { transform: translate3d(var(--nautilus-swim-dist, 200px), 0, 0) scaleX(1); }
+      50%  { transform: translate3d(var(--nautilus-swim-dist, 200px), 0, 0) scaleX(-1); }
+      65%  { transform: translate3d(calc(var(--nautilus-swim-dist, 200px) * 0.65), -6px, 0) scaleX(-1); }
+      82%  { transform: translate3d(calc(var(--nautilus-swim-dist, 200px) * 0.40),  5px, 0) scaleX(-1); }
+      100% { transform: translate3d(0, 0, 0) scaleX(-1); }
+    }
+
+    /* --- octopus — drifts side to side with a subtle pulse --- */
+    .aquarium-octopus {
+      position: absolute;
+      line-height: 1;
+      user-select: none;
+      will-change: transform;
+      animation: aquarium-octopus-swim var(--octopus-duration, 16s) ease-in-out infinite;
+      animation-delay: var(--octopus-delay, 0s);
+    }
+
+    @keyframes aquarium-octopus-swim {
+      0%   { transform: translate3d(0, 0, 0) scaleX(1) scale(1); }
+      12%  { transform: translate3d(calc(var(--octopus-swim-dist, 210px) * 0.12), -8px, 0) scaleX(1) scale(1.05); }
+      28%  { transform: translate3d(calc(var(--octopus-swim-dist, 210px) * 0.28),  6px, 0) scaleX(1) scale(0.97); }
+      48%  { transform: translate3d(var(--octopus-swim-dist, 210px), 0, 0) scaleX(1) scale(1); }
+      50%  { transform: translate3d(var(--octopus-swim-dist, 210px), 0, 0) scaleX(-1) scale(1); }
+      65%  { transform: translate3d(calc(var(--octopus-swim-dist, 210px) * 0.80), -8px, 0) scaleX(-1) scale(1.05); }
+      80%  { transform: translate3d(calc(var(--octopus-swim-dist, 210px) * 0.50),  6px, 0) scaleX(-1) scale(0.97); }
+      100% { transform: translate3d(0, 0, 0) scaleX(-1) scale(1); }
+    }
+
     /* --- Disney pixel-fish roster --- */
     .aquarium-disney-fish {
       position: absolute;

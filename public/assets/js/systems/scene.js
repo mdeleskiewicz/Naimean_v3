@@ -46,6 +46,7 @@ import { playWrongAudio, unlockCornerScoreScoringAudioFromGesture } from './corn
 import { adjustDvdSpeed, stopBigTvDvdAnimation } from './dvd.js';
 import { stopRadioTuningLoopPlayback } from './flipClock.js';
 import { createHotspots, getRuntimeHotspotById, syncControlledOverlaysFromHotspots, consumeSaveResultFlash, hydrateHotspotsFromServer, hydrateNonCriticalSceneData, refreshDebugObjectActions, refreshDebugObjectSelectOptions, setHotspotDebugLockState, getSelectedDebugHotspotElement, saveDenUrlOverride, saveHotspots, hideSaveModal, encodeDebugSavePassword, hasMatchingDebugSaveCipher } from './hotspots.js';
+import { getAquariumShrimpCount } from './aquariumEffect.js';
 
 const hasCoarsePointer = window.matchMedia('(pointer: coarse)').matches;
 const isIOSDevice =
@@ -265,6 +266,33 @@ function createPixelSpriteDataUrl({ pixels, palette }) {
     rowCount,
     dataUrl: `url("data:image/svg+xml,${encodeURIComponent(svg)}")`
   };
+}
+
+function takeAquariumDisneyFishSpec(specPool) {
+  return specPool.pop() ?? AQUARIUM_DISNEY_CHARACTER_SPECS[Math.floor(Math.random() * AQUARIUM_DISNEY_CHARACTER_SPECS.length)];
+}
+
+function appendAquariumDisneyFish(el, specPool, overrides = {}) {
+  const spec = takeAquariumDisneyFishSpec(specPool);
+  const spriteData = createPixelSpriteDataUrl(spec);
+  const widthPx = overrides.widthPx ?? spec.widthPx;
+  const fish = document.createElement('span');
+  fish.className = 'aquarium-disney-fish';
+  fish.dataset.character = spec.name;
+  fish.setAttribute('aria-hidden', 'true');
+  fish.style.left = `${overrides.leftPct ?? spec.leftPct}%`;
+  fish.style.top = `${overrides.topPct ?? spec.topPct}%`;
+  fish.style.width = `${widthPx}px`;
+  fish.style.height = `${Math.round((spriteData.rowCount / spriteData.columnCount) * widthPx)}px`;
+  fish.style.backgroundImage = spriteData.dataUrl;
+  fish.style.setProperty('--fish-swim-dist', `${overrides.swimDistPx ?? spec.swimDistPx}px`);
+  fish.style.setProperty('--fish-duration', `${(overrides.durationSec ?? spec.durationSec).toFixed(2)}s`);
+  fish.style.setProperty('--fish-delay', `${(overrides.delaySec ?? spec.delaySec).toFixed(2)}s`);
+  fish.style.setProperty('--fish-bob-a', `${overrides.bobA ?? spec.bobA}px`);
+  fish.style.setProperty('--fish-bob-b', `${overrides.bobB ?? spec.bobB}px`);
+  fish.style.setProperty('--fish-bob-c', `${overrides.bobC ?? spec.bobC}px`);
+  el.appendChild(fish);
+  return fish;
 }
 
 function createSceneTiles() {
@@ -514,25 +542,172 @@ function createAquariumFishEffect() {
     }
   }
 
-  // ── Disney fish roster — pixel-styled sprites matching the provided colors ──
-  for (const spec of AQUARIUM_DISNEY_CHARACTER_SPECS) {
-    const spriteData = createPixelSpriteDataUrl(spec);
-    const fish = document.createElement('span');
-    fish.className = 'aquarium-disney-fish';
-    fish.dataset.character = spec.name;
-    fish.setAttribute('aria-hidden', 'true');
-    fish.style.left = `${spec.leftPct}%`;
-    fish.style.top = `${spec.topPct}%`;
-    fish.style.width = `${spec.widthPx}px`;
-    fish.style.height = `${Math.round((spriteData.rowCount / spriteData.columnCount) * spec.widthPx)}px`;
-    fish.style.backgroundImage = spriteData.dataUrl;
-    fish.style.setProperty('--fish-swim-dist', `${spec.swimDistPx}px`);
-    fish.style.setProperty('--fish-duration', `${spec.durationSec.toFixed(2)}s`);
-    fish.style.setProperty('--fish-delay', `${spec.delaySec.toFixed(2)}s`);
-    fish.style.setProperty('--fish-bob-a', `${spec.bobA}px`);
-    fish.style.setProperty('--fish-bob-b', `${spec.bobB}px`);
-    fish.style.setProperty('--fish-bob-c', `${spec.bobC}px`);
-    el.appendChild(fish);
+  // Shrimp: weighted random count favoring 3–4 (3–6 possible), distributed evenly across the bottom third of the tank with jitter.
+  // Color palette blends warm and cool shrimp morph-inspired hues for variety.
+  const shrimpHues = [0, 22, 55, 115, 200, 260, 330];
+  const shrimpHuePool = [...shrimpHues].sort(() => Math.random() - 0.5);
+  const shrimpCount = getAquariumShrimpCount();
+  const slotHeight = 23 / shrimpCount;
+  const shrimpSizeTiers = [10, 14, 20, 26, 31];
+  for (let i = 0; i < shrimpCount; i++) {
+    const slotStart = 67 + i * slotHeight;
+    const top = Math.floor(slotStart + Math.random() * (slotHeight * 0.7));
+    const size = shrimpSizeTiers[Math.floor(Math.random() * shrimpSizeTiers.length)] + Math.floor(Math.random() * 3);
+    const swimDist = 170 + Math.floor(Math.random() * 130);
+    const duration = 10 + Math.random() * 8;
+    const delay = -(Math.random() * duration);
+    const hue = shrimpHuePool[i % shrimpHuePool.length];
+    const shrimp = document.createElement('span');
+    shrimp.className = 'aquarium-shrimp';
+    shrimp.textContent = '🦐';
+    shrimp.style.fontSize = `${size}px`;
+    shrimp.style.top = `${top}%`;
+    shrimp.style.left = '4%';
+    shrimp.style.filter = `hue-rotate(${hue}deg)`;
+    shrimp.style.setProperty('--shrimp-swim-dist', `${swimDist}px`);
+    shrimp.style.setProperty('--shrimp-duration', `${duration.toFixed(2)}s`);
+    shrimp.style.setProperty('--shrimp-delay', `${delay.toFixed(2)}s`);
+    el.appendChild(shrimp);
+  }
+
+  const disneyFishPool = [...AQUARIUM_DISNEY_CHARACTER_SPECS].sort(() => Math.random() - 0.5);
+
+  // Special guest: one random creature per load.
+  const guests = ['snail', 'starfish', 'betta', 'turtle', 'jellyfish', 'nautilus', 'octopus'];
+  const guestType = guests[Math.floor(Math.random() * guests.length)];
+
+  if (guestType === 'snail') {
+    const size = 20 + Math.floor(Math.random() * 10);
+    const left = 5 + Math.floor(Math.random() * 30);
+    const crawlDist = 120 + Math.floor(Math.random() * 100);
+    const duration = 22 + Math.random() * 14;
+    const delay = -(Math.random() * duration);
+    const snail = document.createElement('span');
+    snail.className = 'aquarium-snail';
+    snail.textContent = '🐌';
+    snail.style.fontSize = `${size}px`;
+    snail.style.bottom = '4%';
+    snail.style.left = `${left}%`;
+    snail.style.setProperty('--snail-crawl-dist', `${crawlDist}px`);
+    snail.style.setProperty('--snail-duration', `${duration.toFixed(2)}s`);
+    snail.style.setProperty('--snail-delay', `${delay.toFixed(2)}s`);
+    el.appendChild(snail);
+  } else if (guestType === 'starfish') {
+    const size = 22 + Math.floor(Math.random() * 12);
+    const left = 20 + Math.floor(Math.random() * 55);
+    const duration = 18 + Math.random() * 10;
+    const delay = Math.random() * 7;
+    const star = document.createElement('span');
+    star.className = 'aquarium-starfish';
+    star.textContent = '⭐';
+    star.style.fontSize = `${size}px`;
+    star.style.bottom = '6%';
+    star.style.left = `${left}%`;
+    star.style.setProperty('--starfish-duration', `${duration.toFixed(2)}s`);
+    star.style.setProperty('--starfish-delay', `${delay.toFixed(2)}s`);
+    el.appendChild(star);
+  } else if (guestType === 'betta') {
+    const widthPx = 36 + Math.floor(Math.random() * 12);
+    const top = 20 + Math.floor(Math.random() * 45);
+    const swimDist = 190 + Math.floor(Math.random() * 110);
+    const duration = 9 + Math.random() * 7;
+    const delay = -(Math.random() * duration);
+    appendAquariumDisneyFish(el, disneyFishPool, {
+      widthPx,
+      topPct: top,
+      leftPct: 6,
+      swimDistPx: swimDist,
+      durationSec: duration,
+      delaySec: delay
+    });
+  } else if (guestType === 'turtle') {
+    const size = 30 + Math.floor(Math.random() * 12);
+    const top = 30 + Math.floor(Math.random() * 35);
+    const swimDist = 150 + Math.floor(Math.random() * 100);
+    const duration = 20 + Math.random() * 14;
+    const delay = -(Math.random() * duration);
+    const turtle = document.createElement('span');
+    turtle.className = 'aquarium-turtle';
+    turtle.textContent = '🐢';
+    turtle.style.fontSize = `${size}px`;
+    turtle.style.top = `${top}%`;
+    turtle.style.left = '5%';
+    turtle.style.setProperty('--turtle-swim-dist', `${swimDist}px`);
+    turtle.style.setProperty('--turtle-duration', `${duration.toFixed(2)}s`);
+    turtle.style.setProperty('--turtle-delay', `${delay.toFixed(2)}s`);
+    el.appendChild(turtle);
+  } else if (guestType === 'jellyfish') {
+    const size = 24 + Math.floor(Math.random() * 14);
+    const left = 15 + Math.floor(Math.random() * 65);
+    const driftAmt = 30 + Math.floor(Math.random() * 30);
+    const duration = 6 + Math.random() * 5;
+    const delay = Math.random() * 4;
+    const jelly = document.createElement('span');
+    jelly.className = 'aquarium-jellyfish';
+    jelly.textContent = '🪼';
+    jelly.style.fontSize = `${size}px`;
+    jelly.style.top = `${15 + Math.floor(Math.random() * 50)}%`;
+    jelly.style.left = `${left}%`;
+    jelly.style.setProperty('--jelly-drift', `${driftAmt}px`);
+    jelly.style.setProperty('--jelly-duration', `${duration.toFixed(2)}s`);
+    jelly.style.setProperty('--jelly-delay', `${delay.toFixed(2)}s`);
+    el.appendChild(jelly);
+  } else if (guestType === 'nautilus') {
+    const size = 26 + Math.floor(Math.random() * 12);
+    const top = 25 + Math.floor(Math.random() * 40);
+    const swimDist = 160 + Math.floor(Math.random() * 100);
+    const duration = 18 + Math.random() * 12;
+    const delay = -(Math.random() * duration);
+    const nautilus = document.createElement('span');
+    nautilus.className = 'aquarium-nautilus';
+    nautilus.textContent = '🐚';
+    nautilus.style.fontSize = `${size}px`;
+    nautilus.style.top = `${top}%`;
+    nautilus.style.left = '8%';
+    nautilus.style.setProperty('--nautilus-swim-dist', `${swimDist}px`);
+    nautilus.style.setProperty('--nautilus-duration', `${duration.toFixed(2)}s`);
+    nautilus.style.setProperty('--nautilus-delay', `${delay.toFixed(2)}s`);
+    el.appendChild(nautilus);
+  } else if (guestType === 'octopus') {
+    const size = 28 + Math.floor(Math.random() * 14);
+    const top = 20 + Math.floor(Math.random() * 50);
+    const swimDist = 180 + Math.floor(Math.random() * 110);
+    const duration = 14 + Math.random() * 10;
+    const delay = -(Math.random() * duration);
+    const octopus = document.createElement('span');
+    octopus.className = 'aquarium-octopus';
+    octopus.textContent = '🐙';
+    octopus.style.fontSize = `${size}px`;
+    octopus.style.top = `${top}%`;
+    octopus.style.left = '5%';
+    octopus.style.setProperty('--octopus-swim-dist', `${swimDist}px`);
+    octopus.style.setProperty('--octopus-duration', `${duration.toFixed(2)}s`);
+    octopus.style.setProperty('--octopus-delay', `${delay.toFixed(2)}s`);
+    el.appendChild(octopus);
+  }
+
+  // Generic fish slots now draw from the Disney sprite roster instead of emoji fish.
+  const leadingFishConfigs = [
+    {
+      widthPx: 40 + Math.floor(Math.random() * 8),
+      topPct: 22 + Math.floor(Math.random() * 28),
+      leftPct: 5,
+      swimDistPx: 180 + Math.floor(Math.random() * 100),
+      durationSec: 9 + Math.random() * 6,
+      delaySec: 0
+    },
+    {
+      widthPx: 38 + Math.floor(Math.random() * 8),
+      topPct: 30 + Math.floor(Math.random() * 30),
+      leftPct: 7,
+      swimDistPx: 170 + Math.floor(Math.random() * 110),
+      durationSec: 10 + Math.random() * 7,
+      delaySec: 0
+    }
+  ];
+  for (const fishConfig of leadingFishConfigs) {
+    fishConfig.delaySec = -(Math.random() * fishConfig.durationSec);
+    appendAquariumDisneyFish(el, disneyFishPool, fishConfig);
   }
 
   // ── Left-side filter (hang-on-back style, upper-left of tank) ────────────

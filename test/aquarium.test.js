@@ -106,12 +106,17 @@ test('aquarium shrimp count favors 3 and 4, with 5 uncommon and 6 rare', () => {
   }
 });
 
-test('aquarium Disney sprite roster includes the requested character lineup', () => {
+test('aquarium keeps shrimp/random creature flow while generic fish use Disney sprites', () => {
   const source = fs.readFileSync(sceneJsPath, 'utf8');
-  const aquariumBlock = getBlock(
+  const disneySpecBlock = getBlock(
     source,
     'const AQUARIUM_DISNEY_CHARACTER_SPECS = Object.freeze([',
     'function createPixelSpriteDataUrl({ pixels, palette }) {',
+  );
+  const aquariumBlock = getBlock(
+    source,
+    'function createAquariumFishEffect() {',
+    'function renderHotspotLayers() {',
   );
 
   [
@@ -123,8 +128,17 @@ test('aquarium Disney sprite roster includes the requested character lineup', ()
     'Gurgle',
     'Gill'
   ].forEach((name) => {
-    assert.match(aquariumBlock, new RegExp(name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));
+    assert.match(disneySpecBlock, new RegExp(name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));
   });
+  assert.match(source, /import { getAquariumShrimpCount } from '\.\/aquariumEffect\.js';/);
+  assert.match(aquariumBlock, /const shrimpCount = getAquariumShrimpCount\(\);/, 'Expected aquarium to keep the shrimp population flow');
+  assert.match(
+    aquariumBlock,
+    /const guests = \['snail', 'starfish', 'betta', 'turtle', 'jellyfish', 'nautilus', 'octopus'\];/,
+    'Expected aquarium to keep the random sea-creature guest mix',
+  );
+  assert.match(aquariumBlock, /appendAquariumDisneyFish\(el, disneyFishPool, /, 'Expected generic fish slots to render Disney sprites');
+  assert.doesNotMatch(aquariumBlock, /for \(const spec of AQUARIUM_DISNEY_CHARACTER_SPECS\)/, 'Expected aquarium not to render the entire Disney roster at once');
   assert.match(source, /aquarium-disney-fish/, 'Expected aquarium fish to render as Disney pixel sprites');
   assert.match(source, /createPixelSpriteDataUrl/, 'Expected aquarium fish sprites to be generated from pixel art data');
 });
@@ -133,6 +147,7 @@ test('lite rendering keeps aquarium bubbles and animals animating', () => {
   const cssSource = fs.readFileSync(indexCssPath, 'utf8');
   const pausedInLiteRenderingSelectors = [
     '.aquarium-bubble',
+    '.aquarium-shrimp',
     '.aquarium-disney-fish',
   ];
 
