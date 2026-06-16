@@ -142,7 +142,7 @@ function ensureViewportAuthChipRefs() {
     await logoutDiscordSession();
   });
   document.addEventListener('pointerdown', (event) => {
-    if (!state.isViewportAuthChipMenuOpen || !state.viewportAuthChipEl?.contains(event.target)) {
+    if (state.isViewportAuthChipMenuOpen && !state.viewportAuthChipEl?.contains(event.target)) {
       setViewportAuthChipMenuOpen(false);
     }
   });
