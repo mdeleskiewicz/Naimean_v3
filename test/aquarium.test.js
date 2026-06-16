@@ -165,12 +165,22 @@ test('aquarium restored creature swim loops return to their starting orientation
 
   assert.match(
     cssSource,
-    /@keyframes aquarium-nautilus-glide \{[\s\S]*100% \{ transform: translate3d\(0, 0, 0\) scaleX\(1\); \}/,
+    /98%\s+\{\s+transform: translate3d\(0, 0, 0\) scaleX\(-1\);\s+\}/,
+    'Expected nautilus glide loop to hold its return orientation before resetting',
+  );
+  assert.match(
+    cssSource,
+    /100%\s+\{\s+transform: translate3d\(0, 0, 0\) scaleX\(1\);\s+\}/,
     'Expected nautilus glide loop to end facing its starting direction',
   );
   assert.match(
     cssSource,
-    /@keyframes aquarium-octopus-swim \{[\s\S]*100% \{ transform: translate3d\(0, 0, 0\) scaleX\(1\) scale\(1\); \}/,
+    /98%\s+\{\s+transform: translate3d\(0, 0, 0\) scaleX\(-1\) scale\(1\);\s+\}/,
+    'Expected octopus swim loop to hold its return orientation before resetting',
+  );
+  assert.match(
+    cssSource,
+    /100%\s+\{\s+transform: translate3d\(0, 0, 0\) scaleX\(1\) scale\(1\);\s+\}/,
     'Expected octopus swim loop to end facing its starting direction',
   );
 });
