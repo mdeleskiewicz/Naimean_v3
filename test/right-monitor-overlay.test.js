@@ -46,3 +46,18 @@ test('right monitor content bleeds 1px past the frame transparency', () => {
     'Expected right monitor overlays to extend 1px past the frame transparency on every side',
   );
 });
+
+test('right monitor frame is vertically corrected and uses mirrored screen bounds', () => {
+  const source = fs.readFileSync(indexCssPath, 'utf8');
+
+  assert.match(
+    source,
+    /\.right-monitor-screen-window\s*\{[^}]*inset:\s*17\.09%\s+25\.26%\s+29\.297%\s+24\.414%;/s,
+    'Expected right monitor screen bounds to mirror the left monitor without the upside-down vertical offsets',
+  );
+  assert.match(
+    source,
+    /\.monitor-group-right\s+\.monitor-frame-image\s*\{[^}]*transform:\s*scaleY\(-1\);[^}]*transform-origin:\s*center;/s,
+    'Expected the right monitor frame art to be vertically flipped into the correct orientation',
+  );
+});
