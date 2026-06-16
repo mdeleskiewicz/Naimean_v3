@@ -4,7 +4,7 @@
 This document details the technical roadmap, build protocols, and infrastructure scoping for Naimean V3.
 
 ## Technical Notes
-- **Wrangler Configuration:** The project has transitioned from `wrangler.toml` (V2) to `wrangler.jsonc` (V3) for improved configuration management.
+- **Wrangler Configuration:** The project standardizes on `wrangler.toml` as the authoritative Cloudflare config.
 - **Environment:** Runs on Cloudflare Workers (`naimeav3`).
 - **Database:** Uses Cloudflare D1 (`naimean_v3_db`).
 - **Compatibility:** Compatibility date is set to `2024-04-03`.

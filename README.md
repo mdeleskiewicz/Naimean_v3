@@ -20,7 +20,6 @@ Naimean V3 is a Cloudflare edge application that serves a room-based interactive
 - Cloudflare Durable Objects with SQLite-backed storage (`HOTSPOT_STORE`)
 - Cloudflare Assets/Pages static hosting (`ASSETS`)
 - Cloudflare D1 binding (`DB` -> `naimean-v3-db`)
-- Cloudflare R2 binding (`ASSETS_STORAGE` -> `naimean-v3-assets`)
 - Vanilla HTML/CSS/JavaScript frontend (no framework)
 - Discord OAuth for authenticated routes
 - Node.js built-in test runner (`node --test`)
@@ -61,7 +60,6 @@ The `HotspotStore` Durable Object stores:
 | Assets | `ASSETS` | `public/` directory |
 | Durable Objects | `HOTSPOT_STORE` | `HotspotStore` class |
 | D1 | `DB` | `naimean-v3-db` (`0798d2f2-618b-4044-91f5-a2c762922184`) |
-| R2 | `ASSETS_STORAGE` | `naimean-v3-assets` |
 
 ### Account-level storage inventory provided
 
@@ -71,7 +69,7 @@ The `HotspotStore` Durable Object stores:
 | D1 | `naimean-v3-db` | `0798d2f2-618b-4044-91f5-a2c762922184` (bound as `DB`) |
 | D1 | `naimean-db` | `0871f90d-f7e3-467a-a1f9-4e74ac8aef42` |
 | D1 | `barrelroll-counter-db` | `22277fbe-031d-4ca2-8937-245309e981cd` |
-| R2 | `naimean-v3-assets` | bound as `ASSETS_STORAGE` |
+| R2 | `naimean-v3-assets` | account resource only; not bound in `wrangler.toml` |
 
 ## Development
 

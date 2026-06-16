@@ -14,7 +14,6 @@ Naimean V3 is an edge-native application running on Cloudflare Workers. It prior
 | Durable Objects | Stateful logic and storage | `env.HOTSPOT_STORE` |
 | Pages Assets | Static hosting | `env.ASSETS` |
 | D1 | Relational data | `naimean-v3-db` |
-| R2 | Object storage | `naimean-v3-assets` (`ASSETS_STORAGE`) |
 | KV | Fast global state (sparse usage) | `naimeav3` namespace |
 
 ## 2. Resource Inventory and Configuration
@@ -26,13 +25,12 @@ Naimean V3 is an edge-native application running on Cloudflare Workers. It prior
 - Environment variables:
   - `AQUARIUM_LOCAL_CLIP_COUNT = 23`
   - `DISCORD_CLIENT_ID = 1495879141638275213`
-  - `DISCORD_CLIENT_SECRET = [Encrypted]`
-  - `DISCORD_GUILD_ID = REQUIRED_SET_DISCORD_GUILD_ID`
+  - `DISCORD_GUILD_ID = 1487898909224341534`
   - `GOOGLE_DRIVE_PAGE_SIZE = 100`
-  - `GOOGLE_DRIVE_SHRIMP_FOLDER_ID = 1DPzSJbcN9v_D1mSy4nlXjPOBhFHJpvSi`
+  - `GOOGLE_DRIVE_SHRIMP_FOLDER_ID = 1DPzSJbcN9v_D1mSy4nIXjPOBhFHJpvSi`
+  - `DISCORD_ALLOWED_ROLE_IDS = ""`
 - Bindings:
   - `ASSETS` (Pages Assets)
-  - `ASSETS_STORAGE` (R2)
   - `DB` (D1)
   - `HOTSPOT_STORE` (Durable Object)
 
@@ -42,7 +40,7 @@ Naimean V3 is an edge-native application running on Cloudflare Workers. It prior
 |---|---|---|
 | KV Namespace | `naimeav3` | `dff7175059ce478eab8c910949ca330f` |
 | D1 Database | `naimean-v3-db` | `0798d2f2-618b-4044-91f5-a2c762922184` (`DB`) |
-| R2 Bucket | `naimean-v3-assets` | bound via `ASSETS_STORAGE` |
+| R2 Bucket | `naimean-v3-assets` | account resource only; not bound in `wrangler.toml` |
 
 ## 3. Implementation Logic
 
@@ -54,8 +52,6 @@ Naimean V3 uses a local-first storage strategy for interactive room features.
   - Avoids unnecessary global D1/KV usage for room-scoped interactions.
 - D1 (`naimean-v3-db`):
   - Reserved for structured application data that needs querying outside the scope of individual Durable Objects.
-- R2 (`naimean-v3-assets`):
-  - Stores large or user-uploaded media assets.
 
 ## 4. Development and CI
 

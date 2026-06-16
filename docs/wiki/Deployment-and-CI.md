@@ -25,7 +25,7 @@ The workflow fires automatically whenever commits are pushed to the `main` branc
 
 ```
 1. Checkout the code
-2. Run: `npx wrangler deploy` (workflow currently passes `--config wrangler.jsonc`)
+2. Run: npx wrangler deploy --config wrangler.toml
 3. Save the deploy log to Google Drive
 ```
 
@@ -45,12 +45,12 @@ Clones the repository into the GitHub Actions runner (a temporary Linux VM).
     CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
     CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
   run: |
-    npx wrangler deploy --config wrangler.jsonc --color=always > raw-deploy.log 2>&1 || true
+    npx wrangler deploy --config wrangler.toml --color=always > raw-deploy.log 2>&1 || true
 ```
 
 - `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID` are GitHub repository secrets — they authenticate Wrangler to your Cloudflare account without needing to log in interactively.
 - `npx wrangler deploy` runs Wrangler without installing it globally (it downloads it from npm on demand).
-- The workflow currently passes `--config wrangler.jsonc`; the repository config file present in source control is `wrangler.toml`. Keep these aligned to avoid deployment drift.
+- `--config wrangler.toml` explicitly uses the repository's TOML config file.
 - `> raw-deploy.log 2>&1 || true` captures all output to a log file and ensures the step doesn't fail even if Wrangler exits with an error (the `|| true`). The outcome is checked from the log file instead.
 - The log is then stripped of ANSI colour codes and saved as `full-deploy-log.txt`.
 
@@ -124,7 +124,7 @@ Cloudflare distributes these globally to all its edge data centres.
 You can validate the configuration locally without actually deploying:
 
 ```bash
-npx --yes wrangler@latest deploy --dry-run
+npx --yes wrangler@latest deploy --config wrangler.toml --dry-run
 ```
 
 This builds the Worker and validates the config but makes no changes to Cloudflare. Useful for catching config errors before pushing.
@@ -141,7 +141,7 @@ GitHub Actions starts runner (Linux VM)
 Checkout code
        ↓
 npx wrangler deploy
-  ├── Reads configured Wrangler file passed in workflow
+  ├── Reads wrangler.toml
   ├── Bundles src/worker.js
   ├── Uploads Worker script to Cloudflare
   ├── Uploads public/ assets to Cloudflare
@@ -187,4 +187,4 @@ Use this inventory when reviewing deploy/config changes:
 | D1 | `naimean-v3-db` | `0798d2f2-618b-4044-91f5-a2c762922184` (bound as `DB`) |
 | D1 | `naimean-db` | `0871f90d-f7e3-467a-a1f9-4e74ac8aef42` |
 | D1 | `barrelroll-counter-db` | `22277fbe-031d-4ca2-8937-245309e981cd` |
-| R2 | `naimean-v3-assets` | bound as `ASSETS_STORAGE` |
+| R2 | `naimean-v3-assets` | account resource only; not bound in `wrangler.toml` |

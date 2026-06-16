@@ -13,7 +13,7 @@ Naimean V2 represented a foundational era in the project's development, establis
 - **Legacy Bindings:** Early iterations of KV and Durable Object experiments were conducted during this phase.
 
 ## Intersection with V3
-- **Architectural Shift:** The migration from V2 to V3 involved a complete overhaul of the configuration logic (transitioning to `wrangler.jsonc`) and a refinement of the system handoff protocols.
+- **Architectural Shift:** The migration from V2 to V3 involved major configuration and deployment workflow changes; the current repository standard is `wrangler.toml`.
 - **Core Logic:** Much of the worker logic in `naimeav3` inherits its philosophical approach to prompt engineering and agentic behavior from the V2 heritage.
 
 ## Archive Status
