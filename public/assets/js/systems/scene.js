@@ -463,7 +463,7 @@ function createAquariumFishEffect() {
     el.appendChild(octopus);
   }
 
-  // ── Bottom LED lamp fixtures (light sources at bottom-left and bottom-right) ─
+  // ── LED lamp strips — neon-matched colors (left=blue, right=pink) ──────────
   for (const side of ['left', 'right']) {
     const lamp = document.createElement('div');
     lamp.className = `aquarium-lamp aquarium-lamp-${side}`;
@@ -478,10 +478,22 @@ function createAquariumFishEffect() {
   const wallGlowTop = Math.round(spot.y + spot.h - wallGlowH);
 
   const rippleDefs = [
-    { topPct: 5,  heightPct: 22, delay: 0.0, duration: 5.4 },
-    { topPct: 25, heightPct: 26, delay: 2.1, duration: 6.8 },
-    { topPct: 48, heightPct: 20, delay: 3.8, duration: 5.0 },
-    { topPct: 68, heightPct: 24, delay: 1.3, duration: 7.2 },
+    { topPct:  5, heightPct: 18, delay: 0.0, duration: 4.2 },
+    { topPct: 22, heightPct: 22, delay: 1.4, duration: 5.8 },
+    { topPct: 42, heightPct: 18, delay: 2.7, duration: 4.6 },
+    { topPct: 58, heightPct: 24, delay: 0.8, duration: 6.2 },
+    { topPct: 14, heightPct: 14, delay: 3.4, duration: 3.8 },
+    { topPct: 72, heightPct: 20, delay: 1.9, duration: 5.0 },
+  ];
+
+  // neon palette: blue, pink, red — cycles through for each ripple
+  const neonRippleColors = [
+    { tint: 'rgba(0,200,255,0.22)',   bright: 'rgba(0,245,255,0.52)',   peak: '0.92' },
+    { tint: 'rgba(255,48,204,0.20)',  bright: 'rgba(255,80,220,0.50)',  peak: '0.88' },
+    { tint: 'rgba(255,32,32,0.18)',   bright: 'rgba(255,70,40,0.46)',   peak: '0.84' },
+    { tint: 'rgba(0,180,255,0.20)',   bright: 'rgba(20,230,255,0.48)',  peak: '0.90' },
+    { tint: 'rgba(255,60,200,0.20)',  bright: 'rgba(255,100,230,0.48)', peak: '0.86' },
+    { tint: 'rgba(0,220,255,0.22)',   bright: 'rgba(0,248,255,0.50)',   peak: '0.90' },
   ];
 
   for (const side of ['left', 'right']) {
@@ -495,13 +507,18 @@ function createAquariumFishEffect() {
     } else {
       wg.style.left = `${Math.round(spot.x + spot.w)}px`;
     }
-    for (const { topPct, heightPct, delay, duration } of rippleDefs) {
+    for (let ri = 0; ri < rippleDefs.length; ri++) {
+      const { topPct, heightPct, delay, duration } = rippleDefs[ri];
       const ripple = document.createElement('div');
       ripple.className = 'aquarium-wall-ripple';
       ripple.style.top = `${topPct}%`;
       ripple.style.height = `${heightPct}%`;
-      ripple.style.setProperty('--ripple-delay', `${delay.toFixed(2)}s`);
+      ripple.style.setProperty('--ripple-delay',    `${delay.toFixed(2)}s`);
       ripple.style.setProperty('--ripple-duration', `${duration.toFixed(2)}s`);
+      const nc = neonRippleColors[ri % neonRippleColors.length];
+      ripple.style.setProperty('--ripple-tint',   nc.tint);
+      ripple.style.setProperty('--ripple-bright', nc.bright);
+      ripple.style.setProperty('--ripple-peak',   nc.peak);
       wg.appendChild(ripple);
     }
     dom.effectsLayer.appendChild(wg);
