@@ -2,6 +2,8 @@ import { API_TIMEOUT_MS, CORNER_SCORE_API_URL, CORNER_SCORE_INITIALS_LENGTH, COR
 import { state } from '../core/state.js';
 import { isRightMonitorInteractive, wakeRightMonitorForCornerScore } from './monitors.js';
 
+const SERVER_STATS_VISIBLE_MS = 15_000;
+
 function sanitizeCornerScoreInitialsInput(value) {
   return String(value ?? '')
     .toUpperCase()
@@ -167,7 +169,6 @@ function renderRunStats() {
   const elapsed = state.cornerScoreRunElapsedMs;
   const bounces = state.cornerScoreRunBounces;
   const nearMisses = state.cornerScoreRunNearMisses;
-  const medal = getMedalForScore(state.cornerScoreValue);
   if (state.rightMonitorCornerScoreElapsedEl) {
     state.rightMonitorCornerScoreElapsedEl.textContent = formatElapsedMs(elapsed);
   }
@@ -176,10 +177,6 @@ function renderRunStats() {
   }
   if (state.rightMonitorCornerScoreNearMissesEl) {
     state.rightMonitorCornerScoreNearMissesEl.textContent = String(nearMisses);
-  }
-  if (state.rightMonitorCornerScoreMedalEl) {
-    state.rightMonitorCornerScoreMedalEl.dataset.medal = medal ?? '';
-    state.rightMonitorCornerScoreMedalEl.textContent = medal ? medal.charAt(0).toUpperCase() + medal.slice(1) : '—';
   }
 }
 
@@ -203,13 +200,13 @@ function renderPersonalBestStats() {
 }
 
 function renderServerStats() {
-  if (!state.whiteboardCornerScoreServerStatsEl) return;
+  if (!state.bigTvHighScoreStatsEl) return;
   const stats = state.cornerScoreServerStats;
-  const totalScoresEl = state.whiteboardCornerScoreServerStatsEl.querySelector('.whiteboard-cs-total-scores');
-  const totalBouncesEl = state.whiteboardCornerScoreServerStatsEl.querySelector('.whiteboard-cs-total-bounces');
-  const totalNearMissesEl = state.whiteboardCornerScoreServerStatsEl.querySelector('.whiteboard-cs-total-near-misses');
-  const totalTimeEl = state.whiteboardCornerScoreServerStatsEl.querySelector('.whiteboard-cs-total-time');
-  const totalRunsEl = state.whiteboardCornerScoreServerStatsEl.querySelector('.whiteboard-cs-total-runs');
+  const totalScoresEl = state.bigTvHighScoreStatsEl.querySelector('.big-tv-cs-total-scores');
+  const totalBouncesEl = state.bigTvHighScoreStatsEl.querySelector('.big-tv-cs-total-bounces');
+  const totalNearMissesEl = state.bigTvHighScoreStatsEl.querySelector('.big-tv-cs-total-near-misses');
+  const totalTimeEl = state.bigTvHighScoreStatsEl.querySelector('.big-tv-cs-total-time');
+  const totalRunsEl = state.bigTvHighScoreStatsEl.querySelector('.big-tv-cs-total-runs');
   if (totalScoresEl) totalScoresEl.textContent = stats ? String(stats.totalScores) : '—';
   if (totalBouncesEl) totalBouncesEl.textContent = stats ? String(stats.totalBounces) : '—';
   if (totalNearMissesEl) totalNearMissesEl.textContent = stats ? String(stats.totalNearMisses) : '—';
@@ -289,6 +286,12 @@ function renderCornerScore() {
   if (state.rightMonitorCornerScoreValueEl) {
     state.rightMonitorCornerScoreValueEl.textContent = String(state.cornerScoreValue);
   }
+  if (state.bigTvHighScoreStatsEl) {
+    const localScoreEl = state.bigTvHighScoreStatsEl.querySelector('.big-tv-cs-local-score');
+    if (localScoreEl) {
+      localScoreEl.textContent = String(state.cornerScoreValue);
+    }
+  }
   if (state.whiteboardCornerScoreValueEl) {
     state.whiteboardCornerScoreValueEl.textContent = String(state.cornerScoreHighScoreValue);
   }
@@ -313,9 +316,18 @@ function toggleBigTvHighScoreStats() {
   if (!state.bigTvHighScoreStatsEl) {
     return;
   }
-  state.isBigTvHighScoreStatsVisible = !state.isBigTvHighScoreStatsVisible;
-  state.bigTvHighScoreStatsEl.classList.toggle('is-active', state.isBigTvHighScoreStatsVisible);
-  state.bigTvHighScoreStatsEl.setAttribute('aria-hidden', state.isBigTvHighScoreStatsVisible ? 'false' : 'true');
+  state.isBigTvHighScoreStatsVisible = true;
+  state.bigTvHighScoreStatsEl.classList.add('is-active');
+  state.bigTvHighScoreStatsEl.setAttribute('aria-hidden', 'false');
+  if (state.bigTvHighScoreStatsTimeoutId !== null) {
+    window.clearTimeout(state.bigTvHighScoreStatsTimeoutId);
+  }
+  state.bigTvHighScoreStatsTimeoutId = window.setTimeout(() => {
+    state.isBigTvHighScoreStatsVisible = false;
+    state.bigTvHighScoreStatsEl?.classList.remove('is-active');
+    state.bigTvHighScoreStatsEl?.setAttribute('aria-hidden', 'true');
+    state.bigTvHighScoreStatsTimeoutId = null;
+  }, SERVER_STATS_VISIBLE_MS);
 }
 
 function setCornerScore(nextScore) {

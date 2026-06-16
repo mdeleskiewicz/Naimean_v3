@@ -92,8 +92,39 @@ function serializeCookie(name, value, options = {}) {
   if (options.sameSite) cookie += `; SameSite=${options.sameSite}`;
   if (options.maxAge !== undefined) cookie += `; Max-Age=${options.maxAge}`;
   if (options.path) cookie += `; Path=${options.path}`;
+  if (options.domain) cookie += `; Domain=${options.domain}`;
   if (options.secure) cookie += '; Secure';
   return cookie;
+}
+
+function isIpHostname(hostname) {
+  return /^\d{1,3}(?:\.\d{1,3}){3}$/.test(hostname) || hostname.includes(':');
+}
+
+function isCookieDomainCandidate(hostname) {
+  if (!hostname || typeof hostname !== 'string') return false;
+  const normalized = hostname.toLowerCase();
+  if (normalized === 'localhost' || normalized.endsWith('.localhost')) return false;
+  if (!normalized.includes('.')) return false;
+  if (isIpHostname(normalized)) return false;
+  return true;
+}
+
+function resolveOAuthStateCookieDomain(requestUrl, redirectUri, forceRedirectHost = false) {
+  let redirectHost;
+  try {
+    redirectHost = new URL(redirectUri, requestUrl).hostname.toLowerCase();
+  } catch {
+    return null;
+  }
+  const requestHost = requestUrl.hostname.toLowerCase();
+  if (!isCookieDomainCandidate(redirectHost)) return null;
+  if (requestHost === redirectHost) {
+    return forceRedirectHost ? redirectHost : null;
+  }
+  if (requestHost.endsWith(`.${redirectHost}`)) return redirectHost;
+  if (redirectHost.endsWith(`.${requestHost}`) && isCookieDomainCandidate(requestHost)) return requestHost;
+  return null;
 }
 
 // ─── Response helpers ─────────────────────────────────────────────────────────
@@ -259,24 +290,29 @@ async function serveAsset(request, env, pathname) {
 // ─── HotspotStore ─────────────────────────────────────────────────────────────
 const DEFAULT_HOTSPOTS = [
   { id: 'noahs-arcade', x: 880, y: 320, w: 2050, h: 1280 },
-  { id: 'aquarium', x: 2680, y: 445, w: 455, h: 729 },
-  { id: 'rca-board', x: 738, y: 380, w: 470, h: 1060 },
-  { id: 'overlay-whiteboard-corner-score-control', x: 785, y: 456, w: 355, h: 260 },
+  { id: 'aquarium', x: 2652, y: 888, w: 492, h: 423 },
+  { id: 'rca-board', x: 386, y: 660, w: 483, h: 108 },
+  { id: 'overlay-whiteboard-corner-score-control', x: 859, y: 329, w: 445, h: 400 },
   { id: 'chapel', x: 3840, y: 0, w: 3840, h: 2160 },
-  { id: 'pencil-sharpener', x: 2562, y: 1220, w: 221, h: 245 },
-  { id: 'overlay-big-tv-control', x: 1469, y: 330, w: 1000, h: 572 },
-  { id: 'overlay-flip-clock-control', x: 990, y: 1740, w: 360, h: 156 },
-  { id: 'overlay-left-monitor-control', x: 1322, y: 1028, w: 298, h: 206 },
-  { id: 'overlay-right-monitor-control', x: 1758, y: 1014, w: 288, h: 228 },
-  { id: 'rca-apps', x: 145, y: 195, w: 145, h: 145 },
-  { id: 'rca_apps', x: 145, y: 195, w: 145, h: 145 },
-  { id: 'cap-ex', x: 772, y: 462, w: 402, h: 120 },
-  { id: 'cap-ex_totals', x: 772, y: 462, w: 402, h: 120 },
-  { id: 'snow-tickets', x: 772, y: 614, w: 402, h: 120 },
-  { id: 'ntst-cases', x: 772, y: 766, w: 402, h: 120 },
-  { id: 'jira-board', x: 772, y: 918, w: 402, h: 120 },
-  { id: 'change-mgmt', x: 772, y: 1070, w: 402, h: 120 },
-  { id: 'change-mgmt-open', x: 772, y: 1222, w: 402, h: 120 }
+  { id: 'rca_apps', x: 392, y: 357, w: 436, h: 294 },
+  { id: 'cap-ex', x: 390, y: 774, w: 478, h: 85 },
+  { id: 'cap-ex_totals', x: 868, y: 755, w: 402, h: 100 },
+  { id: 'snow-tickets', x: 394, y: 1051, w: 666, h: 103 },
+  { id: 'ntst-cases', x: 390, y: 1148, w: 468, h: 92 },
+  { id: 'jira-board', x: 390, y: 1239, w: 470, h: 100 },
+  { id: 'change-mgmt', x: 392, y: 856, w: 804, h: 105 },
+  { id: 'change-mgmt-open', x: 392, y: 958, w: 808, h: 94 },
+  { id: 'pencil-sharpener', x: 2538, y: 1362, w: 153, h: 217 },
+  { id: 'overlay-big-tv-control', x: 1316, y: 378, w: 886, h: 646 },
+  { id: 'overlay-commodore-screen-control', x: 1323, y: 982, w: 923, h: 665 },
+  { id: 'monitor-group-middle-control', x: 1720, y: 1004, w: 338, h: 226 },
+  { id: 'overlay-commodore-power-button-control', x: 1977, y: 1528, w: 55, h: 39 },
+  { id: 'monitor-group-right-control', x: 1869, y: 990, w: 780, h: 495 },
+  { id: 'overlay-flip-clock-control', x: 848, y: 1439, w: 329, h: 136 },
+  { id: 'overlay-ashtray-smoke-control', x: 2925, y: 45, w: 280, h: 1680 },
+  { id: 'overlay-ashtray-cigarette-control', x: 2922, y: 1682, w: 148, h: 44 },
+  { id: 'monitor-group-left-control', x: 929, y: 987, w: 776, h: 495 },
+  { id: 'github-shelf-object-control', x: 2379, y: 497, w: 130, h: 130 }
 ];
 
 const HOTSPOT_LIMITS = {
@@ -342,6 +378,8 @@ const OAUTH_STATE_COOKIE = 'naimean_oauth_state';
 const SESSION_COOKIE = 'naimean_session';
 const SESSION_TTL_MS = 7 * 24 * 60 * 60 * 1000;
 const REQUIRED_DISCORD_GUILD_ID_PLACEHOLDER = 'REQUIRED_SET_DISCORD_GUILD_ID';
+const DISCORD_CANONICAL_CALLBACK_HOST = 'naimean.com';
+const DISCORD_WWW_HOST = `www.${DISCORD_CANONICAL_CALLBACK_HOST}`;
 
 function requireSessionSecret(env) {
   if (!env.SESSION_SECRET) {
@@ -356,7 +394,9 @@ async function handleDiscordAuth(request, env) {
   const clientId = env.DISCORD_CLIENT_ID;
   if (!clientId) return errorRedirect(`${url.origin}/`, 'configuration_error');
   
-  const redirectUri = env.DISCORD_REDIRECT_URI || `${url.origin}/api/discord/callback`;
+  const redirectUriOverride = env.DISCORD_REDIRECT_URI;
+  const redirectUri = redirectUriOverride || resolveDefaultDiscordRedirectUri(url);
+  const stateCookieDomain = resolveOAuthStateCookieDomain(url, redirectUri, Boolean(redirectUriOverride));
   const requestedReturnPath = normalizePostAuthPath(url.searchParams.get('state') || '/');
   const state = createOAuthState(requestedReturnPath);
   const params = new URLSearchParams({
@@ -374,6 +414,7 @@ async function handleDiscordAuth(request, env) {
       sameSite: 'Lax',
       path: '/',
       maxAge: 300,
+      domain: stateCookieDomain || undefined,
       secure: url.protocol === 'https:'
     }),
     'Access-Control-Allow-Origin': '*'
@@ -402,7 +443,9 @@ async function handleDiscordCallback(request, env) {
   const clientId = env.DISCORD_CLIENT_ID;
   const clientSecret = env.DISCORD_CLIENT_SECRET;
   const sessionSecret = env.SESSION_SECRET;
-  const targetRedirectUri = env.DISCORD_REDIRECT_URI || `${origin}/api/discord/callback`;
+  const redirectUriOverride = env.DISCORD_REDIRECT_URI;
+  const targetRedirectUri = redirectUriOverride || resolveDefaultDiscordRedirectUri(url);
+  const stateCookieDomain = resolveOAuthStateCookieDomain(url, targetRedirectUri, Boolean(redirectUriOverride));
   if (!clientId || !clientSecret || !sessionSecret) {
     return errorRedirect(`${origin}/`, 'configuration_error');
   }
@@ -462,6 +505,7 @@ async function handleDiscordCallback(request, env) {
     sameSite: 'Lax',
     path: '/',
     maxAge: 0,
+    domain: stateCookieDomain || undefined,
     secure
   });
   const sessionCookieStr = serializeCookie(SESSION_COOKIE, sessionToken, {
@@ -476,6 +520,13 @@ async function handleDiscordCallback(request, env) {
   headers.append('Set-Cookie', clearStateCookie);
   applySecurityHeaders(headers);
   return new Response(null, { status: 302, headers });
+}
+
+function resolveDefaultDiscordRedirectUri(url) {
+  if (url.protocol === 'https:' && url.hostname.toLowerCase() === DISCORD_WWW_HOST) {
+    return `https://${DISCORD_CANONICAL_CALLBACK_HOST}/api/discord/callback`;
+  }
+  return `${url.origin}/api/discord/callback`;
 }
 
 async function handleDiscordMe(request, env) {
@@ -538,7 +589,14 @@ function sanitizeHotspots(input) {
     const y = isFiniteNumber(entry.y) ? clamp(Math.round(entry.y), HOTSPOT_LIMITS.minY, HOTSPOT_LIMITS.maxY) : fallback.y;
     const w = isFiniteNumber(entry.w) ? clamp(Math.round(entry.w), HOTSPOT_LIMITS.minW, HOTSPOT_LIMITS.maxW) : fallback.w;
     const h = isFiniteNumber(entry.h) ? clamp(Math.round(entry.h), HOTSPOT_LIMITS.minH, HOTSPOT_LIMITS.maxH) : fallback.h;
-    return { id: fallback.id, x, y, w, h };
+    return {
+      id: fallback.id,
+      x,
+      y,
+      w,
+      h,
+      ...(entry.locked === true ? { locked: true } : {})
+    };
   });
 }
 
@@ -1107,6 +1165,27 @@ export class HotspotStore {
             ? 'notes'
             : 'hotspots';
     if (request.method === 'OPTIONS') return new Response(null, { status: 204, headers: HOTSPOT_JSON_HEADERS });
+    if (request.method === 'DELETE' && isCornerScore) {
+      const resetRecord = {
+        score: 0,
+        initials: '',
+        totalBounces: 0,
+        totalNearMisses: 0,
+        totalScores: 0,
+        totalTimeMs: 0,
+        totalRuns: 0,
+        pbScore: 0,
+        pbTimeMs: 0,
+        pbBounces: 0,
+        pbNearMisses: 0
+      };
+      try {
+        await this.state.storage.put(storageKey, resetRecord);
+      } catch (err) {
+        return hotspotJson({ error: `Failed to reset corner score: ${err?.message || 'Unknown error'}` }, 500);
+      }
+      return hotspotJson({ ok: true, ...resetRecord });
+    }
     if (request.method === 'GET') {
       let saved;
       try {
@@ -1384,7 +1463,13 @@ export default {
     if (pathname === '/api/hotspots') return dispatchToHotspotStore(env, request, 'den-hotspots');
     if (pathname === '/api/chapel-hotspots') return dispatchToHotspotStore(env, request, 'chapel-hotspots');
     if (pathname === '/api/arcade-url-overrides') return dispatchToHotspotStore(env, request, 'arcade-url-overrides');
-    if (pathname === '/api/corner-score') return dispatchToHotspotStore(env, request, 'corner-score');
+    if (pathname === '/api/corner-score') {
+      if (request.method === 'DELETE') {
+        const session = await getRequestSession(request, env);
+        if (!session?.userId) return jsonResponse({ error: 'Unauthorized' }, 401);
+      }
+      return dispatchToHotspotStore(env, request, 'corner-score');
+    }
 
     // Per-user notes store
     if (pathname === '/api/notes') return handleNotes(request, env);

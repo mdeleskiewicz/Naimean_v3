@@ -174,3 +174,17 @@ Site is live at the custom domain
 - [Wrangler: Creating API tokens](https://developers.cloudflare.com/workers/wrangler/ci-cd/)
 - [Managing secrets with Wrangler](https://developers.cloudflare.com/workers/configuration/secrets/)
 - [GitHub Actions documentation](https://docs.github.com/en/actions)
+
+---
+
+## Cloudflare Resource Inventory Reference
+
+Use this inventory when reviewing deploy/config changes:
+
+| Type | Name | ID / Notes |
+|---|---|---|
+| Workers KV | `naimean-kv` | `dff7175059ce478eab8c910949ca330f` |
+| D1 | `naimean-v3-db` | `0798d2f2-618b-4044-91f5-a2c762922184` (bound as `DB`) |
+| D1 | `naimean-db` | `0871f90d-f7e3-467a-a1f9-4e74ac8aef42` |
+| D1 | `barrelroll-counter-db` | `22277fbe-031d-4ca2-8937-245309e981cd` |
+| R2 | `naimean-v3-assets` | account resource only; not bound in `wrangler.toml` |

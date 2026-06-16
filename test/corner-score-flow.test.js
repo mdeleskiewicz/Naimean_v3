@@ -35,13 +35,28 @@ test('dvd scoring flow does not preemptively overwrite high score before initial
   );
 });
 
-test('dvd scoring flow persists new high score to server immediately without waiting for initials', () => {
+test('dvd scoring flow does not auto-persist new high score before initials submit', () => {
+  const source = fs.readFileSync(dvdJsPath, 'utf8');
+
+  assert.doesNotMatch(
+    source,
+    /else if \(nextCornerScore > previousHighScore\) \{[^}]*void queueCornerScoreUpdate\(nextCornerScore\)/s,
+    'Expected new high-score path to NOT automatically queue a server persist — server score only updates on initials submit',
+  );
+  assert.match(
+    source,
+    /else if \(nextCornerScore > previousHighScore\) \{\s*showCornerScoreStatus\('New High-Score', nextCornerScore\);\s*showCornerScoreInitialsPrompt\(nextCornerScore\);\s*\}/s,
+    'Expected new high-score path to show status and prompt only, without queuing a server update',
+  );
+});
+
+test('dvd run timer starts when the first wall bounce is detected', () => {
   const source = fs.readFileSync(dvdJsPath, 'utf8');
 
   assert.match(
     source,
-    /else if \(nextCornerScore > previousHighScore\) \{\s*showCornerScoreStatus\('New High-Score', nextCornerScore\);\s*showCornerScoreInitialsPrompt\(nextCornerScore\);\s*void queueCornerScoreUpdate\(nextCornerScore\);/s,
-    'Expected new high-score path to immediately queue a server persist so the score survives a page reload',
+    /if \(hitHorizontalEdge \|\| hitVerticalEdge\) \{\s*startRunStats\(\);\s*state\.dvdColorStepIndex = \(state\.dvdColorStepIndex \+ 1\) % DVD_COLOR_STEPS\.length;\s*applyDvdColorStep\(\);\s*recordBounce\(\);/s,
+    'Expected first wall bounce handling to start run timing before updating bounce stats',
   );
 });
 
@@ -64,5 +79,25 @@ test('submitting corner score initials clears the temporary new-high-score statu
     source,
     /setCornerScoreHighScore\(highestKnownScore, submittedInitials\);\s*hideCornerScoreInitialsPrompt\(\);\s*hideCornerScoreStatus\(\);/s,
     'Expected initials submit flow to hide the temporary new-high-score status text',
+  );
+});
+
+test('server high score toggle shows arena stats for 15 seconds and then hides them', () => {
+  const source = fs.readFileSync(cornerScoreJsPath, 'utf8');
+
+  assert.match(
+    source,
+    /const SERVER_STATS_VISIBLE_MS = 15_000;/,
+    'Expected server stats visibility duration to be 15 seconds',
+  );
+  assert.match(
+    source,
+    /state\.bigTvHighScoreStatsEl\.classList\.add\('is-active'\);\s*state\.bigTvHighScoreStatsEl\.setAttribute\('aria-hidden', 'false'\);/s,
+    'Expected toggle flow to reveal server stats immediately',
+  );
+  assert.match(
+    source,
+    /state\.bigTvHighScoreStatsTimeoutId = window\.setTimeout\(\(\) => \{\s*state\.isBigTvHighScoreStatsVisible = false;\s*state\.bigTvHighScoreStatsEl\?\.classList\.remove\('is-active'\);\s*state\.bigTvHighScoreStatsEl\?\.setAttribute\('aria-hidden', 'true'\);/s,
+    'Expected toggle flow to hide server stats after timeout',
   );
 });

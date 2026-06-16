@@ -39,6 +39,21 @@ test('right monitor corner score overlay applies expected classes and initials p
     /bigTvCornerScoreInitialsPromptEl\.addEventListener\('submit', \(event\) => \{\s*event\.preventDefault\(\);\s*submitCornerScoreInitials\(\);\s*\}\);/s,
     'Expected initials form submit handler to submit corner score initials',
   );
+  assert.match(
+    source,
+    /bigTvHighScoreStatsEl\.className = 'big-tv-high-score-stats';/,
+    'Expected big TV CornerScore metrics panel class to be applied',
+  );
+  assert.match(
+    source,
+    /highScoreStatsGridEl\.className = 'big-tv-high-score-stats-grid';/,
+    'Expected big TV CornerScore metrics panel grid class to be applied',
+  );
+  assert.match(
+    source,
+    /quadrantEl\.className = `big-tv-corner-score-quadrant \$\{cls\}`;/,
+    'Expected metrics panel quadrants to be created for each DVD corner',
+  );
 });
 
 test('whiteboard corner score overlay uses styled stack/value/initials classes', () => {
@@ -68,5 +83,31 @@ test('whiteboard corner score overlay uses styled stack/value/initials classes',
     source,
     /whiteboardCornerScoreInitialsEl\.className = 'whiteboard-corner-score-initials';/,
     'Expected whiteboard initials value class to be applied',
+  );
+  assert.doesNotMatch(
+    source,
+    /whiteboard-cs-server-stats/,
+    'Expected whiteboard overlay to avoid rendering server stats rows',
+  );
+});
+
+test('middle monitor group no longer creates the CornerScore server/static overlay', () => {
+  const source = fs.readFileSync(overlaysJsPath, 'utf8');
+  const middleMonitorBlockStart = source.indexOf('if (overlay.id === MONITOR_GROUP_MIDDLE_ID) {');
+
+  assert.notEqual(middleMonitorBlockStart, -1, 'Expected middle monitor group overlay block in overlays.js');
+
+  const powerButtonBlockStart = source.indexOf('if (overlay.id === COMMODORE_POWER_BUTTON_OVERLAY_ID) {', middleMonitorBlockStart);
+  const middleMonitorBlock = source.slice(middleMonitorBlockStart, powerButtonBlockStart === -1 ? source.length : powerButtonBlockStart);
+
+  assert.doesNotMatch(
+    middleMonitorBlock,
+    /middleMonitorCornerScoreOverlayEl|middleMonitorCornerScoreServerStatsEl/,
+    'Expected middle monitor group overlay block to avoid creating a server score overlay',
+  );
+  assert.match(
+    middleMonitorBlock,
+    /state\.commodoreShadowOverlayEl = shadowLayer;/,
+    'Expected middle monitor group overlay block to keep the Commodore power shadow layer',
   );
 });

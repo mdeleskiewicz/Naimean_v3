@@ -43,6 +43,10 @@ function isLeftMonitorInteractive() {
   return isMonitorPoweredOn(state.leftMonitorShadowOverlayEl);
 }
 
+function isCommodoreMonitorInteractive() {
+  return isMonitorPoweredOn(state.commodoreShadowOverlayEl);
+}
+
 function isRightMonitorInteractive() {
   return isMonitorPoweredOn(state.rightMonitorShadowOverlayEl);
 }
@@ -249,4 +253,4 @@ async function wakeRightMonitorForCornerScore() {
 state._cb.triggerCommodorePowerOnSequence = triggerCommodorePowerOnSequence;
 state._cb.isRightMonitorInteractive = isRightMonitorInteractive;
 
-export { loadCommodorePowerState, saveCommodorePowerState, syncStoredCommodorePowerState, handlePageShow, cancelMonitorPowerTimeouts, isMonitorPoweredOn, isLeftMonitorInteractive, isRightMonitorInteractive, hasActiveMonitorPowerState, reconcileCommodorePowerStateOnLoad, resetMonitorsToOffState, animateMonitorShadowOn, animateMonitorShadowOff, navigateToCommodoreFromDen, triggerCommodorePowerOnSequence, hideAllMonitorShadows, wakeRightMonitorForCornerScore, waitForLeftMonitorInteractive, powerOnLeftMonitorWithStatic };
+export { loadCommodorePowerState, saveCommodorePowerState, syncStoredCommodorePowerState, handlePageShow, cancelMonitorPowerTimeouts, isMonitorPoweredOn, isLeftMonitorInteractive, isCommodoreMonitorInteractive, isRightMonitorInteractive, hasActiveMonitorPowerState, reconcileCommodorePowerStateOnLoad, resetMonitorsToOffState, animateMonitorShadowOn, animateMonitorShadowOff, navigateToCommodoreFromDen, triggerCommodorePowerOnSequence, hideAllMonitorShadows, wakeRightMonitorForCornerScore, waitForLeftMonitorInteractive, powerOnLeftMonitorWithStatic };

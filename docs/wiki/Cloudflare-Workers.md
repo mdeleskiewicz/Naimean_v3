@@ -72,6 +72,14 @@ Workers can export multiple things: the default `fetch` handler *and* any Durabl
 - **`wrangler.toml`** — tells Cloudflare which file is the worker (`main = "src/worker.js"`), what bindings it has, and what environment variables to inject
 - **`test/worker.test.js`** — unit tests for the worker's routing and API behaviour
 
+## Runtime Binding Snapshot
+
+From `wrangler.toml`, this worker currently has:
+
+- `ASSETS` (static assets from `public/`)
+- `HOTSPOT_STORE` (Durable Object class `HotspotStore`)
+- `DB` (D1 database `naimean-v3-db`, id `0798d2f2-618b-4044-91f5-a2c762922184`, used by `/api/db-test`)
+
 ---
 
 ## Further Reading

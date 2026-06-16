@@ -158,18 +158,19 @@ test('HotspotStore GET returns default hotspots when storage is empty', async ()
   assert.equal(response.status, 200);
   assert.equal(response.headers.get('cache-control'), 'no-store');
   assert.equal(response.headers.get('content-type'), 'application/json; charset=UTF-8');
-  assert.equal(body.hotspots.length, 19);
+  assert.equal(body.hotspots.length, 24);
   assert.deepEqual(body.hotspots[0], { id: 'noahs-arcade', x: 880, y: 320, w: 2050, h: 1280 });
-  assert.deepEqual(body.hotspots[1], { id: 'aquarium', x: 2680, y: 445, w: 455, h: 729 });
-  assert.deepEqual(body.hotspots[2], { id: 'rca-board', x: 738, y: 380, w: 470, h: 1060 });
-  assert.deepEqual(body.hotspots[3], { id: 'overlay-whiteboard-corner-score-control', x: 785, y: 456, w: 355, h: 260 });
+  assert.deepEqual(body.hotspots[1], { id: 'aquarium', x: 2652, y: 888, w: 492, h: 423 });
+  assert.deepEqual(body.hotspots[2], { id: 'rca-board', x: 386, y: 660, w: 483, h: 108 });
+  assert.deepEqual(body.hotspots[3], { id: 'overlay-whiteboard-corner-score-control', x: 859, y: 329, w: 445, h: 400 });
   assert.deepEqual(body.hotspots[4], { id: 'chapel', x: 3840, y: 0, w: 3840, h: 2160 });
-  assert.deepEqual(body.hotspots[6], { id: 'overlay-big-tv-control', x: 1469, y: 330, w: 1000, h: 572 });
-  assert.deepEqual(body.hotspots[7], { id: 'overlay-flip-clock-control', x: 990, y: 1740, w: 360, h: 156 });
-  assert.deepEqual(body.hotspots[8], { id: 'overlay-left-monitor-control', x: 1322, y: 1028, w: 298, h: 206 });
-  assert.deepEqual(body.hotspots[9], { id: 'overlay-right-monitor-control', x: 1758, y: 1014, w: 288, h: 228 });
-  assert.deepEqual(findHotspotById(body.hotspots, 'rca_apps'), { id: 'rca_apps', x: 145, y: 195, w: 145, h: 145 });
-  assert.deepEqual(findHotspotById(body.hotspots, 'cap-ex_totals'), { id: 'cap-ex_totals', x: 772, y: 462, w: 402, h: 120 });
+  assert.deepEqual(findHotspotById(body.hotspots, 'overlay-big-tv-control'), { id: 'overlay-big-tv-control', x: 1316, y: 378, w: 886, h: 646 });
+  assert.deepEqual(findHotspotById(body.hotspots, 'overlay-commodore-screen-control'), { id: 'overlay-commodore-screen-control', x: 1323, y: 982, w: 923, h: 665 });
+  assert.deepEqual(findHotspotById(body.hotspots, 'monitor-group-left-control'), { id: 'monitor-group-left-control', x: 929, y: 987, w: 776, h: 495 });
+  assert.deepEqual(findHotspotById(body.hotspots, 'monitor-group-right-control'), { id: 'monitor-group-right-control', x: 1869, y: 990, w: 780, h: 495 });
+  assert.deepEqual(findHotspotById(body.hotspots, 'rca_apps'), { id: 'rca_apps', x: 392, y: 357, w: 436, h: 294 });
+  assert.deepEqual(findHotspotById(body.hotspots, 'cap-ex_totals'), { id: 'cap-ex_totals', x: 868, y: 755, w: 402, h: 100 });
+  assert.deepEqual(findHotspotById(body.hotspots, 'github-shelf-object-control'), { id: 'github-shelf-object-control', x: 2379, y: 497, w: 130, h: 130 });
 });
 
 test('HotspotStore POST rejects invalid JSON', async () => {
@@ -198,8 +199,8 @@ test('HotspotStore POST sanitizes, clamps and stores hotspot payloads', async ()
       headers: { 'content-type': 'application/json' },
       body: JSON.stringify({
         hotspots: [
-          { id: 'rca_apps', x: 123.4, y: 222.6, w: 144.5, h: 149.9 },
-          { id: 'cap-ex_totals', x: 800.6, y: 482.4, w: 390.2, h: 123.3 },
+          { id: 'rca_apps', x: 123.4, y: 222.6, w: 144.5, h: 149.9, locked: true },
+          { id: 'overlay-commodore-screen-control', x: 1600.6, y: 1100.4, w: 900.2, h: 600.3 },
           { id: 'unknown-id', x: 1, y: 2, w: 3, h: 4 }
         ]
       })
@@ -210,18 +211,17 @@ test('HotspotStore POST sanitizes, clamps and stores hotspot payloads', async ()
 
   assert.equal(response.status, 200);
   assert.equal(body.ok, true);
-  assert.equal(body.hotspots.length, 19);
+  assert.equal(body.hotspots.length, 24);
   assert.deepEqual(body.hotspots[0], { id: 'noahs-arcade', x: 880, y: 320, w: 2050, h: 1280 });
-  assert.deepEqual(body.hotspots[1], { id: 'aquarium', x: 2680, y: 445, w: 455, h: 729 });
-  assert.deepEqual(body.hotspots[2], { id: 'rca-board', x: 738, y: 380, w: 470, h: 1060 });
-  assert.deepEqual(body.hotspots[3], { id: 'overlay-whiteboard-corner-score-control', x: 785, y: 456, w: 355, h: 260 });
+  assert.deepEqual(body.hotspots[1], { id: 'aquarium', x: 2652, y: 888, w: 492, h: 423 });
+  assert.deepEqual(body.hotspots[2], { id: 'rca-board', x: 386, y: 660, w: 483, h: 108 });
+  assert.deepEqual(body.hotspots[3], { id: 'overlay-whiteboard-corner-score-control', x: 859, y: 329, w: 445, h: 400 });
   assert.deepEqual(body.hotspots[4], { id: 'chapel', x: 3840, y: 0, w: 3840, h: 2160 });
-  assert.deepEqual(body.hotspots[6], { id: 'overlay-big-tv-control', x: 1469, y: 330, w: 1000, h: 572 });
-  assert.deepEqual(body.hotspots[7], { id: 'overlay-flip-clock-control', x: 990, y: 1740, w: 360, h: 156 });
-  assert.deepEqual(body.hotspots[8], { id: 'overlay-left-monitor-control', x: 1322, y: 1028, w: 298, h: 206 });
-  assert.deepEqual(body.hotspots[9], { id: 'overlay-right-monitor-control', x: 1758, y: 1014, w: 288, h: 228 });
-  assert.deepEqual(findHotspotById(body.hotspots, 'rca_apps'), { id: 'rca_apps', x: 123, y: 223, w: 145, h: 150 });
-  assert.deepEqual(findHotspotById(body.hotspots, 'cap-ex_totals'), { id: 'cap-ex_totals', x: 801, y: 482, w: 390, h: 123 });
+  assert.deepEqual(findHotspotById(body.hotspots, 'overlay-big-tv-control'), { id: 'overlay-big-tv-control', x: 1316, y: 378, w: 886, h: 646 });
+  assert.deepEqual(findHotspotById(body.hotspots, 'overlay-commodore-screen-control'), { id: 'overlay-commodore-screen-control', x: 1601, y: 1100, w: 900, h: 600 });
+  assert.deepEqual(findHotspotById(body.hotspots, 'monitor-group-left-control'), { id: 'monitor-group-left-control', x: 929, y: 987, w: 776, h: 495 });
+  assert.deepEqual(findHotspotById(body.hotspots, 'monitor-group-right-control'), { id: 'monitor-group-right-control', x: 1869, y: 990, w: 780, h: 495 });
+  assert.deepEqual(findHotspotById(body.hotspots, 'rca_apps'), { id: 'rca_apps', x: 123, y: 223, w: 145, h: 150, locked: true });
 
   assert.equal(calls.put.length, 1);
   assert.equal(calls.put[0].key, 'hotspots');
@@ -1371,7 +1371,7 @@ test('HotspotStore GET returns saved hotspots when storage has data', async () =
     { id: 'pencil-sharpener', x: 2562, y: 1220, w: 221, h: 245 },
     { id: 'overlay-big-tv-control', x: 1469, y: 330, w: 1000, h: 572 },
     { id: 'overlay-flip-clock-control', x: 990, y: 1740, w: 360, h: 156 },
-    { id: 'overlay-left-monitor-control', x: 1322, y: 1028, w: 298, h: 206 }
+    { id: 'monitor-group-left-control', x: 1322, y: 1028, w: 298, h: 206 }
   ];
   const { state } = makeState(saved);
   const store = new HotspotStore(state);
@@ -1440,7 +1440,7 @@ test('HotspotStore POST uses defaults when hotspots payload is null', async () =
   const body = await response.json();
 
   assert.equal(response.status, 200);
-  assert.equal(body.hotspots.length, 19);
+  assert.equal(body.hotspots.length, 24);
   assert.deepEqual(body.hotspots[0], { id: 'noahs-arcade', x: 880, y: 320, w: 2050, h: 1280 });
 });
 
@@ -1458,9 +1458,9 @@ test('HotspotStore POST uses defaults when hotspots payload is a non-array', asy
   const body = await response.json();
 
   assert.equal(response.status, 200);
-  assert.equal(body.hotspots.length, 19);
+  assert.equal(body.hotspots.length, 24);
   assert.deepEqual(body.hotspots[0], { id: 'noahs-arcade', x: 880, y: 320, w: 2050, h: 1280 });
-  assert.deepEqual(body.hotspots[1], { id: 'aquarium', x: 2680, y: 445, w: 455, h: 729 });
+  assert.deepEqual(body.hotspots[1], { id: 'aquarium', x: 2652, y: 888, w: 492, h: 423 });
 });
 
 test('HotspotStore POST skips non-object and null entries in hotspots array', async () => {
@@ -1486,7 +1486,7 @@ test('HotspotStore POST skips non-object and null entries in hotspots array', as
 
   assert.equal(response.status, 200);
   assert.deepEqual(body.hotspots[0], { id: 'noahs-arcade', x: 100, y: 200, w: 300, h: 400 });
-  assert.deepEqual(body.hotspots[1], { id: 'aquarium', x: 2680, y: 445, w: 455, h: 729 });
+  assert.deepEqual(body.hotspots[1], { id: 'aquarium', x: 2652, y: 888, w: 492, h: 423 });
 });
 
 test('HotspotStore POST uses last entry when hotspot id is duplicated', async () => {
@@ -1838,7 +1838,7 @@ test('functions HotspotStore GET returns default hotspots when storage is empty'
   const body = await response.json();
 
   assert.equal(response.status, 200);
-  assert.equal(body.hotspots.length, 8);
+  assert.equal(body.hotspots.length, 24);
   assert.deepEqual(body.hotspots[0], { id: 'noahs-arcade', x: 880, y: 320, w: 2050, h: 1280 });
   assert.deepEqual(body.hotspots[4], { id: 'chapel', x: 3840, y: 0, w: 3840, h: 2160 });
 });
@@ -1897,7 +1897,7 @@ test('functions HotspotStore POST sanitizes and stores hotspot payloads', async 
 
   assert.equal(response.status, 200);
   assert.equal(body.ok, true);
-  assert.equal(body.hotspots.length, 8);
+  assert.equal(body.hotspots.length, 24);
   assert.deepEqual(body.hotspots[0], { id: 'noahs-arcade', x: 50, y: 60, w: 500, h: 600 });
   assert.equal(calls.put.length, 1);
   assert.equal(calls.put[0].key, 'hotspots');
@@ -2178,10 +2178,10 @@ test('FunctionsHotspotStore POST uses defaults when hotspots payload is not an a
   const body = await response.json();
 
   assert.equal(response.status, 200);
-  assert.equal(body.hotspots.length, 8);
+  assert.equal(body.hotspots.length, 24);
   assert.deepEqual(body.hotspots[0], { id: 'noahs-arcade', x: 880, y: 320, w: 2050, h: 1280 });
-  assert.deepEqual(body.hotspots[1], { id: 'aquarium', x: 2680, y: 445, w: 455, h: 729 });
-  assert.equal(body.hotspots.find((hotspot) => hotspot.id === 'overlay-left-monitor-control'), undefined);
+  assert.deepEqual(body.hotspots[1], { id: 'aquarium', x: 2652, y: 888, w: 492, h: 423 });
+  assert.deepEqual(findHotspotById(body.hotspots, 'monitor-group-left-control'), { id: 'monitor-group-left-control', x: 929, y: 987, w: 776, h: 495 });
 });
 
 test('functions/api/hotspots onRequest returns unknown error text when durable object throws non-Error', async () => {
@@ -2262,7 +2262,34 @@ test('worker /api/discord/auth redirects to Discord OAuth with state cookie', as
   assert.ok(setCookie.includes('HttpOnly'));
   assert.ok(setCookie.includes('SameSite=Lax'));
   assert.ok(setCookie.includes('Secure'));
+  assert.ok(!setCookie.includes('Domain='));
   assert.equal(response.headers.get('x-content-type-options'), 'nosniff');
+});
+
+test('worker /api/discord/auth on www host uses apex callback redirect URI by default', async () => {
+  const env = { DISCORD_CLIENT_ID: 'test-client-id', ASSETS: { async fetch() { return new Response(''); } } };
+  const response = await router.fetch(new Request('https://www.naimean.com/api/discord/auth'), env);
+
+  assert.equal(response.status, 302);
+  const location = response.headers.get('Location');
+  assert.ok(location.includes('redirect_uri=https%3A%2F%2Fnaimean.com%2Fapi%2Fdiscord%2Fcallback'));
+  const setCookie = response.headers.get('Set-Cookie');
+  assert.ok(setCookie.includes('Domain=naimean.com'));
+});
+
+test('worker /api/discord/auth sets shared state cookie domain for explicit cross-subdomain redirect URI', async () => {
+  const env = {
+    DISCORD_CLIENT_ID: 'test-client-id',
+    DISCORD_REDIRECT_URI: 'https://naimean.com/api/discord/callback',
+    ASSETS: { async fetch() { return new Response(''); } }
+  };
+  const response = await router.fetch(new Request('https://www.naimean.com/api/discord/auth'), env);
+
+  assert.equal(response.status, 302);
+  const location = response.headers.get('Location');
+  assert.ok(location.includes('redirect_uri=https%3A%2F%2Fnaimean.com%2Fapi%2Fdiscord%2Fcallback'));
+  const setCookie = response.headers.get('Set-Cookie');
+  assert.ok(setCookie.includes('Domain=naimean.com'));
 });
 
 test('worker /api/discord/auth redirects to /?discord_error=configuration_error when DISCORD_CLIENT_ID is missing', async () => {
@@ -2439,6 +2466,99 @@ test('worker /api/discord/callback succeeds, sets session cookie and redirects t
     assert.equal(session.username, 'naimean_tester');
     assert.equal(session.isMember, true);
     assert.deepEqual(session.roles, ['role-alpha', 'role-beta']);
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
+
+test('worker /api/discord/callback clears state cookie on explicit redirect URI domain', async () => {
+  const env = {
+    DISCORD_CLIENT_ID: 'cid',
+    DISCORD_CLIENT_SECRET: 'secret',
+    SESSION_SECRET: TEST_SESSION_SECRET,
+    DISCORD_GUILD_ID: 'guild123',
+    DISCORD_REDIRECT_URI: 'https://naimean.com/api/discord/callback',
+    ASSETS: { async fetch() { return new Response(''); } }
+  };
+  const state = 'teststate123';
+
+  const originalFetch = globalThis.fetch;
+  globalThis.fetch = async (url) => {
+    const u = String(url);
+    if (u.includes('/oauth2/token')) {
+      return Response.json({ access_token: 'tok123', token_type: 'Bearer' });
+    }
+    if (u.includes('/users/@me/guilds/')) {
+      return Response.json({ roles: [] });
+    }
+    if (u.includes('/users/@me')) {
+      return Response.json({ id: 'user999', username: 'naimean_tester', avatar: 'avatarhash' });
+    }
+    throw new Error(`Unexpected fetch: ${u}`);
+  };
+
+  try {
+    const response = await router.fetch(
+      new Request(`https://naimean.com/api/discord/callback?code=code123&state=${state}`, {
+        headers: { Cookie: `naimean_oauth_state=${state}` }
+      }),
+      env
+    );
+
+    assert.equal(response.status, 302);
+    const cookies = response.headers.getSetCookie
+      ? response.headers.getSetCookie()
+      : [response.headers.get('Set-Cookie')];
+    const stateClearCookie = cookies.find((c) => c.startsWith('naimean_oauth_state=;'));
+    assert.ok(stateClearCookie, 'state cookie should be cleared');
+    assert.ok(stateClearCookie.includes('Domain=naimean.com'));
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
+
+test('worker /api/discord/callback on www host uses apex callback redirect URI by default', async () => {
+  const env = {
+    DISCORD_CLIENT_ID: 'cid',
+    DISCORD_CLIENT_SECRET: 'secret',
+    SESSION_SECRET: TEST_SESSION_SECRET,
+    DISCORD_GUILD_ID: 'guild123',
+    ASSETS: { async fetch() { return new Response(''); } }
+  };
+  const state = 'teststate123';
+  const tokenBodies = [];
+
+  const originalFetch = globalThis.fetch;
+  globalThis.fetch = async (url, init = {}) => {
+    const u = String(url);
+    if (u.includes('/oauth2/token')) {
+      tokenBodies.push(new URLSearchParams(String(init.body || '')));
+      return Response.json({ access_token: 'tok123', token_type: 'Bearer' });
+    }
+    if (u.includes('/users/@me/guilds/')) {
+      return Response.json({ roles: [] });
+    }
+    if (u.includes('/users/@me')) {
+      return Response.json({ id: 'user999', username: 'naimean_tester', avatar: 'avatarhash' });
+    }
+    throw new Error(`Unexpected fetch: ${u}`);
+  };
+
+  try {
+    const response = await router.fetch(
+      new Request(`https://www.naimean.com/api/discord/callback?code=code123&state=${state}`, {
+        headers: { Cookie: `naimean_oauth_state=${state}` }
+      }),
+      env
+    );
+
+    assert.equal(response.status, 302);
+    assert.equal(tokenBodies[0].get('redirect_uri'), 'https://naimean.com/api/discord/callback');
+    const cookies = response.headers.getSetCookie
+      ? response.headers.getSetCookie()
+      : [response.headers.get('Set-Cookie')];
+    const stateClearCookie = cookies.find((c) => c.startsWith('naimean_oauth_state=;'));
+    assert.ok(stateClearCookie.includes('Domain=naimean.com'));
   } finally {
     globalThis.fetch = originalFetch;
   }

@@ -1,22 +1,33 @@
 # Wrangler
 
-## What Is Wrangler?
+## What Wrangler Does Here
 
-**Wrangler** is Cloudflare's official command-line tool for developing, testing, and deploying Cloudflare Workers (and static assets).
+**Wrangler** is Cloudflare's official command-line tool for developing, testing, and deploying Cloudflare Workers (and static assets). In this repository, the active config is `wrangler.toml`.
 
-In this project, Wrangler is used to:
-- Deploy the Worker and static assets to Cloudflare
-- Validate configuration before deploying
+## `wrangler.toml` Overview
 
-Wrangler is listed as a dev dependency in `package.json`:
+Current high-value config sections:
 
-```json
-"devDependencies": {
-  "wrangler": "^4.98.0"
-}
+```toml
+name = "naimeav3"
+main = "src/worker.js"
+compatibility_date = "2026-06-15"
+compatibility_flags = ["nodejs_compat"]
+
+[assets]
+directory = "public"
+binding = "ASSETS"
+run_worker_first = ["/*"]
+
+[[d1_databases]]
+binding = "DB"
+database_name = "naimean-v3-db"
+database_id = "0798d2f2-618b-4044-91f5-a2c762922184"
+
+[[durable_objects.bindings]]
+name = "HOTSPOT_STORE"
+class_name = "HotspotStore"
 ```
-
----
 
 ## `wrangler.toml` — The Configuration File
 
@@ -97,7 +108,7 @@ Defines versioned Durable Object storage migrations. `new_sqlite_classes` enable
 | Command | What it does |
 |---|---|
 | `npx wrangler deploy --config wrangler.toml` | Deploys the Worker and assets to Cloudflare |
-| `npx wrangler deploy --config wrangler.toml --dry-run` | Validates config and builds without deploying |
+| `npx --yes wrangler@latest deploy --config wrangler.toml --dry-run` | Validates config and builds without deploying |
 | `npx wrangler dev --config wrangler.toml` | Starts a local development server |
 | `npx wrangler secret put SECRET_NAME` | Uploads an encrypted secret to Cloudflare |
 | `npx wrangler tail` | Streams live logs from the deployed Worker |
@@ -108,9 +119,17 @@ In CI, the deploy workflow runs:
 npx wrangler deploy --config wrangler.toml --color=always
 ```
 
----
+## Vars and Secrets
 
-## Environment Variables vs Secrets
+Set sensitive values with:
+
+```bash
+npx wrangler secret put SECRET_NAME
+```
+
+Examples: `DISCORD_CLIENT_SECRET`, `SESSION_SECRET`, `GOOGLE_DRIVE_API_KEY`.
+
+### Where each kind of config lives
 
 | Type | Where defined | Visible in repo | When to use |
 |---|---|---|---|
@@ -132,11 +151,6 @@ Both appear in the Worker's `env` object at runtime.
 | **Secrets** | Encrypted runtime environment variables stored in Cloudflare |
 | **`--dry-run`** | Validates and builds without deploying |
 
----
+## CI Note
 
-## Further Reading
-
-- [Wrangler — official docs](https://developers.cloudflare.com/workers/wrangler/)
-- [Wrangler configuration reference](https://developers.cloudflare.com/workers/wrangler/configuration/)
-- [Managing secrets with Wrangler](https://developers.cloudflare.com/workers/configuration/secrets/)
-- [Workers Observability / Logs](https://developers.cloudflare.com/workers/observability/logs/)
+Deployment workflow is in `.github/workflows/deploy.yml`. Keep any `--config` path used there aligned with the canonical config file in this repository.

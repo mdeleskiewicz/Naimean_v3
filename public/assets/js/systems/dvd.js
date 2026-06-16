@@ -213,6 +213,7 @@ function tickBigTvDvdAnimation(timestamp) {
   }
 
   if (hitHorizontalEdge || hitVerticalEdge) {
+    startRunStats();
     state.dvdColorStepIndex = (state.dvdColorStepIndex + 1) % DVD_COLOR_STEPS.length;
     applyDvdColorStep();
     recordBounce();
@@ -242,7 +243,6 @@ function tickBigTvDvdAnimation(timestamp) {
       } else if (nextCornerScore > previousHighScore) {
         showCornerScoreStatus('New High-Score', nextCornerScore);
         showCornerScoreInitialsPrompt(nextCornerScore);
-        void queueCornerScoreUpdate(nextCornerScore);
       }
     }
     if (!isRightMonitorInteractive() && !state.isRightMonitorCornerScoreWakeSequenceRunning) {
@@ -252,6 +252,7 @@ function tickBigTvDvdAnimation(timestamp) {
     } else {
       syncDvdScreensaverState();
     }
+    void state._cb.triggerMiddleMonitorCornerScoreStatsTransition?.();
   } else {
     const missCorner = getCornerCollisionName({
       hitHorizontalEdge,

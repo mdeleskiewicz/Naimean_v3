@@ -91,9 +91,17 @@ export const HOTSPOT_READABLE_LABELS = new Map([
   ...WHITEBOARD_TASK_HOTSPOTS.map(({ id, label }) => [id, label])
 ]);
 export const AQUARIUM_HOTSPOT_IDS = new Set(['aquarium']);
+export const MONITOR_GROUP_LEFT_ID = 'monitor-group-left';
+export const MONITOR_GROUP_RIGHT_ID = 'monitor-group-right';
+export const MONITOR_GROUP_MIDDLE_ID = 'monitor-group-middle';
+export const MONITOR_GROUP_LEFT_CONTROL_ID = 'monitor-group-left-control';
+export const MONITOR_GROUP_RIGHT_CONTROL_ID = 'monitor-group-right-control';
+export const MONITOR_GROUP_MIDDLE_CONTROL_ID = 'monitor-group-middle-control';
+// Middle monitor screen area (the Commodore monitor's screen hole within the desk image).
+export const MIDDLE_MONITOR_FRAME_BOUNDS = Object.freeze({ x: 1720, y: 1004, w: 338, h: 226 });
 export const NEDRY_GATE_TRIGGER_HOTSPOT_IDS = new Set([
   'overlay-big-tv-control',
-  'overlay-right-monitor-control'
+  MONITOR_GROUP_RIGHT_CONTROL_ID
 ]);
 export const DEFAULT_BIG_TV_RIGHT_MONITOR_OVERLAY_STATE = 'blue_discord';
 export const BIG_TV_RIGHT_MONITOR_OVERLAY_CORNER_SCORE_STATE = 'corner_score';
@@ -282,28 +290,15 @@ export const SCENE_TILE_IMAGE_URLS = [
   },
 ];
 export const DISCORD_OVERLAY_CONTROL_ID = 'overlay-big-tv-control';
-export const LEFT_MONITOR_OVERLAY_CONTROL_ID = 'overlay-left-monitor-control';
-export const LEFT_MONITOR_SHADOW_LAYER_ID = 'left_monitor_shadow_layer';
-export const LEFT_MONITOR_SHADOW_LAYER_CONTROL_ID = 'left_monitor_shadow_layer_control';
 export const COMMODORE_OVERLAY_CONTROL_ID = 'overlay-commodore-screen-control';
-export const COMMODORE_SHADOW_OVERLAY_ID = 'overlay-commodore-shadow';
-export const COMMODORE_SHADOW_CONTROL_ID = 'overlay-commodore-shadow-control';
 export const COMMODORE_POWER_BUTTON_OVERLAY_ID = 'overlay-commodore-power-button';
 export const COMMODORE_POWER_BUTTON_CONTROL_ID = 'overlay-commodore-power-button-control';
 export const MIN_HOTSPOT_SIZE = 20; // Keep editable hotspots large enough to remain targetable in debug mode.
 export const MIN_MONITOR_RATIO_DENOMINATOR = 0.0001; // Prevents divide-by-zero when converting between screen-window and frame bounds.
-export const LEGACY_MONITOR_BOUNDS_TOLERANCE_PX = 12; // Legacy monitor control bounds may drift slightly from expected monitor frame/screen-window coordinates.
 export const COMMODORE_HITBOX_HORIZONTAL_INSET = 40; // Shrinks Commodore click area while preserving overlay artwork width.
 export const COMMODORE_HITBOX_VERTICAL_INSET = 70; // Shrinks Commodore click area while preserving overlay artwork height.
 export const COMMODORE_MIN_SOURCE_HITBOX_WIDTH = MIN_HOTSPOT_SIZE + (COMMODORE_HITBOX_HORIZONTAL_INSET * 2);
 export const COMMODORE_MIN_SOURCE_HITBOX_HEIGHT = MIN_HOTSPOT_SIZE + (COMMODORE_HITBOX_VERTICAL_INSET * 2);
-export const RIGHT_MONITOR_OVERLAY_CONTROL_ID = 'overlay-right-monitor-control';
-export const RIGHT_MONITOR_SHADOW_LAYER_ID = 'right_monitor_shadow_layer';
-export const RIGHT_MONITOR_SHADOW_LAYER_CONTROL_ID = 'right_monitor_shadow_layer_control';
-export const LEFT_MONITOR_SIDE_FRAME_OVERLAY_ID = 'overlay-left-monitor-side-frame';
-export const LEFT_MONITOR_SIDE_FRAME_CONTROL_ID = 'overlay-left-monitor-side-frame-control';
-export const RIGHT_MONITOR_SIDE_FRAME_OVERLAY_ID = 'overlay-right-monitor-side-frame';
-export const RIGHT_MONITOR_SIDE_FRAME_CONTROL_ID = 'overlay-right-monitor-side-frame-control';
 export const WHITEBOARD_CORNER_SCORE_OVERLAY_ID = 'overlay-whiteboard-corner-score';
 export const WHITEBOARD_CORNER_SCORE_CONTROL_ID = 'overlay-whiteboard-corner-score-control';
 export const FLIP_CLOCK_OVERLAY_CONTROL_ID = 'overlay-flip-clock-control';
@@ -330,15 +325,11 @@ export const RIGHT_MONITOR_SCREEN_WINDOW_INSETS = Object.freeze({ top: 0.29297, 
 export const LEFT_MONITOR_SCREEN_BOUNDS = Object.freeze(frameBoundsToScreenBoundsForConstants(LEFT_MONITOR_FRAME_BOUNDS, LEFT_MONITOR_SCREEN_WINDOW_INSETS));
 export const RIGHT_MONITOR_SCREEN_BOUNDS = Object.freeze(frameBoundsToScreenBoundsForConstants(RIGHT_MONITOR_FRAME_BOUNDS, RIGHT_MONITOR_SCREEN_WINDOW_INSETS));
 HOTSPOT_READABLE_LABELS.set(COMMODORE_OVERLAY_CONTROL_ID, 'Commodore Screen');
-HOTSPOT_READABLE_LABELS.set(COMMODORE_SHADOW_CONTROL_ID, 'Commodore Shadow');
+HOTSPOT_READABLE_LABELS.set(MONITOR_GROUP_MIDDLE_CONTROL_ID, 'Middle Monitor Group');
 HOTSPOT_READABLE_LABELS.set(COMMODORE_POWER_BUTTON_CONTROL_ID, 'Commodore Power Button');
 HOTSPOT_READABLE_LABELS.set(DISCORD_OVERLAY_CONTROL_ID, 'Fullscreen Big TV');
-HOTSPOT_READABLE_LABELS.set(LEFT_MONITOR_OVERLAY_CONTROL_ID, 'Left Monitor Overlay');
-HOTSPOT_READABLE_LABELS.set(LEFT_MONITOR_SHADOW_LAYER_CONTROL_ID, 'Left Monitor Shadow Layer');
-HOTSPOT_READABLE_LABELS.set(LEFT_MONITOR_SIDE_FRAME_CONTROL_ID, 'Left Monitor Side Frame');
-HOTSPOT_READABLE_LABELS.set(RIGHT_MONITOR_OVERLAY_CONTROL_ID, 'Right Monitor Overlay');
-HOTSPOT_READABLE_LABELS.set(RIGHT_MONITOR_SHADOW_LAYER_CONTROL_ID, 'Right Monitor Shadow Layer');
-HOTSPOT_READABLE_LABELS.set(RIGHT_MONITOR_SIDE_FRAME_CONTROL_ID, 'Right Monitor Side Frame');
+HOTSPOT_READABLE_LABELS.set(MONITOR_GROUP_LEFT_CONTROL_ID, 'Left Monitor Group');
+HOTSPOT_READABLE_LABELS.set(MONITOR_GROUP_RIGHT_CONTROL_ID, 'Right Monitor Group');
 HOTSPOT_READABLE_LABELS.set(WHITEBOARD_CORNER_SCORE_CONTROL_ID, 'Whiteboard CornerScore High Score');
 HOTSPOT_READABLE_LABELS.set(ASHTRAY_SMOKE_CONTROL_ID, 'Ashtray Smoke Effect');
 HOTSPOT_READABLE_LABELS.set(ASHTRAY_CIGARETTE_CONTROL_ID, 'Ashtray Cigarette Effect');
@@ -351,15 +342,11 @@ export const LOCKED_DEBUG_HOTSPOT_IDS = new Set([
 export const INTERACTIVE_OVERLAY_CONTROL_IDS = new Set([COMMODORE_OVERLAY_CONTROL_ID, GITHUB_SHELF_OBJECT_CONTROL_ID]);
 export const OVERLAY_CONTROL_BINDINGS = [
   { controlId: DISCORD_OVERLAY_CONTROL_ID, overlayId: DISCORD_OVERLAY_ID },
-  { controlId: LEFT_MONITOR_OVERLAY_CONTROL_ID, overlayId: 'overlay-left-monitor' },
-  { controlId: LEFT_MONITOR_SHADOW_LAYER_CONTROL_ID, overlayId: LEFT_MONITOR_SHADOW_LAYER_ID },
-  { controlId: LEFT_MONITOR_SIDE_FRAME_CONTROL_ID, overlayId: LEFT_MONITOR_SIDE_FRAME_OVERLAY_ID },
+  { controlId: MONITOR_GROUP_LEFT_CONTROL_ID, overlayId: MONITOR_GROUP_LEFT_ID },
   { controlId: COMMODORE_OVERLAY_CONTROL_ID, overlayId: 'overlay-commodore-screen' },
-  { controlId: COMMODORE_SHADOW_CONTROL_ID, overlayId: COMMODORE_SHADOW_OVERLAY_ID },
+  { controlId: MONITOR_GROUP_MIDDLE_CONTROL_ID, overlayId: MONITOR_GROUP_MIDDLE_ID },
   { controlId: COMMODORE_POWER_BUTTON_CONTROL_ID, overlayId: COMMODORE_POWER_BUTTON_OVERLAY_ID },
-  { controlId: RIGHT_MONITOR_OVERLAY_CONTROL_ID, overlayId: 'overlay-right-monitor' },
-  { controlId: RIGHT_MONITOR_SHADOW_LAYER_CONTROL_ID, overlayId: RIGHT_MONITOR_SHADOW_LAYER_ID },
-  { controlId: RIGHT_MONITOR_SIDE_FRAME_CONTROL_ID, overlayId: RIGHT_MONITOR_SIDE_FRAME_OVERLAY_ID },
+  { controlId: MONITOR_GROUP_RIGHT_CONTROL_ID, overlayId: MONITOR_GROUP_RIGHT_ID },
   { controlId: WHITEBOARD_CORNER_SCORE_CONTROL_ID, overlayId: WHITEBOARD_CORNER_SCORE_OVERLAY_ID },
   { controlId: FLIP_CLOCK_OVERLAY_CONTROL_ID, overlayId: FLIP_CLOCK_OVERLAY_ID },
   { controlId: ASHTRAY_SMOKE_CONTROL_ID, overlayId: ASHTRAY_SMOKE_EFFECT_ID },
@@ -372,22 +359,6 @@ export const OVERLAY_CONTROL_TO_OVERLAY_ID = new Map(
 export const OVERLAY_ID_TO_CONTROL_ID = new Map(
   OVERLAY_CONTROL_BINDINGS.map(({ controlId, overlayId }) => [overlayId, controlId])
 );
-export const MONITOR_SCREEN_INSETS_BY_CONTROL_ID = new Map([
-  [LEFT_MONITOR_OVERLAY_CONTROL_ID, LEFT_MONITOR_SCREEN_WINDOW_INSETS],
-  [RIGHT_MONITOR_OVERLAY_CONTROL_ID, RIGHT_MONITOR_SCREEN_WINDOW_INSETS]
-]);
-export const MONITOR_FRAME_BOUNDS_BY_OVERLAY_CONTROL_ID = new Map([
-  [LEFT_MONITOR_OVERLAY_CONTROL_ID, LEFT_MONITOR_FRAME_BOUNDS],
-  [RIGHT_MONITOR_OVERLAY_CONTROL_ID, RIGHT_MONITOR_FRAME_BOUNDS]
-]);
-export const MONITOR_SCREEN_INSETS_BY_SIDE_FRAME_CONTROL_ID = new Map([
-  [LEFT_MONITOR_SIDE_FRAME_CONTROL_ID, LEFT_MONITOR_SCREEN_WINDOW_INSETS],
-  [RIGHT_MONITOR_SIDE_FRAME_CONTROL_ID, RIGHT_MONITOR_SCREEN_WINDOW_INSETS]
-]);
-export const MONITOR_SCREEN_INSETS_BY_OVERLAY_ID = new Map([
-  ['overlay-left-monitor', LEFT_MONITOR_SCREEN_WINDOW_INSETS],
-  ['overlay-right-monitor', RIGHT_MONITOR_SCREEN_WINDOW_INSETS]
-]);
 
 // Fixed pixel hotspots in design-space coordinates.
 // Edit x/y/w/h values as artwork alignment is refined.
@@ -401,17 +372,13 @@ export const defaultHotspots = [
   { id: 'pencil-sharpener', x: 2538, y: 1362, w: 153, h: 217 },
   { id: DISCORD_OVERLAY_CONTROL_ID, x: 1316, y: 378, w: 886, h: 646 },
   { id: COMMODORE_OVERLAY_CONTROL_ID, x: 1323, y: 982, w: 923, h: 665 },
-  { id: COMMODORE_SHADOW_CONTROL_ID, x: 1579, y: 1093, w: 423, h: 235 },
+  { id: MONITOR_GROUP_MIDDLE_CONTROL_ID, x: 1720, y: 1004, w: 338, h: 226 },
   { id: COMMODORE_POWER_BUTTON_CONTROL_ID, x: 1977, y: 1528, w: 55, h: 39 },
-  { id: RIGHT_MONITOR_OVERLAY_CONTROL_ID, x: 2044, y: 1077, w: 414, h: 266 },
-  { id: RIGHT_MONITOR_SHADOW_LAYER_CONTROL_ID, x: 2059, y: 1077, w: 388, h: 265 },
-  { id: RIGHT_MONITOR_SIDE_FRAME_CONTROL_ID, x: 1869, y: 990, w: 780, h: 495 },
+  { id: MONITOR_GROUP_RIGHT_CONTROL_ID, x: 1869, y: 990, w: 780, h: 495 },
   { id: FLIP_CLOCK_OVERLAY_CONTROL_ID, x: 848, y: 1439, w: 329, h: 136 },
   { id: ASHTRAY_SMOKE_CONTROL_ID, x: 2925, y: 45, w: 280, h: 1680 },
   { id: ASHTRAY_CIGARETTE_CONTROL_ID, x: 2922, y: 1682, w: 148, h: 44 },
-  { id: LEFT_MONITOR_OVERLAY_CONTROL_ID, x: 1127, y: 1056, w: 386, h: 282 },
-  { id: LEFT_MONITOR_SHADOW_LAYER_CONTROL_ID, x: 1130, y: 1075, w: 387, h: 268 },
-  { id: LEFT_MONITOR_SIDE_FRAME_CONTROL_ID, x: 929, y: 987, w: 776, h: 495 },
+  { id: MONITOR_GROUP_LEFT_CONTROL_ID, x: 929, y: 987, w: 776, h: 495 },
   { id: GITHUB_SHELF_OBJECT_CONTROL_ID, x: 2379, y: 497, w: 130, h: 130 }
 ];
 
@@ -419,15 +386,11 @@ export const defaultHotspots = [
 export const overlayDefaults = [
   { id: DISCORD_OVERLAY_ID, x: 1468, y: 329, w: 1002, h: 574 },
   { id: AQUARIUM_OVERLAY_ID, x: 1468, y: 329, w: 1002, h: 574 },
-  { id: 'overlay-left-monitor', ...LEFT_MONITOR_FRAME_BOUNDS },
-  { id: LEFT_MONITOR_SHADOW_LAYER_ID, ...LEFT_MONITOR_FRAME_BOUNDS },
-  { id: LEFT_MONITOR_SIDE_FRAME_OVERLAY_ID, ...LEFT_MONITOR_FRAME_BOUNDS },
-  { id: COMMODORE_SHADOW_OVERLAY_ID, x: 1682, y: 1095, w: 414, h: 198 },
+  { id: MONITOR_GROUP_LEFT_ID, x: LEFT_MONITOR_FRAME_BOUNDS.x, y: LEFT_MONITOR_FRAME_BOUNDS.y, w: LEFT_MONITOR_FRAME_BOUNDS.w, h: LEFT_MONITOR_FRAME_BOUNDS.h },
   { id: 'overlay-commodore-screen', x: 1703, y: 994, w: 372, h: 246 },
+  { id: MONITOR_GROUP_MIDDLE_ID, x: MIDDLE_MONITOR_FRAME_BOUNDS.x, y: MIDDLE_MONITOR_FRAME_BOUNDS.y, w: MIDDLE_MONITOR_FRAME_BOUNDS.w, h: MIDDLE_MONITOR_FRAME_BOUNDS.h },
   { id: COMMODORE_POWER_BUTTON_OVERLAY_ID, ...COMMODORE_POWER_BUTTON_BOUNDS },
-  { id: 'overlay-right-monitor', ...RIGHT_MONITOR_FRAME_BOUNDS },
-  { id: RIGHT_MONITOR_SHADOW_LAYER_ID, ...RIGHT_MONITOR_FRAME_BOUNDS },
-  { id: RIGHT_MONITOR_SIDE_FRAME_OVERLAY_ID, ...RIGHT_MONITOR_FRAME_BOUNDS },
+  { id: MONITOR_GROUP_RIGHT_ID, x: RIGHT_MONITOR_FRAME_BOUNDS.x, y: RIGHT_MONITOR_FRAME_BOUNDS.y, w: RIGHT_MONITOR_FRAME_BOUNDS.w, h: RIGHT_MONITOR_FRAME_BOUNDS.h },
   { id: WHITEBOARD_CORNER_SCORE_OVERLAY_ID, x: 785, y: 456, w: 355, h: 260 },
   { id: FLIP_CLOCK_OVERLAY_ID, x: 990, y: 1740, w: 360, h: 156 },
   { id: GITHUB_SHELF_OBJECT_OVERLAY_ID, x: 2720, y: 980, w: 130, h: 130 }

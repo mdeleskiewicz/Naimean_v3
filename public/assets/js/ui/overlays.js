@@ -14,7 +14,6 @@ import {
   CALENDAR_MONTH_NAME_FORMATTER,
   COMMODORE_POWER_BUTTON_OVERLAY_ID,
   COMMODORE_DESK_IMAGE_URL,
-  COMMODORE_SHADOW_OVERLAY_ID,
   DEFAULT_LEFT_MONITOR_STATE,
   DISCORD_BUTTON_IMAGE_URL,
   DISCORD_OVERLAY_ID,
@@ -32,14 +31,13 @@ import {
   GITHUB_V3_ACTIONS_URL,
   LEFT_MONITOR_SIDE_FRAME_IMAGE_URL,
   LEFT_MONITOR_IMAGE_URLS,
-  LEFT_MONITOR_SHADOW_LAYER_ID,
-  LEFT_MONITOR_SIDE_FRAME_OVERLAY_ID,
+  MONITOR_GROUP_LEFT_ID,
+  MONITOR_GROUP_RIGHT_ID,
+  MONITOR_GROUP_MIDDLE_ID,
   LEFT_MONITOR_SEGMENTS,
   LEFT_MONITOR_STATES,
   LOGIN_LOGO_URL,
-  RIGHT_MONITOR_SHADOW_LAYER_ID,
   RIGHT_MONITOR_SIDE_FRAME_IMAGE_URL,
-  RIGHT_MONITOR_SIDE_FRAME_OVERLAY_ID,
   STARSHRIMP_LOGO_IMAGE_URL,
   WHITEBOARD_CORNER_SCORE_OVERLAY_ID,
   FLIP_CLOCK_OVERLAY_ID,
@@ -323,18 +321,28 @@ async function activateLeftMonitorQuadrant(nextState) {
   await playLeftMonitorStaticPass(sequenceToken);
 }
 
+function syncGithubQuadrantOverlayVisibility() {
+  const isGithubMode = state.isGithubScreensaverMode;
+  if (state.leftMonitorSelectorEl) {
+    state.leftMonitorSelectorEl.classList.toggle('is-hidden', isGithubMode);
+    state.leftMonitorSelectorEl.setAttribute('aria-hidden', isGithubMode ? 'true' : 'false');
+  }
+  if (state.bigTvGithubQuadrantEl) {
+    state.bigTvGithubQuadrantEl.classList.toggle('is-active', isGithubMode);
+    state.bigTvGithubQuadrantEl.setAttribute('aria-hidden', isGithubMode ? 'false' : 'true');
+  }
+}
+
 function deactivateGithubScreensaverMode() {
   if (!state.isGithubScreensaverMode) return;
   state.isGithubScreensaverMode = false;
   state.githubScreensaverSequenceToken += 1;
   if (state.bigTvDvdLogoEl) {
     state.bigTvDvdLogoEl.src = BIG_TV_SCREENSAVER_LOGO_URL;
+    state.bigTvDvdLogoEl.classList.remove('is-github-mode-logo');
   }
   syncGithubShelfObjectImage();
-  if (state.bigTvGithubQuadrantEl) {
-    state.bigTvGithubQuadrantEl.classList.remove('is-active');
-    state.bigTvGithubQuadrantEl.setAttribute('aria-hidden', 'true');
-  }
+  syncGithubQuadrantOverlayVisibility();
 }
 
 async function activateGithubScreensaverMode() {
@@ -370,14 +378,14 @@ async function activateGithubScreensaverMode() {
   state.isGithubScreensaverMode = true;
   if (state.bigTvDvdLogoEl) {
     state.bigTvDvdLogoEl.src = GITHUB_SCREENSAVER_LOGO_URL;
+    state.bigTvDvdLogoEl.classList.add('is-github-mode-logo');
   }
   syncGithubShelfObjectImage();
   if (state.bigTvGithubQuadrantEl) {
     // Reset any previously-activated quadrant states each time mode is entered
     state.bigTvGithubQuadrantEl.querySelectorAll('.github-quadrant-btn').forEach((btn) => btn.classList.remove('is-active'));
-    state.bigTvGithubQuadrantEl.classList.add('is-active');
-    state.bigTvGithubQuadrantEl.setAttribute('aria-hidden', 'false');
   }
+  syncGithubQuadrantOverlayVisibility();
   state._cb.restoreBigTvDvdLoop?.();
 }
 
@@ -411,13 +419,23 @@ function createOverlays() {
   state.bigTvDvdMissTimeoutIdsByCorner.forEach((timeoutId) => window.clearTimeout(timeoutId));
   state.bigTvDvdMissTimeoutIdsByCorner.clear();
   state.bigTvDvdMissIndicatorsByCorner.clear();
+  if (state.bigTvHighScoreStatsTimeoutId !== null) {
+    window.clearTimeout(state.bigTvHighScoreStatsTimeoutId);
+    state.bigTvHighScoreStatsTimeoutId = null;
+  }
+  state.isBigTvHighScoreStatsVisible = false;
   state.githubShelfImageEl = null;
   state.discordWidgetFrameEl = null;
+  state.leftMonitorSelectorEl = null;
   state.aquariumOverlayEl = null;
   state.commodorePowerButtonEl = null;
   state.commodoreShadowOverlayEl = null;
   state.leftMonitorShadowOverlayEl = null;
   state.rightMonitorShadowOverlayEl = null;
+  state.middleMonitorCornerScoreOverlayEl = null;
+  state.middleMonitorCornerScoreServerStatsEl = null;
+  state.middleMonitorStaticOverlayEl = null;
+  state.middleMonitorStaticVideoEl = null;
   overlayDefaults.forEach((overlay) => {
     const rect = getOverlayRect(overlay.id);
     if (!rect) return;
@@ -451,22 +469,6 @@ function createOverlays() {
         state.bigTvDvdMissIndicatorsByCorner.set(corner, missIndicatorEl);
         state.bigTvDvdOverlayEl.appendChild(missIndicatorEl);
       });
-      // Big TV high score stats panel — toggled by clicking the whiteboard high-score overlay
-      state.bigTvHighScoreStatsEl = document.createElement('div');
-      state.bigTvHighScoreStatsEl.className = 'big-tv-high-score-stats';
-      state.bigTvHighScoreStatsEl.setAttribute('aria-hidden', 'true');
-      const highScoreStatsTitleEl = document.createElement('p');
-      highScoreStatsTitleEl.className = 'big-tv-high-score-stats-title';
-      highScoreStatsTitleEl.textContent = 'High Score';
-      const highScoreStatsRowEl = document.createElement('div');
-      highScoreStatsRowEl.className = 'big-tv-high-score-stats-row';
-      state.bigTvHighScoreStatsValueEl = document.createElement('p');
-      state.bigTvHighScoreStatsValueEl.className = 'big-tv-high-score-stats-value';
-      state.bigTvHighScoreStatsInitialsEl = document.createElement('p');
-      state.bigTvHighScoreStatsInitialsEl.className = 'big-tv-high-score-stats-initials';
-      highScoreStatsRowEl.append(state.bigTvHighScoreStatsValueEl, state.bigTvHighScoreStatsInitialsEl);
-      state.bigTvHighScoreStatsEl.append(highScoreStatsTitleEl, highScoreStatsRowEl);
-      state.bigTvDvdOverlayEl.appendChild(state.bigTvHighScoreStatsEl);
       // GitHub quadrant overlay — shown when GitHub screensaver mode is active
       state.bigTvGithubQuadrantEl = document.createElement('div');
       state.bigTvGithubQuadrantEl.className = 'big-tv-github-quadrant-overlay';
@@ -484,14 +486,90 @@ function createOverlays() {
         btn.setAttribute('aria-label', `GitHub ${label}`);
         btn.textContent = label;
         btn.addEventListener('pointerdown', (e) => e.stopPropagation());
-        btn.addEventListener('click', (e) => {
+        btn.addEventListener('click', async (e) => {
           e.stopPropagation();
+          const isAuthenticated = await state._cb.ensureDiscordAuthForQuadrantAction?.();
+          if (!isAuthenticated) {
+            return;
+          }
           btn.classList.add('is-active');
           window.open(url, '_blank', 'noopener,noreferrer');
         });
         state.bigTvGithubQuadrantEl.appendChild(btn);
       });
       state.bigTvDvdOverlayEl.appendChild(state.bigTvGithubQuadrantEl);
+      // Big TV CornerScore metrics panel — toggled by clicking the whiteboard high-score overlay
+      state.bigTvHighScoreStatsEl = document.createElement('div');
+      state.bigTvHighScoreStatsEl.className = 'big-tv-high-score-stats';
+      state.bigTvHighScoreStatsEl.setAttribute('aria-hidden', 'true');
+      const highScoreStatsTitleEl = document.createElement('p');
+      highScoreStatsTitleEl.className = 'big-tv-high-score-stats-title';
+      highScoreStatsTitleEl.textContent = 'CornerScore Metrics';
+      const highScoreStatsGridEl = document.createElement('div');
+      highScoreStatsGridEl.className = 'big-tv-high-score-stats-grid';
+      const metricQuadrants = [
+        {
+          cls: 'big-tv-corner-score-quadrant-top-left',
+          title: 'Score',
+          fields: [
+            { label: 'Local', cls: 'big-tv-cs-local-score' },
+            { label: 'High', cls: 'big-tv-high-score-stats-value', stateKey: 'bigTvHighScoreStatsValueEl' }
+          ]
+        },
+        {
+          cls: 'big-tv-corner-score-quadrant-top-right',
+          title: 'Initials + Time',
+          fields: [
+            { label: 'Initials', cls: 'big-tv-high-score-stats-initials', stateKey: 'bigTvHighScoreStatsInitialsEl' },
+            { label: 'Run Time', cls: 'big-tv-cs-run-elapsed', stateKey: 'rightMonitorCornerScoreElapsedEl' }
+          ]
+        },
+        {
+          cls: 'big-tv-corner-score-quadrant-bottom-left',
+          title: 'Run Stats',
+          fields: [
+            { label: 'Bounces', cls: 'big-tv-cs-run-bounces', stateKey: 'rightMonitorCornerScoreBouncesEl' },
+            { label: 'Near Misses', cls: 'big-tv-cs-run-near-misses', stateKey: 'rightMonitorCornerScoreNearMissesEl' }
+          ]
+        },
+        {
+          cls: 'big-tv-corner-score-quadrant-bottom-right',
+          title: 'Server Totals',
+          fields: [
+            { label: 'Scores', cls: 'big-tv-cs-total-scores' },
+            { label: 'Bounces', cls: 'big-tv-cs-total-bounces' },
+            { label: 'Near Misses', cls: 'big-tv-cs-total-near-misses' },
+            { label: 'Time', cls: 'big-tv-cs-total-time' },
+            { label: 'Runs', cls: 'big-tv-cs-total-runs' }
+          ]
+        }
+      ];
+      metricQuadrants.forEach(({ cls, title, fields }) => {
+        const quadrantEl = document.createElement('section');
+        quadrantEl.className = `big-tv-corner-score-quadrant ${cls}`;
+        const titleEl = document.createElement('p');
+        titleEl.className = 'big-tv-corner-score-quadrant-title';
+        titleEl.textContent = title;
+        quadrantEl.appendChild(titleEl);
+        const listEl = document.createElement('div');
+        listEl.className = 'big-tv-corner-score-quadrant-list';
+        fields.forEach(({ label, cls: valueClassName, stateKey }) => {
+          const labelEl = document.createElement('span');
+          labelEl.className = 'big-tv-corner-score-metric-label';
+          labelEl.textContent = label;
+          const valueEl = document.createElement('span');
+          valueEl.className = `big-tv-corner-score-metric-value ${valueClassName}`;
+          valueEl.textContent = '—';
+          if (stateKey) {
+            state[stateKey] = valueEl;
+          }
+          listEl.append(labelEl, valueEl);
+        });
+        quadrantEl.appendChild(listEl);
+        highScoreStatsGridEl.appendChild(quadrantEl);
+      });
+      state.bigTvHighScoreStatsEl.append(highScoreStatsTitleEl, highScoreStatsGridEl);
+      state.bigTvDvdOverlayEl.appendChild(state.bigTvHighScoreStatsEl);
       el.appendChild(state.bigTvDvdOverlayEl);
       applyDvdColorStep();
       if (DISCORD_WIDGET_URL) {
@@ -638,28 +716,35 @@ function createOverlays() {
       el.appendChild(state.calendarBigTvOverlayEl);
     }
 
-    if (overlay.id === COMMODORE_SHADOW_OVERLAY_ID) {
-      el.classList.add('commodore-shadow-overlay');
-      state.commodoreShadowOverlayEl = el;
-    }
+    if (overlay.id === MONITOR_GROUP_LEFT_ID) {
+      el.classList.add('monitor-group', 'monitor-group-left');
 
-    if (overlay.id === LEFT_MONITOR_SHADOW_LAYER_ID) {
-      el.classList.add('monitor-shadow-overlay');
-      state.leftMonitorShadowOverlayEl = el;
-    }
+      // Layer 3 (topmost): L_Frame.png bezel — drawn above shadow and content
+      const frameLayer = document.createElement('div');
+      frameLayer.className = 'monitor-frame-layer';
+      const frameImg = document.createElement('img');
+      frameImg.className = 'monitor-frame-image';
+      frameImg.src = LEFT_MONITOR_SIDE_FRAME_IMAGE_URL;
+      frameImg.alt = '';
+      frameLayer.appendChild(frameImg);
+      el.appendChild(frameLayer);
 
-    if (overlay.id === RIGHT_MONITOR_SHADOW_LAYER_ID) {
-      el.classList.add('monitor-shadow-overlay');
-      state.rightMonitorShadowOverlayEl = el;
-    }
+      // Layer 2: power-on/off black overlay
+      const shadowLayer = document.createElement('div');
+      shadowLayer.className = 'monitor-shadow-layer';
+      state.leftMonitorShadowOverlayEl = shadowLayer;
+      el.appendChild(shadowLayer);
 
-    if (overlay.id === 'overlay-left-monitor') {
+      // Layer 1: interactive screen content
       const windowEl = document.createElement('div');
-      windowEl.className = 'monitor-screen-window left-monitor-screen-window';
+      windowEl.className = 'monitor-overlay-layer monitor-screen-window left-monitor-screen-window';
       state.leftMonitorContentImageEl = document.createElement('img');
+      state.leftMonitorContentImageEl.className = 'left-monitor-content-image';
       windowEl.appendChild(state.leftMonitorContentImageEl);
       const selector = document.createElement('div');
       selector.className = 'left-monitor-selector';
+      selector.setAttribute('aria-hidden', 'false');
+      state.leftMonitorSelectorEl = selector;
       LEFT_MONITOR_SEGMENTS.forEach(({ state: segmentState, label, quadrant }) => {
         const segment = document.createElement('button');
         segment.type = 'button';
@@ -667,8 +752,12 @@ function createOverlays() {
         segment.dataset.quadrant = quadrant;
         segment.textContent = label;
         segment.setAttribute('aria-label', label);
-        segment.addEventListener('click', () => {
+        segment.addEventListener('click', async () => {
           if (!isLeftMonitorInteractive()) return;
+          const isAuthenticated = await state._cb.ensureDiscordAuthForQuadrantAction?.();
+          if (!isAuthenticated) {
+            return;
+          }
           const nextState = segmentState === state.leftMonitorSelectedState ? DEFAULT_LEFT_MONITOR_STATE : segmentState;
           state.shouldAutoStartDiscordLoginOnNextLoginActivation = nextState === 'login' && !state.discordAuthState?.authenticated;
           void activateLeftMonitorQuadrant(nextState);
@@ -677,6 +766,36 @@ function createOverlays() {
         selector.appendChild(segment);
       });
       windowEl.appendChild(selector);
+      // GitHub quadrant overlay (left monitor): shown when GitHub screensaver mode is active.
+      state.bigTvGithubQuadrantEl = document.createElement('div');
+      state.bigTvGithubQuadrantEl.className = 'big-tv-github-quadrant-overlay left-monitor-github-quadrant-overlay';
+      state.bigTvGithubQuadrantEl.setAttribute('aria-hidden', 'true');
+      const githubQuadrants = [
+        { label: 'Issues',  url: GITHUB_V3_ISSUES_URL,  pos: 'top-left' },
+        { label: 'Agents',  url: GITHUB_V3_AGENTS_URL,  pos: 'top-right' },
+        { label: 'Wiki',    url: GITHUB_V3_WIKI_URL,    pos: 'bottom-left' },
+        { label: 'Actions', url: GITHUB_V3_ACTIONS_URL, pos: 'bottom-right' }
+      ];
+      githubQuadrants.forEach(({ label, url, pos }) => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = `github-quadrant-btn github-quadrant-btn-${pos}`;
+        btn.setAttribute('aria-label', `GitHub ${label}`);
+        btn.textContent = label;
+        btn.addEventListener('pointerdown', (e) => e.stopPropagation());
+        btn.addEventListener('click', async (e) => {
+          e.stopPropagation();
+          const isAuthenticated = await state._cb.ensureDiscordAuthForQuadrantAction?.();
+          if (!isAuthenticated) {
+            return;
+          }
+          btn.classList.add('is-active');
+          window.open(url, '_blank', 'noopener,noreferrer');
+        });
+        state.bigTvGithubQuadrantEl.appendChild(btn);
+      });
+      windowEl.appendChild(state.bigTvGithubQuadrantEl);
+      syncGithubQuadrantOverlayVisibility();
       // Personal Best cornerscore overlay (shown on left monitor when cornerscore is active)
       state.leftMonitorCornerScoreOverlayEl = document.createElement('div');
       state.leftMonitorCornerScoreOverlayEl.className = 'left-monitor-corner-score-overlay';
@@ -722,21 +841,23 @@ function createOverlays() {
       setLeftMonitorState(state.leftMonitorSelectedState);
     }
 
-    if (overlay.id === LEFT_MONITOR_SIDE_FRAME_OVERLAY_ID) {
-      el.classList.add('monitor-side-frame-overlay');
-      const imageEl = document.createElement('img');
-      imageEl.className = 'monitor-side-frame-image';
-      imageEl.src = LEFT_MONITOR_SIDE_FRAME_IMAGE_URL;
-      imageEl.alt = '';
-      el.appendChild(imageEl);
-    }
-
     if (overlay.id === 'overlay-commodore-screen') {
+      el.classList.add('commodore-desk-overlay');
       const imageEl = document.createElement('img');
       imageEl.className = 'commodore-desk-image';
       imageEl.src = COMMODORE_DESK_IMAGE_URL;
       imageEl.alt = '';
       el.appendChild(imageEl);
+    }
+
+    if (overlay.id === MONITOR_GROUP_MIDDLE_ID) {
+      el.classList.add('monitor-group', 'monitor-group-middle');
+
+      // Layer 1: power-on/off black overlay (Commodore desk image provides bezel/screen art)
+      const shadowLayer = document.createElement('div');
+      shadowLayer.className = 'monitor-shadow-layer';
+      state.commodoreShadowOverlayEl = shadowLayer;
+      el.appendChild(shadowLayer);
     }
 
     if (overlay.id === COMMODORE_POWER_BUTTON_OVERLAY_ID) {
@@ -756,9 +877,28 @@ function createOverlays() {
       el.appendChild(buttonEl);
       state.commodorePowerButtonEl = buttonEl;
     }
-    if (overlay.id === 'overlay-right-monitor') {
+    if (overlay.id === MONITOR_GROUP_RIGHT_ID) {
+      el.classList.add('monitor-group', 'monitor-group-right');
+
+      // Layer 3 (topmost): R_Frame.png bezel
+      const frameLayer = document.createElement('div');
+      frameLayer.className = 'monitor-frame-layer';
+      const frameImg = document.createElement('img');
+      frameImg.className = 'monitor-frame-image';
+      frameImg.src = RIGHT_MONITOR_SIDE_FRAME_IMAGE_URL;
+      frameImg.alt = '';
+      frameLayer.appendChild(frameImg);
+      el.appendChild(frameLayer);
+
+      // Layer 2: power-on/off black overlay
+      const shadowLayer = document.createElement('div');
+      shadowLayer.className = 'monitor-shadow-layer';
+      state.rightMonitorShadowOverlayEl = shadowLayer;
+      el.appendChild(shadowLayer);
+
+      // Layer 1: interactive screen content
       const windowEl = document.createElement('div');
-      windowEl.className = 'monitor-screen-window right-monitor-screen-window';
+      windowEl.className = 'monitor-overlay-layer monitor-screen-window right-monitor-screen-window';
       state.rightMonitorScreenWindowEl = windowEl;
       state.discordJoinButtonEl = document.createElement('button');
       state.discordJoinButtonEl.className = 'join-discord-button';
@@ -809,39 +949,6 @@ function createOverlays() {
         submitCornerScoreInitials();
       });
       state.rightMonitorCornerScoreOverlayEl.append(rightMonitorCornerScoreLabelEl, state.rightMonitorCornerScoreValueEl);
-      // Run stats row
-      const runStatsRowEl = document.createElement('div');
-      runStatsRowEl.className = 'right-monitor-cs-run-stats';
-      const statItems = [
-        { key: 'elapsed', label: 'Time', stateKey: 'rightMonitorCornerScoreElapsedEl', value: '0:00' },
-        { key: 'bounces', label: 'Bounces', stateKey: 'rightMonitorCornerScoreBouncesEl', value: '0' },
-        { key: 'near-misses', label: 'Near Misses', stateKey: 'rightMonitorCornerScoreNearMissesEl', value: '0' }
-      ];
-      statItems.forEach(({ key, label, stateKey, value }) => {
-        const itemEl = document.createElement('div');
-        itemEl.className = 'right-monitor-cs-stat-item';
-        const labelEl = document.createElement('span');
-        labelEl.className = 'right-monitor-cs-stat-label';
-        labelEl.textContent = label;
-        const valueEl = document.createElement('span');
-        valueEl.className = `right-monitor-cs-stat-value right-monitor-cs-stat-${key}`;
-        valueEl.textContent = value;
-        state[stateKey] = valueEl;
-        itemEl.append(labelEl, valueEl);
-        runStatsRowEl.appendChild(itemEl);
-      });
-      // Medal
-      const medalItemEl = document.createElement('div');
-      medalItemEl.className = 'right-monitor-cs-stat-item';
-      const medalLabelEl = document.createElement('span');
-      medalLabelEl.className = 'right-monitor-cs-stat-label';
-      medalLabelEl.textContent = 'Medal';
-      state.rightMonitorCornerScoreMedalEl = document.createElement('span');
-      state.rightMonitorCornerScoreMedalEl.className = 'right-monitor-cs-stat-value right-monitor-cs-medal';
-      state.rightMonitorCornerScoreMedalEl.textContent = '—';
-      medalItemEl.append(medalLabelEl, state.rightMonitorCornerScoreMedalEl);
-      runStatsRowEl.appendChild(medalItemEl);
-      state.rightMonitorCornerScoreOverlayEl.appendChild(runStatsRowEl);
       state.rightMonitorCornerScoreOverlayEl.appendChild(state.bigTvCornerScoreInitialsPromptEl);
       renderCornerScore();
       syncCornerScoreInitialsPromptVisibility();
@@ -867,15 +974,6 @@ function createOverlays() {
       windowEl.appendChild(state.rightMonitorShrimpLogoOverlayEl);
       el.appendChild(windowEl);
       applyDvdColorStep();
-    }
-
-    if (overlay.id === RIGHT_MONITOR_SIDE_FRAME_OVERLAY_ID) {
-      el.classList.add('monitor-side-frame-overlay');
-      const imageEl = document.createElement('img');
-      imageEl.className = 'monitor-side-frame-image';
-      imageEl.src = RIGHT_MONITOR_SIDE_FRAME_IMAGE_URL;
-      imageEl.alt = '';
-      el.appendChild(imageEl);
     }
 
     if (overlay.id === WHITEBOARD_CORNER_SCORE_OVERLAY_ID) {
@@ -904,29 +1002,6 @@ function createOverlays() {
         state.whiteboardCornerScoreValueEl,
         state.whiteboardCornerScoreInitialsGroupEl
       );
-      // Server aggregate totals section
-      state.whiteboardCornerScoreServerStatsEl = document.createElement('div');
-      state.whiteboardCornerScoreServerStatsEl.className = 'whiteboard-cs-server-stats';
-      const serverStatFields = [
-        { label: 'Scores', cls: 'whiteboard-cs-total-scores' },
-        { label: 'Bounces', cls: 'whiteboard-cs-total-bounces' },
-        { label: 'Near Misses', cls: 'whiteboard-cs-total-near-misses' },
-        { label: 'Time', cls: 'whiteboard-cs-total-time' },
-        { label: 'Runs', cls: 'whiteboard-cs-total-runs' }
-      ];
-      serverStatFields.forEach(({ label, cls }) => {
-        const rowEl = document.createElement('div');
-        rowEl.className = 'whiteboard-cs-server-stat-row';
-        const labelEl = document.createElement('span');
-        labelEl.className = 'whiteboard-cs-server-stat-label';
-        labelEl.textContent = label;
-        const valueEl = document.createElement('span');
-        valueEl.className = `whiteboard-cs-server-stat-value ${cls}`;
-        valueEl.textContent = '—';
-        rowEl.append(labelEl, valueEl);
-        state.whiteboardCornerScoreServerStatsEl.appendChild(rowEl);
-      });
-      whiteboardStackEl.appendChild(state.whiteboardCornerScoreServerStatsEl);
       el.appendChild(whiteboardStackEl);
       renderCornerScore();
     }
