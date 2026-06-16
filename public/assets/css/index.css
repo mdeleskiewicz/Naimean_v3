@@ -447,8 +447,12 @@
       inset: 0;
       overflow: hidden;
       pointer-events: none;
-      /* Frame art sits above shadow and screen content. */
+      /* Frame art sits above shadow and screen content.
+         will-change: transform forces this to its own compositor layer so it
+         always composites above the shadow layer even when the shadow layer is
+         promoted by a running filter animation. */
       z-index: 3;
+      will-change: transform;
     }
 
     .monitor-frame-image {
