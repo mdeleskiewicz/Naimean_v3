@@ -179,31 +179,123 @@ function createAquariumFishEffect() {
   el.style.width = `${Math.round(spot.w)}px`;
   el.style.height = `${Math.round(spot.h)}px`;
 
-  // Filter bubbles: main cluster on the left side, plus a few scattered bubbles
-  const bubbleCount = 10 + Math.floor(Math.random() * 9); // 10–18 bubbles
-  for (let i = 0; i < bubbleCount; i++) {
-    // Most bubbles stay in the left-side cluster, a few scatter elsewhere
-    const inCluster = i < 9 || Math.random() < 0.6;
-    const leftPct = inCluster
-      ? 9 + Math.random() * 22            // 9–31 %
-      : 34 + Math.random() * 54;          // 34–88 % (scattered)
-    const bottomPct = 2 + Math.random() * 6;
-    const size = 3 + Math.floor(Math.random() * 7);  // 3–9 px
-    const rise = 510 + Math.floor(Math.random() * 160);
-    const wobble = (Math.random() < 0.5 ? -1 : 1) * (3 + Math.floor(Math.random() * 8));
-    const duration = 4.4 + Math.random() * 3.6;
-    const delay = Math.random() * 5.5;
+  // ── Animated water line (subtle surface movement at the top of the tank) ──
+  const waterLine = document.createElement('div');
+  waterLine.className = 'aquarium-water-line';
+  el.appendChild(waterLine);
+
+  // ── Caustic light effects (ambient light from above playing on the back wall) ──
+  const causticDefs = [
+    { leftPct: 11, width: 30, opacity: 0.22, drift: 20,  duration: 7.4,  delay: 0.0  },
+    { leftPct: 29, width: 20, opacity: 0.16, drift: -14, duration: 9.8,  delay: 2.3  },
+    { leftPct: 50, width: 38, opacity: 0.20, drift: 24,  duration: 8.3,  delay: 4.5  },
+    { leftPct: 71, width: 24, opacity: 0.14, drift: -18, duration: 11.0, delay: 1.7  },
+  ];
+  for (const { leftPct, width, opacity, drift, duration, delay } of causticDefs) {
+    const caustic = document.createElement('div');
+    caustic.className = 'aquarium-caustic';
+    caustic.style.left = `${leftPct}%`;
+    caustic.style.width = `${width}px`;
+    caustic.style.setProperty('--caustic-drift', `${drift}px`);
+    caustic.style.setProperty('--caustic-opacity', String(opacity));
+    caustic.style.setProperty('--caustic-duration', `${duration.toFixed(2)}s`);
+    caustic.style.setProperty('--caustic-delay', `${delay.toFixed(2)}s`);
+    el.appendChild(caustic);
+  }
+
+  // ── Filter intake tube (hang-on-back style, upper-right of tank) ──────────
+  const filterEl = document.createElement('div');
+  filterEl.className = 'aquarium-filter';
+  el.appendChild(filterEl);
+
+  // Filter output bubbles: small & quick-rising from the outflow near the surface
+  const filterOutputBubbles = [
+    { size: 2, left: '86%', bottom: '88%', rise: 55, wobble:  2, duration: 1.6, delay: 0.0 },
+    { size: 3, left: '84%', bottom: '90%', rise: 45, wobble: -3, duration: 1.9, delay: 0.7 },
+    { size: 2, left: '87%', bottom: '87%', rise: 60, wobble:  4, duration: 1.5, delay: 1.4 },
+    { size: 3, left: '85%', bottom: '89%', rise: 50, wobble: -2, duration: 1.8, delay: 2.2 },
+  ];
+  for (const { size, left, bottom, rise, wobble, duration, delay } of filterOutputBubbles) {
+    const bubble = document.createElement('span');
+    bubble.className = 'aquarium-bubble aquarium-filter-bubble';
+    bubble.style.width = `${size}px`;
+    bubble.style.height = `${size}px`;
+    bubble.style.left = left;
+    bubble.style.bottom = bottom;
+    bubble.style.setProperty('--bubble-rise', `${rise}px`);
+    bubble.style.setProperty('--bubble-wobble', `${wobble}px`);
+    bubble.style.setProperty('--bubble-duration', `${duration}s`);
+    bubble.style.setProperty('--bubble-delay', `${delay}s`);
+    el.appendChild(bubble);
+  }
+
+  // ── Original filter bubbles: 8 fixed bubbles from the right-side filter ───
+  const filterBubbles = [
+    { size: 5, left: '79%', bottom: '5%', rise: 590, wobble: -6, duration: 5.0, delay: 0.0 },
+    { size: 7, left: '84%', bottom: '3%', rise: 630, wobble:  8, duration: 6.4, delay: 1.3 },
+    { size: 4, left: '76%', bottom: '6%', rise: 550, wobble: -4, duration: 5.6, delay: 2.7 },
+    { size: 8, left: '87%', bottom: '4%', rise: 610, wobble:  6, duration: 7.2, delay: 0.6 },
+    { size: 5, left: '81%', bottom: '3%', rise: 565, wobble: -8, duration: 5.9, delay: 3.4 },
+    { size: 6, left: '78%', bottom: '5%', rise: 600, wobble:  5, duration: 6.7, delay: 1.8 },
+    { size: 4, left: '83%', bottom: '4%', rise: 525, wobble: -5, duration: 4.6, delay: 4.1 },
+    { size: 9, left: '89%', bottom: '3%', rise: 645, wobble:  7, duration: 7.6, delay: 2.0 },
+  ];
+  for (const { size, left, bottom, rise, wobble, duration, delay } of filterBubbles) {
     const bubble = document.createElement('span');
     bubble.className = 'aquarium-bubble';
     bubble.style.width = `${size}px`;
     bubble.style.height = `${size}px`;
-    bubble.style.left = `${leftPct.toFixed(1)}%`;
-    bubble.style.bottom = `${bottomPct.toFixed(1)}%`;
+    bubble.style.left = left;
+    bubble.style.bottom = bottom;
     bubble.style.setProperty('--bubble-rise', `${rise}px`);
     bubble.style.setProperty('--bubble-wobble', `${wobble}px`);
-    bubble.style.setProperty('--bubble-duration', `${duration.toFixed(2)}s`);
-    bubble.style.setProperty('--bubble-delay', `${delay.toFixed(2)}s`);
+    bubble.style.setProperty('--bubble-duration', `${duration}s`);
+    bubble.style.setProperty('--bubble-delay', `${delay}s`);
     el.appendChild(bubble);
+  }
+
+  // ── Bubble rocks: 3 spots on the floor with intermittent bubble streams ───
+  const rockDefs = [
+    { leftPct: 20, bubbles: [
+      { size: 4, offset: -1, rise: 480, wobble: -5, duration: 6.2, delay: 0.0 },
+      { size: 3, offset:  1, rise: 510, wobble:  4, duration: 6.8, delay: 0.5 },
+      { size: 5, offset:  0, rise: 465, wobble: -3, duration: 5.9, delay: 1.0 },
+      { size: 4, offset: -1, rise: 495, wobble:  6, duration: 6.5, delay: 3.8 },
+      { size: 3, offset:  1, rise: 520, wobble: -4, duration: 7.1, delay: 4.3 },
+    ]},
+    { leftPct: 46, bubbles: [
+      { size: 5, offset:  0, rise: 500, wobble:  5, duration: 6.0, delay: 0.0 },
+      { size: 3, offset: -1, rise: 475, wobble: -6, duration: 6.4, delay: 0.6 },
+      { size: 4, offset:  1, rise: 530, wobble:  4, duration: 7.0, delay: 1.1 },
+      { size: 6, offset:  0, rise: 490, wobble: -5, duration: 5.8, delay: 3.5 },
+      { size: 3, offset: -1, rise: 515, wobble:  3, duration: 6.7, delay: 4.0 },
+    ]},
+    { leftPct: 66, bubbles: [
+      { size: 4, offset:  1, rise: 545, wobble: -4, duration: 6.3, delay: 0.0 },
+      { size: 6, offset:  0, rise: 510, wobble:  7, duration: 7.2, delay: 0.4 },
+      { size: 3, offset: -1, rise: 480, wobble: -5, duration: 5.7, delay: 0.9 },
+      { size: 5, offset:  0, rise: 525, wobble:  4, duration: 6.6, delay: 3.6 },
+      { size: 4, offset:  1, rise: 500, wobble: -6, duration: 6.9, delay: 4.1 },
+    ]},
+  ];
+  for (const rock of rockDefs) {
+    const rockEl = document.createElement('span');
+    rockEl.className = 'aquarium-bubble-rock';
+    rockEl.style.left = `${rock.leftPct - 1}%`;
+    el.appendChild(rockEl);
+    for (const { size, offset, rise, wobble, duration, delay } of rock.bubbles) {
+      const bubble = document.createElement('span');
+      bubble.className = 'aquarium-bubble';
+      bubble.style.width = `${size}px`;
+      bubble.style.height = `${size}px`;
+      bubble.style.left = `${rock.leftPct + offset}%`;
+      bubble.style.bottom = '3%';
+      bubble.style.setProperty('--bubble-rise', `${rise}px`);
+      bubble.style.setProperty('--bubble-wobble', `${wobble}px`);
+      bubble.style.setProperty('--bubble-duration', `${duration}s`);
+      bubble.style.setProperty('--bubble-delay', `${delay}s`);
+      el.appendChild(bubble);
+    }
   }
 
   // Shrimp: weighted random count favoring 2–3 (2–5 possible), distributed evenly across the bottom third of the tank with jitter

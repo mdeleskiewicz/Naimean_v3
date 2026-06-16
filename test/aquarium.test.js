@@ -40,7 +40,7 @@ test('getRandomShrimpClipUrl selects from state clip catalog and refills queue',
   }
 });
 
-test('aquarium bubbles are biased toward the left side', () => {
+test('aquarium uses fixed right-side filter bubbles and bubble-rock streams', () => {
   const source = fs.readFileSync(sceneJsPath, 'utf8');
   const aquariumBlock = getBlock(
     source,
@@ -50,18 +50,33 @@ test('aquarium bubbles are biased toward the left side', () => {
 
   assert.match(
     aquariumBlock,
-    /const inCluster = i < 9 \|\| Math\.random\(\) < 0\.6;/,
-    'Expected aquarium bubbles to force most early bubbles into the left-side cluster',
+    /Original filter bubbles: 8 fixed bubbles from the right-side filter/,
+    'Expected original 8 fixed right-side filter bubbles to be present',
   );
   assert.match(
     aquariumBlock,
-    /\? 9 \+ Math\.random\(\) \* 22\s+\/\/ 9–31 %/,
-    'Expected left-side bubble cluster to stay within the left third of the tank',
+    /Bubble rocks: 3 spots on the floor with intermittent bubble streams/,
+    'Expected 3 bubble rock streams across the tank floor',
   );
   assert.match(
     aquariumBlock,
-    /: 34 \+ Math\.random\(\) \* 54;\s+\/\/ 34–88 % \(scattered\)/,
-    'Expected non-cluster bubbles to remain scattered outside the left cluster',
+    /aquarium-bubble-rock/,
+    'Expected bubble rock visual elements to be created',
+  );
+  assert.match(
+    aquariumBlock,
+    /aquarium-water-line/,
+    'Expected animated water line element to be created',
+  );
+  assert.match(
+    aquariumBlock,
+    /aquarium-caustic/,
+    'Expected caustic light elements to be created',
+  );
+  assert.match(
+    aquariumBlock,
+    /aquarium-filter/,
+    'Expected filter element to be created',
   );
 });
 
