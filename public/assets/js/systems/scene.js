@@ -220,7 +220,7 @@ function createAquariumFishEffect() {
     const size = 18 + Math.floor(Math.random() * 14);   // 18–31 px
     const swimDist = 170 + Math.floor(Math.random() * 130); // 170–299 px
     const duration = 10 + Math.random() * 8;
-    const delay = Math.random() * 8;
+    const delay = -(Math.random() * duration);
     const hue = shrimpHuePool[i % shrimpHuePool.length];
     const shrimp = document.createElement('span');
     shrimp.className = 'aquarium-shrimp';
@@ -245,7 +245,7 @@ function createAquariumFishEffect() {
     const left = 5 + Math.floor(Math.random() * 30);
     const crawlDist = 120 + Math.floor(Math.random() * 100);
     const duration = 22 + Math.random() * 14;
-    const delay = Math.random() * 6;
+    const delay = -(Math.random() * duration);
     const snail = document.createElement('span');
     snail.className = 'aquarium-snail';
     snail.textContent = '🐌';
@@ -279,7 +279,7 @@ function createAquariumFishEffect() {
     const top = 20 + Math.floor(Math.random() * 45);
     const swimDist = 190 + Math.floor(Math.random() * 110);
     const duration = 9 + Math.random() * 7;
-    const delay = Math.random() * 5;
+    const delay = -(Math.random() * duration);
     const hue = Math.floor(Math.random() * 360);
     const betta = document.createElement('span');
     betta.className = 'aquarium-betta';
@@ -299,7 +299,7 @@ function createAquariumFishEffect() {
     const top = 30 + Math.floor(Math.random() * 35);
     const swimDist = 150 + Math.floor(Math.random() * 100);
     const duration = 20 + Math.random() * 14;
-    const delay = Math.random() * 8;
+    const delay = -(Math.random() * duration);
     const turtle = document.createElement('span');
     turtle.className = 'aquarium-turtle';
     turtle.textContent = '🐢';
@@ -335,7 +335,7 @@ function createAquariumFishEffect() {
     const top = 25 + Math.floor(Math.random() * 40);
     const swimDist = 160 + Math.floor(Math.random() * 100);
     const duration = 18 + Math.random() * 12;
-    const delay = Math.random() * 7;
+    const delay = -(Math.random() * duration);
     const nautilus = document.createElement('span');
     nautilus.className = 'aquarium-nautilus';
     nautilus.textContent = '🐚';
@@ -353,7 +353,7 @@ function createAquariumFishEffect() {
     const top = 20 + Math.floor(Math.random() * 50);
     const swimDist = 180 + Math.floor(Math.random() * 110);
     const duration = 14 + Math.random() * 10;
-    const delay = Math.random() * 6;
+    const delay = -(Math.random() * duration);
     const octopus = document.createElement('span');
     octopus.className = 'aquarium-octopus';
     octopus.textContent = '🐙';
