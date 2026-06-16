@@ -178,49 +178,157 @@ function createAquariumFishEffect() {
   el.style.width = `${Math.round(spot.w)}px`;
   el.style.height = `${Math.round(spot.h)}px`;
 
-  // Filter bubbles: clustered in the lower-right quadrant where a tank filter typically sits
-  const bubbles = [
-    { size: 5,  left: '79%', bottom: '5%',  rise: 590, wobble: -6,  duration: 5.0, delay: 0.0 },
-    { size: 7,  left: '84%', bottom: '3%',  rise: 630, wobble:  8,  duration: 6.4, delay: 1.3 },
-    { size: 4,  left: '76%', bottom: '6%',  rise: 550, wobble: -4,  duration: 5.6, delay: 2.7 },
-    { size: 8,  left: '87%', bottom: '4%',  rise: 610, wobble:  6,  duration: 7.2, delay: 0.6 },
-    { size: 5,  left: '81%', bottom: '3%',  rise: 565, wobble: -8,  duration: 5.9, delay: 3.4 },
-    { size: 6,  left: '78%', bottom: '5%',  rise: 600, wobble:  5,  duration: 6.7, delay: 1.8 },
-    { size: 4,  left: '83%', bottom: '4%',  rise: 525, wobble: -5,  duration: 4.6, delay: 4.1 },
-    { size: 9,  left: '89%', bottom: '3%',  rise: 645, wobble:  7,  duration: 7.6, delay: 2.0 }
-  ];
-  bubbles.forEach(({ size, left, bottom, rise, wobble, duration, delay }) => {
+  const rng = () => Math.random();
+
+  // Filter bubbles: main cluster in the lower-right (filter), plus a few scattered bubbles
+  const bubbleCount = 10 + Math.floor(rng() * 9); // 10–18 bubbles
+  for (let i = 0; i < bubbleCount; i++) {
+    // Most bubbles stay in the right-side filter cluster, a few scatter elsewhere
+    const inCluster = i < 8 || rng() < 0.55;
+    const leftPct = inCluster
+      ? 74 + rng() * 17           // 74–91 %
+      : 15 + rng() * 55;          // 15–70 % (scattered)
+    const bottomPct = 2 + rng() * 6;
+    const size = 3 + Math.floor(rng() * 7);  // 3–9 px
+    const rise = 510 + Math.floor(rng() * 160);
+    const wobble = (rng() < 0.5 ? -1 : 1) * (3 + Math.floor(rng() * 8));
+    const duration = 4.4 + rng() * 3.6;
+    const delay = rng() * 5.5;
     const bubble = document.createElement('span');
     bubble.className = 'aquarium-bubble';
     bubble.style.width = `${size}px`;
     bubble.style.height = `${size}px`;
-    bubble.style.left = left;
-    bubble.style.bottom = bottom;
+    bubble.style.left = `${leftPct.toFixed(1)}%`;
+    bubble.style.bottom = `${bottomPct.toFixed(1)}%`;
     bubble.style.setProperty('--bubble-rise', `${rise}px`);
     bubble.style.setProperty('--bubble-wobble', `${wobble}px`);
-    bubble.style.setProperty('--bubble-duration', `${duration}s`);
-    bubble.style.setProperty('--bubble-delay', `${delay}s`);
+    bubble.style.setProperty('--bubble-duration', `${duration.toFixed(2)}s`);
+    bubble.style.setProperty('--bubble-delay', `${delay.toFixed(2)}s`);
     el.appendChild(bubble);
-  });
+  }
 
-  // Shrimp: three at different depths, swimming back and forth with a gentle bob
-  const shrimps = [
-    { size: 24, top: '27%', swimDist: 260, duration: 14.0, delay: 0.0 },
-    { size: 28, top: '51%', swimDist: 195, duration: 11.2, delay: 2.8 },
-    { size: 20, top: '73%', swimDist: 275, duration: 16.4, delay: 5.6 }
-  ];
-  shrimps.forEach(({ size, top, swimDist, duration, delay }) => {
+  // Shrimp: random count (2–5) at varied vertical depths
+  const shrimpCount = 2 + Math.floor(rng() * 4); // 2–5
+  const usedTops = [];
+  for (let i = 0; i < shrimpCount; i++) {
+    // Spread tops evenly with some jitter, avoiding collisions
+    let top;
+    let tries = 0;
+    do {
+      top = 15 + Math.floor(rng() * 68); // 15–82 %
+      tries++;
+    } while (tries < 20 && usedTops.some((t) => Math.abs(t - top) < 14));
+    usedTops.push(top);
+    const size = 18 + Math.floor(rng() * 14);   // 18–31 px
+    const swimDist = 170 + Math.floor(rng() * 130); // 170–299 px
+    const duration = 10 + rng() * 8;
+    const delay = rng() * 8;
     const shrimp = document.createElement('span');
     shrimp.className = 'aquarium-shrimp';
     shrimp.textContent = '🦐';
     shrimp.style.fontSize = `${size}px`;
-    shrimp.style.top = top;
+    shrimp.style.top = `${top}%`;
     shrimp.style.left = '4%';
     shrimp.style.setProperty('--shrimp-swim-dist', `${swimDist}px`);
-    shrimp.style.setProperty('--shrimp-duration', `${duration}s`);
-    shrimp.style.setProperty('--shrimp-delay', `${delay}s`);
+    shrimp.style.setProperty('--shrimp-duration', `${duration.toFixed(2)}s`);
+    shrimp.style.setProperty('--shrimp-delay', `${delay.toFixed(2)}s`);
     el.appendChild(shrimp);
-  });
+  }
+
+  // Special guest: one random creature per load
+  const guests = ['snail', 'starfish', 'betta', 'turtle', 'jellyfish'];
+  const guestType = guests[Math.floor(rng() * guests.length)];
+
+  if (guestType === 'snail') {
+    // Crawls slowly along the bottom
+    const size = 20 + Math.floor(rng() * 10);
+    const left = 5 + Math.floor(rng() * 30);
+    const crawlDist = 120 + Math.floor(rng() * 100);
+    const duration = 22 + rng() * 14;
+    const delay = rng() * 6;
+    const snail = document.createElement('span');
+    snail.className = 'aquarium-snail';
+    snail.textContent = '🐌';
+    snail.style.fontSize = `${size}px`;
+    snail.style.bottom = '4%';
+    snail.style.left = `${left}%`;
+    snail.style.setProperty('--snail-crawl-dist', `${crawlDist}px`);
+    snail.style.setProperty('--snail-duration', `${duration.toFixed(2)}s`);
+    snail.style.setProperty('--snail-delay', `${delay.toFixed(2)}s`);
+    el.appendChild(snail);
+
+  } else if (guestType === 'starfish') {
+    // Gently drifts near the sandy bottom
+    const size = 22 + Math.floor(rng() * 12);
+    const left = 20 + Math.floor(rng() * 55);
+    const duration = 18 + rng() * 10;
+    const delay = rng() * 7;
+    const star = document.createElement('span');
+    star.className = 'aquarium-starfish';
+    star.textContent = '⭐';
+    star.style.fontSize = `${size}px`;
+    star.style.bottom = '6%';
+    star.style.left = `${left}%`;
+    star.style.setProperty('--starfish-duration', `${duration.toFixed(2)}s`);
+    star.style.setProperty('--starfish-delay', `${delay.toFixed(2)}s`);
+    el.appendChild(star);
+
+  } else if (guestType === 'betta') {
+    // Swims like a shrimp but with a random hue-rotate for color variety
+    const size = 26 + Math.floor(rng() * 12);
+    const top = 20 + Math.floor(rng() * 45);
+    const swimDist = 190 + Math.floor(rng() * 110);
+    const duration = 9 + rng() * 7;
+    const delay = rng() * 5;
+    const hue = Math.floor(rng() * 360);
+    const betta = document.createElement('span');
+    betta.className = 'aquarium-betta';
+    betta.textContent = '🐠';
+    betta.style.fontSize = `${size}px`;
+    betta.style.top = `${top}%`;
+    betta.style.left = '6%';
+    betta.style.filter = `hue-rotate(${hue}deg)`;
+    betta.style.setProperty('--betta-swim-dist', `${swimDist}px`);
+    betta.style.setProperty('--betta-duration', `${duration.toFixed(2)}s`);
+    betta.style.setProperty('--betta-delay', `${delay.toFixed(2)}s`);
+    el.appendChild(betta);
+
+  } else if (guestType === 'turtle') {
+    // Plods slowly across the mid-tank
+    const size = 30 + Math.floor(rng() * 12);
+    const top = 30 + Math.floor(rng() * 35);
+    const swimDist = 150 + Math.floor(rng() * 100);
+    const duration = 20 + rng() * 14;
+    const delay = rng() * 8;
+    const turtle = document.createElement('span');
+    turtle.className = 'aquarium-turtle';
+    turtle.textContent = '🐢';
+    turtle.style.fontSize = `${size}px`;
+    turtle.style.top = `${top}%`;
+    turtle.style.left = '5%';
+    turtle.style.setProperty('--turtle-swim-dist', `${swimDist}px`);
+    turtle.style.setProperty('--turtle-duration', `${duration.toFixed(2)}s`);
+    turtle.style.setProperty('--turtle-delay', `${delay.toFixed(2)}s`);
+    el.appendChild(turtle);
+
+  } else {
+    // Jellyfish: pulses gently and drifts up and down
+    const size = 24 + Math.floor(rng() * 14);
+    const left = 15 + Math.floor(rng() * 65);
+    const driftAmt = 30 + Math.floor(rng() * 30);
+    const duration = 6 + rng() * 5;
+    const delay = rng() * 4;
+    const jelly = document.createElement('span');
+    jelly.className = 'aquarium-jellyfish';
+    jelly.textContent = '🪼';
+    jelly.style.fontSize = `${size}px`;
+    jelly.style.top = `${15 + Math.floor(rng() * 50)}%`;
+    jelly.style.left = `${left}%`;
+    jelly.style.setProperty('--jelly-drift', `${driftAmt}px`);
+    jelly.style.setProperty('--jelly-duration', `${duration.toFixed(2)}s`);
+    jelly.style.setProperty('--jelly-delay', `${delay.toFixed(2)}s`);
+    el.appendChild(jelly);
+  }
 
   dom.effectsLayer.appendChild(el);
   state.overlayElementsById.set(AQUARIUM_FISH_EFFECT_ID, el);
