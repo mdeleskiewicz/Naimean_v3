@@ -578,19 +578,6 @@ function createPixelSpriteDataUrl({ pixels, palette }) {
       if (!fill) {
         continue;
       }
-
-      function getAquariumDisneyFishImageUrl(spec) {
-        if (!spec || typeof spec !== 'object') {
-          return '';
-        }
-        const fileName = typeof spec.imageFilename === 'string'
-          ? spec.imageFilename.trim()
-          : '';
-        if (!fileName) {
-          return '';
-        }
-        return `${AQUARIUM_GUI_ASSET_BASE_PATH}/${encodeURIComponent(fileName)}`;
-      }
       rects.push(`<rect x="${columnIndex}" y="${rowIndex}" width="1" height="1" fill="${fill}"/>`);
     }
   });
@@ -601,6 +588,19 @@ function createPixelSpriteDataUrl({ pixels, palette }) {
     rowCount,
     dataUrl: `url("data:image/svg+xml,${encodeURIComponent(svg)}")`
   };
+}
+
+function getAquariumDisneyFishImageUrl(spec) {
+  if (!spec || typeof spec !== 'object') {
+    return '';
+  }
+  const fileName = typeof spec.imageFilename === 'string'
+    ? spec.imageFilename.trim()
+    : '';
+  if (!fileName) {
+    return '';
+  }
+  return `${AQUARIUM_GUI_ASSET_BASE_PATH}/${encodeURIComponent(fileName)}`;
 }
 
 function createShuffledCopy(items) {
@@ -635,10 +635,14 @@ function appendAquariumDisneyFish(el, specPool, overrides = {}) {
   fish.style.backgroundImage = spriteData.dataUrl;
   if (imageUrl) {
     const probeImage = new Image();
+    const resolvedImageUrl = new URL(imageUrl, window.location.origin).href;
     probeImage.onload = () => {
-      fish.style.backgroundImage = `url("${imageUrl}")`;
+      fish.style.backgroundImage = `url("${resolvedImageUrl}")`;
     };
-    probeImage.src = imageUrl;
+    probeImage.onerror = () => {
+      fish.style.backgroundImage = spriteData.dataUrl;
+    };
+    probeImage.src = resolvedImageUrl;
   }
   fish.style.setProperty('--fish-swim-dist', `${overrides.swimDistPx ?? spec.swimDistPx}px`);
   fish.style.setProperty('--fish-duration', `${(overrides.durationSec ?? spec.durationSec).toFixed(2)}s`);

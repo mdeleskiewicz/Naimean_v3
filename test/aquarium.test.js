@@ -268,11 +268,12 @@ test('aquarium keeps shrimp/random creature flow while generic fish use Disney s
     /appendAquariumDisneyFish\(getRandomAquariumCreatureLayer\(backCreatureLayerEl, frontCreatureLayerEl\), disneyFishPool, /,
     'Expected generic fish slots to render Disney sprites through the randomized front/back depth layers',
   );
-  assert.match(
-    source,
-    /const imageUrl = getAquariumDisneyFishImageUrl\(spec\);[\s\S]*fish\.style\.backgroundImage = spriteData\.dataUrl;[\s\S]*probeImage\.src = imageUrl;/,
-    'Expected PNG-backed fish to use aquarium_gui assets while keeping sprite fallback behavior',
-  );
+  assert.match(source, /const imageUrl = getAquariumDisneyFishImageUrl\(spec\);/);
+  assert.match(source, /fish\.style\.backgroundImage = spriteData\.dataUrl;/);
+  assert.match(source, /const resolvedImageUrl = new URL\(imageUrl, window\.location\.origin\)\.href;/);
+  assert.match(source, /probeImage\.onload = \(\) => \{\s*fish\.style\.backgroundImage = `url\("\$\{resolvedImageUrl\}"\)`;\s*\};/);
+  assert.match(source, /probeImage\.onerror = \(\) => \{\s*fish\.style\.backgroundImage = spriteData\.dataUrl;\s*\};/);
+  assert.match(source, /probeImage\.src = resolvedImageUrl;/);
   assert.match(
     aquariumBlock,
     /depthOverlayLeftEl\.className = 'aquarium-depth-overlay aquarium-depth-overlay-left';/,
