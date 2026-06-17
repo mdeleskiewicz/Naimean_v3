@@ -252,10 +252,9 @@ state._cb.startCloudflareVideoLoop = startCloudflareVideoLoop;
 state._cb.stopCloudflareVideoLoop = stopCloudflareVideoLoop;
 state._cb.restoreCloudflareCardState = function restoreCloudflareCardState() {
   if (!loadCloudflareCardState()) return;
-  // CF card mode requires GitHub mode to be active first.
-  // Silently enable GitHub mode so the big TV and right monitor overlays are consistent,
-  // then activate CF card which handles the rest of the UI.
-  state.isGithubScreensaverMode = true;
+  // CF card mode requires GitHub mode to be active. Use the silent version to
+  // restore GitHub mode state without playing transition animations.
+  state._cb.silentActivateGithubScreensaverMode?.();
   activateCloudflareCardMode();
 };
 

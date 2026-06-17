@@ -234,7 +234,7 @@ export const CALENDAR_MONTH_IMAGE_BASE_URL = 'assets/image/calendar';
 export const CALENDAR_MONTH_IMAGE_START = Object.freeze({ year: 2026, month: 4 }); // May 2026, zero-based month
 export const CALENDAR_MONTH_IMAGE_END = Object.freeze({ year: 2030, month: 4 }); // May 2030, zero-based month
 export const CALENDAR_MONTH_NAME_FORMATTER = new Intl.DateTimeFormat('en-US', { month: 'long' });
-export const BIG_TV_INTERACTIVE_UI_SELECTORS = '.big-tv-prompt-content, .big-tv-prompt-secret-box, .big-tv-tools-overlay, .login-overlay, .calendar-big-tv-overlay, .big-tv-corner-score-initials-prompt, .big-tv-fullscreen-exit-button, .big-tv-github-quadrant-overlay, .left-monitor-cloudflare-quadrant-overlay';
+export const BIG_TV_INTERACTIVE_UI_SELECTORS = '.big-tv-prompt-content, .big-tv-prompt-secret-box, .big-tv-tools-overlay, .login-overlay, .calendar-big-tv-overlay, .big-tv-corner-score-initials-prompt, .big-tv-fullscreen-exit-button, .big-tv-github-quadrant-overlay';
 // Keep values comfortably within localStorage and the on-screen form layout.
 export const BIG_TV_TOOLS_MAX_NAME_LENGTH = 120;
 export const BIG_TV_TOOLS_MAX_URL_LENGTH = 2000;

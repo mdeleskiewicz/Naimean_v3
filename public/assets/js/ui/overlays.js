@@ -1539,6 +1539,19 @@ state._cb.restoreDefaultDvdLogo = function restoreDefaultDvdLogo() {
     state.bigTvDvdLogoEl.classList.remove('is-github-mode-logo');
   }
 };
+/**
+ * Silently restore GitHub screensaver mode state without playing any transition animations.
+ * Used when restoring persisted state on page load.
+ */
+state._cb.silentActivateGithubScreensaverMode = function silentActivateGithubScreensaverMode() {
+  state.isGithubScreensaverMode = true;
+  if (state.bigTvDvdLogoEl) {
+    state.bigTvDvdLogoEl.src = GITHUB_SCREENSAVER_LOGO_URL;
+    state.bigTvDvdLogoEl.classList.add('is-github-mode-logo');
+  }
+  syncGithubShelfObjectImage();
+  syncGithubQuadrantOverlayVisibility();
+};
 
 export {
   syncBigTvContentVisibility,
