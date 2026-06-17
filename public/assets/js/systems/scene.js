@@ -787,7 +787,7 @@ function createAquariumFishEffect() {
   } else if (guestType === 'bubble-chest') {
     const chest = document.createElement('span');
     chest.className = 'aquarium-bubble-chest';
-    chest.textContent = '🧰';
+    chest.textContent = '📦';
     chest.style.fontSize = `${22 + Math.floor(Math.random() * 8)}px`;
     const leftPct = 18 + Math.floor(Math.random() * 55);
     chest.style.left = `${leftPct}%`;
