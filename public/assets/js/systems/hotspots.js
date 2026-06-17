@@ -287,7 +287,7 @@ function getSourceOutput(sourceHotspots, aquariumDepthOverlays = []) {
     `  { id: ${JSON.stringify(spot.id)}, x: ${spot.x}, y: ${spot.y}, w: ${spot.w}, h: ${spot.h} },`
   );
   const aquariumDepthOverlayLines = aquariumDepthOverlays.map((overlay) =>
-    `    { id: ${JSON.stringify(overlay.id)}, x: ${overlay.x}, y: ${overlay.y}, w: ${overlay.w}, h: ${overlay.h} },`
+    `  { id: ${JSON.stringify(overlay.id)}, x: ${overlay.x}, y: ${overlay.y}, w: ${overlay.w}, h: ${overlay.h} },`
   );
   return `const hotspotLayout = {\n  hotspots: [\n${lines.join('\n')}\n  ].map((spot) => ({ ...spot, x: spot.x + 3840 })),\n  aquariumDepthOverlays: [\n${aquariumDepthOverlayLines.join('\n')}\n  ]\n};`;
 }
@@ -311,7 +311,7 @@ function shouldUseLegacyDataApi(status) {
   return status === 404;
 }
 
-function extractSourceHotspotPayloadFromLegacyRows(rows) {
+function extractRuntimeHotspotPayloadFromLegacyRows(rows) {
   if (!Array.isArray(rows)) return null;
   for (const row of rows) {
     if (!row || row.title !== LEGACY_HOTSPOT_RECORD_TITLE) continue;
@@ -336,7 +336,7 @@ async function loadHotspotsFromLegacyServer() {
     const response = await fetch(LEGACY_HOTSPOT_API_PATH, { cache: 'no-store' });
     if (!response.ok) return null;
     const payload = await response.json();
-    return extractSourceHotspotPayloadFromLegacyRows(payload);
+    return extractRuntimeHotspotPayloadFromLegacyRows(payload);
   } catch (_) {
     return null;
   }
@@ -828,7 +828,7 @@ state.denUrlOverrides = loadDenUrlOverrides();
 
 export {
   isFiniteNumber,
-  extractSourceHotspotPayloadFromLegacyRows,
+  extractRuntimeHotspotPayloadFromLegacyRows,
   sanitizeAquariumDepthOverlays,
   setAquariumDepthOverlayLayouts,
   setAquariumDepthOverlayLayout,

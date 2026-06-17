@@ -94,12 +94,12 @@ test('Nedry gate video is lazy-loaded in aquarium overlay setup', () => {
   );
   assert.match(
     aquariumBlock,
-    /applyAquariumDepthOverlayLayout\(aquariumDepthOverlayLeftEl, 'left', rect\.w, rect\.h\);/,
+    /applyAquariumDepthOverlayLayout\(aquariumDepthOverlayLeftEl, createDefaultAquariumDepthOverlayLayout\('left', rect\.w, rect\.h\)\);/,
     'Expected the left aquarium overlay image to use the separated layout helper in the big-TV overlay',
   );
   assert.match(
     aquariumBlock,
-    /applyAquariumDepthOverlayLayout\(aquariumDepthOverlayRightEl, 'right', rect\.w, rect\.h\);/,
+    /applyAquariumDepthOverlayLayout\(aquariumDepthOverlayRightEl, createDefaultAquariumDepthOverlayLayout\('right', rect\.w, rect\.h\)\);/,
     'Expected the right aquarium overlay image to use the separated layout helper in the big-TV overlay',
   );
   assert.doesNotMatch(
