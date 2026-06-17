@@ -83,32 +83,32 @@ const AQUARIUM_DISNEY_CHARACTER_SPECS = Object.freeze([
   bobB: 3,
   bobC: -2
 },
-  {
-    name: 'Dory',
+{
+    name: 'Doreee',
     palette: Object.freeze({
-      k: '#162748',
-      b: '#2f7cff',
-      y: '#ffd54a'
+      k: '#1a2e5c', // Deepened navy for a more natural look
+      b: '#3b82f6', // More vibrant, electric blue
+      y: '#facc15'  // Warmer, golden yellow
     }),
     pixels: Object.freeze([
       '................',
       '....kbbbbbyy....',
       '..kbbbbbbbyyyy..',
-      '.kbbbkbbbbyyyyy.',
-      'kbbbbkbbbbyyyyyy',
-      '.kbbbkbbbbyyyyy.',
+      '.kbbkbbbbyyyyy..', // Refined edge
+      'kbbkbbbbbyyyyyy.', // Slightly more tapered
+      '.kbbkbbbbyyyyy..',
       '..kbbbbbbbyyyy..',
       '....kbbbbbyy....'
     ]),
     leftPct: 8,
     topPct: 34,
-    widthPx: 42,
-    swimDistPx: 212,
-    durationSec: 15.6,
-    delaySec: -6.2,
-    bobA: -6,
-    bobB: 5,
-    bobC: -4
+    widthPx: 45, // Slightly larger to match the new proportions
+    swimDistPx: 215,
+    durationSec: 16.5, // A bit slower, more graceful
+    delaySec: -6.5,
+    bobA: -4, // Calmed down to match the cousin's smooth movement
+    bobB: 3,
+    bobC: -2
   },
   {
     name: 'Flounder',
