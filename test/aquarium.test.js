@@ -116,6 +116,21 @@ test('aquarium hotspot sequence starts with static before shrimp clips', () => {
   );
 });
 
+test('aquarium shrimp interrupt syncs the right monitor logo and middle dancing gif', () => {
+  const source = fs.readFileSync(path.join(repoRoot, 'public', 'assets', 'js', 'systems', 'aquarium.js'), 'utf8');
+
+  assert.match(source, /function setShrimpMonitorInterruptState\(isActive\)/);
+  assert.match(source, /state\.rightMonitorShrimpLogoOverlayEl\.classList\.toggle\('is-active', isActive\)/);
+  assert.match(source, /state\.middleMonitorShrimpDancerOverlayEl\.classList\.toggle\('is-active', isActive\)/);
+});
+
+test('aquarium retries stalled shrimp clips instead of hanging the sequence', () => {
+  const source = fs.readFileSync(path.join(repoRoot, 'public', 'assets', 'js', 'systems', 'aquarium.js'), 'utf8');
+
+  assert.match(source, /return sequenceToken === state\.aquariumSequenceToken \? 'retry' : 'cancelled';/);
+  assert.match(source, /if \(clipResult === 'retry'\) \{\s*continue;\s*\}/);
+});
+
 test('aquarium uses fixed right-side filter bubbles and bubble-rock streams', () => {
   const source = fs.readFileSync(sceneJsPath, 'utf8');
   const aquariumBlock = getBlock(

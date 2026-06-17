@@ -29,6 +29,7 @@ import {
   GITHUB_V3_AGENTS_URL,
   GITHUB_V3_WIKI_URL,
   GITHUB_V3_ACTIONS_URL,
+  KID_DANCING_GIF_URL,
   CLOUDFLARE_SCREENSAVER_LOGO_URL,
   CLOUDFLARE_GAMEPIECE_IMAGE_URL,
   CLOUDFLARE_VIDEO_URL,
@@ -185,6 +186,33 @@ function syncLeftMonitorSelectionUi() {
   state.leftMonitorSegmentButtonsByState.forEach((button, segmentState) => {
     button.classList.toggle('is-selected', segmentState === state.leftMonitorSelectedState);
     button.setAttribute('aria-pressed', segmentState === state.leftMonitorSelectedState ? 'true' : 'false');
+  });
+}
+
+function getDiscordQuadrantDefinitions() {
+  return [
+    { label: 'Tools', action: () => state._cb.setLeftMonitorState?.('tools'), cls: 'discord-card-quad-ul' },
+    { label: 'Inventory', action: () => console.log('Inventory clicked'), cls: 'discord-card-quad-ur' },
+    { label: 'Cal.Dot', action: () => state._cb.setLeftMonitorState?.('calendar'), cls: 'discord-card-quad-ll' },
+    { label: 'Notes', action: () => window.open('/notes.html', '_blank'), cls: 'discord-card-quad-lr' }
+  ];
+}
+
+function appendDiscordQuadrantButtons(containerEl, { buttonClassName, useLeftMonitorCardClass = false } = {}) {
+  getDiscordQuadrantDefinitions().forEach(({ label, action, cls }) => {
+    const quadBtn = document.createElement('button');
+    quadBtn.type = 'button';
+    quadBtn.className = useLeftMonitorCardClass
+      ? `left-monitor-card-quadrant ${buttonClassName} ${cls}`
+      : `${buttonClassName} ${cls}`;
+    quadBtn.textContent = label;
+    quadBtn.setAttribute('aria-label', label);
+    quadBtn.addEventListener('click', (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      action();
+    });
+    containerEl.appendChild(quadBtn);
   });
 }
 
@@ -976,24 +1004,9 @@ function createOverlays() {
       const loggedInCardGrid = document.createElement('div');
       loggedInCardGrid.className = 'left-monitor-card-grid logged-in-card-grid';
       
-      const loggedInQuadrants = [
-        { label: 'Tools', action: () => state._cb.setLeftMonitorState?.('tools'), cls: 'logged-in-card-quad-ul' },
-        { label: 'Inventory', action: () => console.log('Inventory clicked'), cls: 'logged-in-card-quad-ur' },
-        { label: 'Cal.Dot', action: () => state._cb.setLeftMonitorState?.('calendar'), cls: 'logged-in-card-quad-ll' },
-        { label: 'Notes', action: () => window.open('/notes.html', '_blank'), cls: 'logged-in-card-quad-lr' }
-      ];
-      
-      loggedInQuadrants.forEach(({ label, action, cls }) => {
-        const quadBtn = document.createElement('button');
-        quadBtn.type = 'button';
-        quadBtn.className = `left-monitor-card-quadrant logged-in-card-btn ${cls}`;
-        quadBtn.textContent = label;
-        quadBtn.setAttribute('aria-label', label);
-        quadBtn.addEventListener('click', (e) => {
-          e.stopPropagation();
-          action();
-        });
-        loggedInCardGrid.appendChild(quadBtn);
+      appendDiscordQuadrantButtons(loggedInCardGrid, {
+        buttonClassName: 'logged-in-card-btn',
+        useLeftMonitorCardClass: true
       });
       
       state.leftMonitorLoggedInCardEl.appendChild(loggedInCardGrid);
@@ -1098,6 +1111,16 @@ function createOverlays() {
       state.middleMonitorCloudflareStaticVideoEl.style.display = 'none';
       state.middleMonitorCloudflareOverlayEl.appendChild(state.middleMonitorCloudflareStaticVideoEl);
       el.appendChild(state.middleMonitorCloudflareOverlayEl);
+
+      state.middleMonitorShrimpDancerOverlayEl = document.createElement('div');
+      state.middleMonitorShrimpDancerOverlayEl.className = 'middle-monitor-shrimp-dancer-overlay';
+      state.middleMonitorShrimpDancerOverlayEl.setAttribute('aria-hidden', 'true');
+      const shrimpDancerImg = document.createElement('img');
+      shrimpDancerImg.className = 'middle-monitor-shrimp-dancer-image';
+      shrimpDancerImg.src = KID_DANCING_GIF_URL;
+      shrimpDancerImg.alt = '';
+      state.middleMonitorShrimpDancerOverlayEl.appendChild(shrimpDancerImg);
+      el.appendChild(state.middleMonitorShrimpDancerOverlayEl);
     }
 
     if (overlay.id === COMMODORE_POWER_BUTTON_OVERLAY_ID) {
@@ -1153,6 +1176,13 @@ function createOverlays() {
       state.discordButtonImgEl.src = DISCORD_BUTTON_IMAGE_URL;
       state.discordJoinButtonEl.appendChild(state.discordButtonImgEl);
       windowEl.appendChild(state.discordJoinButtonEl);
+      state.rightMonitorDiscordQuadrantOverlayEl = document.createElement('div');
+      state.rightMonitorDiscordQuadrantOverlayEl.className = 'right-monitor-discord-quadrant-overlay';
+      state.rightMonitorDiscordQuadrantOverlayEl.setAttribute('aria-hidden', 'true');
+      appendDiscordQuadrantButtons(state.rightMonitorDiscordQuadrantOverlayEl, {
+        buttonClassName: 'right-monitor-discord-quadrant-btn'
+      });
+      windowEl.appendChild(state.rightMonitorDiscordQuadrantOverlayEl);
       state.rightMonitorCornerScoreOverlayEl = document.createElement('div');
       state.rightMonitorCornerScoreOverlayEl.className = 'right-monitor-corner-score-overlay';
       const rightMonitorCornerScoreLabelEl = document.createElement('p');

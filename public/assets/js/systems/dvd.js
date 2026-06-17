@@ -308,6 +308,8 @@ function syncDvdScreensaverState() {
     (canShowRightMonitorOverlayContent &&
       state.rightMonitorDisplayMode !== RIGHT_MONITOR_DISPLAY_MODE_CORNER_SCORE) ||
     (!isScreensaverActive && isRightMonitorInteractive());
+  const showDiscordQuadrants = isJoinDiscordActive && !!state.discordAuthState?.authenticated && !!state.discordAuthState?.isMember;
+  const showDiscordJoinButton = isJoinDiscordActive && !showDiscordQuadrants;
   if (state.rightMonitorCornerScoreOverlayEl) {
     state.rightMonitorCornerScoreOverlayEl.classList.toggle('is-active', isCornerScoreActive);
     state.rightMonitorCornerScoreOverlayEl.setAttribute('aria-hidden', isCornerScoreActive ? 'false' : 'true');
@@ -317,8 +319,12 @@ function syncDvdScreensaverState() {
     state.rightMonitorScreenWindowEl.classList.toggle('is-join-discord-active', isJoinDiscordActive);
   }
   if (state.discordJoinButtonEl) {
-    state.discordJoinButtonEl.setAttribute('aria-hidden', isJoinDiscordActive ? 'false' : 'true');
-    state.discordJoinButtonEl.tabIndex = isJoinDiscordActive ? 0 : -1;
+    state.discordJoinButtonEl.setAttribute('aria-hidden', showDiscordJoinButton ? 'false' : 'true');
+    state.discordJoinButtonEl.tabIndex = showDiscordJoinButton ? 0 : -1;
+  }
+  if (state.rightMonitorDiscordQuadrantOverlayEl) {
+    state.rightMonitorDiscordQuadrantOverlayEl.classList.toggle('is-active', showDiscordQuadrants);
+    state.rightMonitorDiscordQuadrantOverlayEl.setAttribute('aria-hidden', showDiscordQuadrants ? 'false' : 'true');
   }
   if (state.discordWidgetFrameEl) {
     state.discordWidgetFrameEl.setAttribute('aria-hidden', isScreensaverActive ? 'true' : 'false');

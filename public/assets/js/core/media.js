@@ -3,6 +3,10 @@ import { state } from './state.js';
 
 function waitForMediaPlaybackToEnd(mediaEl) {
   return new Promise((resolve) => {
+    let hasObservedProgress = false;
+    let lastPlaybackTime = mediaEl.currentTime;
+    let stalledFrameCount = 0;
+    let rafId = 0;
     const onEnded = () => {
       cleanup();
       resolve(true);
@@ -25,14 +29,53 @@ function waitForMediaPlaybackToEnd(mediaEl) {
       cleanup();
       resolve(false);
     };
+    const onAbort = () => {
+      cleanup();
+      resolve(false);
+    };
+    const onTimeUpdate = () => {
+      hasObservedProgress = true;
+      lastPlaybackTime = mediaEl.currentTime;
+      stalledFrameCount = 0;
+    };
+    const monitorPlaybackProgress = () => {
+      if (mediaEl.ended || mediaEl.paused) {
+        return;
+      }
+      if (mediaEl.currentTime > lastPlaybackTime + 0.01) {
+        hasObservedProgress = true;
+        lastPlaybackTime = mediaEl.currentTime;
+        stalledFrameCount = 0;
+      } else if (hasObservedProgress && mediaEl.readyState < HTMLMediaElement.HAVE_FUTURE_DATA) {
+        stalledFrameCount += 1;
+        if (stalledFrameCount >= 180) {
+          cleanup();
+          resolve(false);
+          return;
+        }
+      }
+      rafId = window.requestAnimationFrame(monitorPlaybackProgress);
+    };
     const cleanup = () => {
       mediaEl.removeEventListener('ended', onEnded);
       mediaEl.removeEventListener('error', onError);
       mediaEl.removeEventListener('pause', onPause);
+      mediaEl.removeEventListener('abort', onAbort);
+      mediaEl.removeEventListener('emptied', onAbort);
+      mediaEl.removeEventListener('stalled', onAbort);
+      mediaEl.removeEventListener('timeupdate', onTimeUpdate);
+      if (rafId) {
+        window.cancelAnimationFrame(rafId);
+      }
     };
     mediaEl.addEventListener('ended', onEnded);
     mediaEl.addEventListener('error', onError);
     mediaEl.addEventListener('pause', onPause);
+    mediaEl.addEventListener('abort', onAbort);
+    mediaEl.addEventListener('emptied', onAbort);
+    mediaEl.addEventListener('stalled', onAbort);
+    mediaEl.addEventListener('timeupdate', onTimeUpdate);
+    rafId = window.requestAnimationFrame(monitorPlaybackProgress);
   });
 }
 
