@@ -1,6 +1,10 @@
 import {
   AQUARIUM_DEPTH_OVERLAY_LEFT_IMAGE_URL,
+  AQUARIUM_DEPTH_OVERLAY_HEIGHT_RATIO,
+  AQUARIUM_DEPTH_OVERLAY_LEFT_OFFSET_RATIO,
+  AQUARIUM_DEPTH_OVERLAY_RIGHT_OFFSET_RATIO,
   AQUARIUM_DEPTH_OVERLAY_RIGHT_IMAGE_URL,
+  AQUARIUM_DEPTH_OVERLAY_TOP_RATIO,
   AQUARIUM_OVERLAY_ID,
   AQUARIUM_STATIC_VIDEO_URL,
   BIG_TV_FULLSCREEN_OVERLAY_IDS,
@@ -65,6 +69,16 @@ function addDepthOverlayResizeHandles(el) {
     handle.setAttribute('aria-hidden', 'true');
     el.appendChild(handle);
   });
+}
+
+function applyAquariumDepthOverlayLayout(depthOverlayEl, side, width, height) {
+  const horizontalOffsetRatio = side === 'left'
+    ? AQUARIUM_DEPTH_OVERLAY_LEFT_OFFSET_RATIO
+    : AQUARIUM_DEPTH_OVERLAY_RIGHT_OFFSET_RATIO;
+  depthOverlayEl.style.left = `${Math.round(width * horizontalOffsetRatio)}px`;
+  depthOverlayEl.style.top = `${Math.round(height * AQUARIUM_DEPTH_OVERLAY_TOP_RATIO)}px`;
+  depthOverlayEl.style.width = `${Math.round(width)}px`;
+  depthOverlayEl.style.height = `${Math.round(height * AQUARIUM_DEPTH_OVERLAY_HEIGHT_RATIO)}px`;
 }
 
 function hasActiveBigTvContentOverlay() {
@@ -627,10 +641,7 @@ function createOverlays() {
       aquariumDepthOverlayLeftEl.decoding = 'async';
       aquariumDepthOverlayLeftEl.loading = 'eager';
       aquariumDepthOverlayLeftEl.setAttribute('aria-hidden', 'true');
-      aquariumDepthOverlayLeftEl.style.left = '0px';
-      aquariumDepthOverlayLeftEl.style.top = '0px';
-      aquariumDepthOverlayLeftEl.style.width = `${rect.w}px`;
-      aquariumDepthOverlayLeftEl.style.height = `${rect.h}px`;
+      applyAquariumDepthOverlayLayout(aquariumDepthOverlayLeftEl, 'left', rect.w, rect.h);
       addDepthOverlayResizeHandles(aquariumDepthOverlayLeftEl);
       el.appendChild(aquariumDepthOverlayLeftEl);
       const aquariumDepthOverlayRightEl = document.createElement('img');
@@ -640,10 +651,7 @@ function createOverlays() {
       aquariumDepthOverlayRightEl.decoding = 'async';
       aquariumDepthOverlayRightEl.loading = 'eager';
       aquariumDepthOverlayRightEl.setAttribute('aria-hidden', 'true');
-      aquariumDepthOverlayRightEl.style.left = '0px';
-      aquariumDepthOverlayRightEl.style.top = '0px';
-      aquariumDepthOverlayRightEl.style.width = `${rect.w}px`;
-      aquariumDepthOverlayRightEl.style.height = `${rect.h}px`;
+      applyAquariumDepthOverlayLayout(aquariumDepthOverlayRightEl, 'right', rect.w, rect.h);
       addDepthOverlayResizeHandles(aquariumDepthOverlayRightEl);
       el.appendChild(aquariumDepthOverlayRightEl);
 

@@ -1,6 +1,10 @@
 import {
   AQUARIUM_DEPTH_OVERLAY_LEFT_IMAGE_URL,
+  AQUARIUM_DEPTH_OVERLAY_HEIGHT_RATIO,
+  AQUARIUM_DEPTH_OVERLAY_LEFT_OFFSET_RATIO,
+  AQUARIUM_DEPTH_OVERLAY_RIGHT_OFFSET_RATIO,
   AQUARIUM_DEPTH_OVERLAY_RIGHT_IMAGE_URL,
+  AQUARIUM_DEPTH_OVERLAY_TOP_RATIO,
   AQUARIUM_FISH_EFFECT_ID,
   AQUARIUM_WALL_GLOW_CLASS,
   ASHTRAY_CIGARETTE_CONTROL_ID,
@@ -56,6 +60,16 @@ const isIOSDevice =
   (window.navigator.platform === 'MacIntel' && window.navigator.maxTouchPoints > 1);
 const useLiteRendering = isIOSDevice || hasCoarsePointer;
 let sceneEventsBound = false;
+
+function applyAquariumDepthOverlayLayout(depthOverlayEl, side, width, height) {
+  const horizontalOffsetRatio = side === 'left'
+    ? AQUARIUM_DEPTH_OVERLAY_LEFT_OFFSET_RATIO
+    : AQUARIUM_DEPTH_OVERLAY_RIGHT_OFFSET_RATIO;
+  depthOverlayEl.style.left = `${Math.round(width * horizontalOffsetRatio)}px`;
+  depthOverlayEl.style.top = `${Math.round(height * AQUARIUM_DEPTH_OVERLAY_TOP_RATIO)}px`;
+  depthOverlayEl.style.width = `${Math.round(width)}px`;
+  depthOverlayEl.style.height = `${Math.round(height * AQUARIUM_DEPTH_OVERLAY_HEIGHT_RATIO)}px`;
+}
 
 const AQUARIUM_DISNEY_CHARACTER_SPECS = Object.freeze([
   {
@@ -481,10 +495,7 @@ function createAquariumFishEffect() {
   depthOverlayLeftEl.decoding = 'async';
   depthOverlayLeftEl.loading = 'eager';
   depthOverlayLeftEl.setAttribute('aria-hidden', 'true');
-  depthOverlayLeftEl.style.left = '0px';
-  depthOverlayLeftEl.style.top = '0px';
-  depthOverlayLeftEl.style.width = `${Math.round(spot.w)}px`;
-  depthOverlayLeftEl.style.height = `${Math.round(spot.h)}px`;
+  applyAquariumDepthOverlayLayout(depthOverlayLeftEl, 'left', spot.w, spot.h);
   addResizeHandles(depthOverlayLeftEl);
   const depthOverlayRightEl = document.createElement('img');
   depthOverlayRightEl.className = 'aquarium-depth-overlay aquarium-depth-overlay-right';
@@ -493,10 +504,7 @@ function createAquariumFishEffect() {
   depthOverlayRightEl.decoding = 'async';
   depthOverlayRightEl.loading = 'eager';
   depthOverlayRightEl.setAttribute('aria-hidden', 'true');
-  depthOverlayRightEl.style.left = '0px';
-  depthOverlayRightEl.style.top = '0px';
-  depthOverlayRightEl.style.width = `${Math.round(spot.w)}px`;
-  depthOverlayRightEl.style.height = `${Math.round(spot.h)}px`;
+  applyAquariumDepthOverlayLayout(depthOverlayRightEl, 'right', spot.w, spot.h);
   addResizeHandles(depthOverlayRightEl);
   const frontCreatureLayerEl = document.createElement('div');
   frontCreatureLayerEl.className = 'aquarium-creature-layer aquarium-creature-layer-front';
