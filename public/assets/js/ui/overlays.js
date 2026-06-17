@@ -396,6 +396,7 @@ function syncGithubShelfObjectImage() {
   state.githubShelfImageEl.src = state.isGithubScreensaverMode
     ? GITHUB_SHELF_OBJECT_DVD_IMAGE_URL
     : GITHUB_SHELF_OBJECT_IMAGE_URL;
+  state.githubShelfImageEl.classList.toggle('is-dvd-logo', state.isGithubScreensaverMode);
 }
 
 function positionOverlay(overlayId) {
