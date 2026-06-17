@@ -45,7 +45,7 @@ import { dom } from '../core/domRefs.js';
 import { applyAquariumDepthOverlayLayout, createDefaultAquariumDepthOverlayLayout } from '../core/aquariumDepthOverlayLayout.js';
 import { clamp, isTextEntryTarget, measureSyncSection, scheduleNonCriticalTask, sourceHotspotsToRuntime } from '../core/utils.js';
 import { createOverlays } from '../ui/overlays.js';
-import { consumeDiscordLoginFlowState, syncDiscordAuthBodyClass, syncDiscordButtonUi, syncLoginOverlayUi } from './login.js';
+import { consumeDiscordLoginFlowState, fetchDiscordAuthState, syncDiscordAuthBodyClass, syncDiscordButtonUi, syncLoginOverlayUi } from './login.js';
 import { loadCommodorePowerState, syncStoredCommodorePowerState, handlePageShow, cancelMonitorPowerTimeouts } from './monitors.js';
 import { playWrongAudio, clearCornerScore, syncCornerScoreServerToLocalMad, unlockCornerScoreScoringAudioFromGesture } from './cornerScore.js';
 import { adjustDvdSpeed, stopBigTvDvdAnimation } from './dvd.js';
@@ -64,6 +64,12 @@ const AQUARIUM_WILDLIFE_GUI_STYLE_ID = 'aquarium-wildlife-gui-style';
 const AQUARIUM_SHRIMP_VERTICAL_SPACE_PERCENT = 23;
 const DEFAULT_DISNEY_FISH_COUNT = 1;
 const AQUARIUM_GUI_ASSET_BASE_PATH = '/assets/aquarium_gui';
+const AQUARIUM_CREATURE_PROFILES_STORAGE_KEY = 'naimean.aquariumWildlife.creatureProfiles.v1';
+const AQUARIUM_CREATURE_SAVE_AUTH_ENABLED_STORAGE_KEY = 'naimean.aquariumWildlife.saveAuthProfile.v1';
+const AQUARIUM_CREATURE_PROFILE_MANIFEST_URL = `${AQUARIUM_GUI_ASSET_BASE_PATH}/manifest.json`;
+const AQUARIUM_CREATURE_ROOM_STATE_PATH = '/api/room-state/aquarium';
+const AQUARIUM_CREATURE_ROOM_STATE_KEY = 'user_profile';
+const AQUARIUM_DOE_NAMES = Object.freeze(['Jane Doe', 'John Doe']);
 const AQUARIUM_WILDLIFE_CREATURE_CLASS_NAMES = Object.freeze([
   'aquarium-disney-fish',
   'aquarium-shrimp',
@@ -90,8 +96,14 @@ const aquariumWildlifeGuiState = {
   textareaEl: null,
   promptTextareaEl: null,
   overridesTextareaEl: null,
+  profilesTextareaEl: null,
+  saveAuthProfileCheckboxEl: null,
   statusEl: null
 };
+let aquariumCreatureProfiles = [];
+let aquariumSavedCreatureProfilesById = new Map();
+const aquariumTouchedCreatureProfileIds = new Set();
+let aquariumSaveAuthProfileEnabled = false;
 
 function getAquariumWildlifeOverrideBounds(value, min, max, fallback) {
   if (!Number.isFinite(value)) {
@@ -121,6 +133,319 @@ function writeAquariumWildlifeOverrides(overrides) {
     window.localStorage.setItem(AQUARIUM_WILDLIFE_OVERRIDES_STORAGE_KEY, JSON.stringify(overrides ?? {}));
   } catch {
     // Ignore storage write failures.
+  }
+}
+
+function readAquariumSaveAuthProfilePreference() {
+  try {
+    return window.localStorage.getItem(AQUARIUM_CREATURE_SAVE_AUTH_ENABLED_STORAGE_KEY) === 'true';
+  } catch {
+    return false;
+  }
+}
+
+function writeAquariumSaveAuthProfilePreference(isEnabled) {
+  aquariumSaveAuthProfileEnabled = Boolean(isEnabled);
+  try {
+    window.localStorage.setItem(AQUARIUM_CREATURE_SAVE_AUTH_ENABLED_STORAGE_KEY, aquariumSaveAuthProfileEnabled ? 'true' : 'false');
+  } catch {
+    // Ignore storage write failures.
+  }
+}
+
+function pickRandomDoeName() {
+  return AQUARIUM_DOE_NAMES[Math.floor(Math.random() * AQUARIUM_DOE_NAMES.length)];
+}
+
+function createCreatureProfileId(sourceLabel) {
+  const normalized = String(sourceLabel ?? '')
+    .toLowerCase()
+    .replace(/\.[a-z0-9]+$/i, '')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+  return normalized ? `creature-${normalized}` : `creature-${Math.floor(Math.random() * 1e9)}`;
+}
+
+function cloneAquariumCreatureProfileSpec(spec) {
+  return {
+    ...spec,
+    name: typeof spec?.name === 'string' ? spec.name : pickRandomDoeName(),
+    imageFilename: typeof spec?.imageFilename === 'string' ? spec.imageFilename : '',
+    palette: { ...(spec?.palette || {}) },
+    pixels: Array.isArray(spec?.pixels) ? [...spec.pixels] : []
+  };
+}
+
+function createDefaultAquariumCreatureProfileForFilename(imageFilename) {
+  const template = AQUARIUM_DISNEY_CHARACTER_SPECS[Math.floor(Math.random() * AQUARIUM_DISNEY_CHARACTER_SPECS.length)]
+    || AQUARIUM_DISNEY_CHARACTER_SPECS[0];
+  const clonedTemplate = cloneAquariumCreatureProfileSpec(template || {});
+  return {
+    ...clonedTemplate,
+    id: createCreatureProfileId(imageFilename),
+    name: pickRandomDoeName(),
+    imageFilename,
+  };
+}
+
+function sanitizeAquariumCreatureProfile(rawProfile = {}, fallback = {}) {
+  const palette = rawProfile?.palette && typeof rawProfile.palette === 'object' && !Array.isArray(rawProfile.palette)
+    ? rawProfile.palette
+    : fallback.palette;
+  const pixels = Array.isArray(rawProfile?.pixels)
+    ? rawProfile.pixels
+    : fallback.pixels;
+  const nextName = typeof rawProfile?.name === 'string' && rawProfile.name.trim()
+    ? rawProfile.name.trim()
+    : (typeof fallback.name === 'string' && fallback.name.trim() ? fallback.name.trim() : pickRandomDoeName());
+  const imageFilename = typeof rawProfile?.imageFilename === 'string'
+    ? rawProfile.imageFilename.trim()
+    : (typeof fallback.imageFilename === 'string' ? fallback.imageFilename.trim() : '');
+  return {
+    ...cloneAquariumCreatureProfileSpec({
+      ...fallback,
+      ...rawProfile,
+      palette: { ...(palette || {}) },
+      pixels: Array.isArray(pixels) ? [...pixels] : []
+    }),
+    id: typeof rawProfile?.id === 'string' && rawProfile.id.trim()
+      ? rawProfile.id.trim()
+      : (typeof fallback.id === 'string' && fallback.id.trim() ? fallback.id.trim() : createCreatureProfileId(nextName || imageFilename)),
+    name: nextName,
+    imageFilename,
+    leftPct: getAquariumWildlifeOverrideBounds(rawProfile?.leftPct, 0, 95, Number.isFinite(fallback.leftPct) ? fallback.leftPct : 8),
+    topPct: getAquariumWildlifeOverrideBounds(rawProfile?.topPct, 0, 95, Number.isFinite(fallback.topPct) ? fallback.topPct : 30),
+    widthPx: getAquariumWildlifeOverrideBounds(rawProfile?.widthPx, 12, 220, Number.isFinite(fallback.widthPx) ? fallback.widthPx : 40),
+    swimDistPx: getAquariumWildlifeOverrideBounds(rawProfile?.swimDistPx, 20, 600, Number.isFinite(fallback.swimDistPx) ? fallback.swimDistPx : 180),
+    durationSec: Number.isFinite(rawProfile?.durationSec) ? rawProfile.durationSec : (Number.isFinite(fallback.durationSec) ? fallback.durationSec : 12),
+    delaySec: Number.isFinite(rawProfile?.delaySec) ? rawProfile.delaySec : (Number.isFinite(fallback.delaySec) ? fallback.delaySec : 0),
+    bobA: Number.isFinite(rawProfile?.bobA) ? rawProfile.bobA : (Number.isFinite(fallback.bobA) ? fallback.bobA : -4),
+    bobB: Number.isFinite(rawProfile?.bobB) ? rawProfile.bobB : (Number.isFinite(fallback.bobB) ? fallback.bobB : 3),
+    bobC: Number.isFinite(rawProfile?.bobC) ? rawProfile.bobC : (Number.isFinite(fallback.bobC) ? fallback.bobC : -2),
+  };
+}
+
+function sanitizeAquariumCreatureProfiles(rawProfiles, fallbackProfiles = AQUARIUM_DISNEY_CHARACTER_SPECS) {
+  const fallbackById = new Map(
+    fallbackProfiles.map((profile) => {
+      const sanitizedFallback = sanitizeAquariumCreatureProfile(profile, profile);
+      return [sanitizedFallback.id, sanitizedFallback];
+    })
+  );
+  const inputProfiles = Array.isArray(rawProfiles)
+    ? rawProfiles
+    : (rawProfiles && typeof rawProfiles === 'object' ? Object.values(rawProfiles) : []);
+  const nextProfiles = [];
+  for (const profile of inputProfiles) {
+    if (!profile || typeof profile !== 'object') {
+      continue;
+    }
+    const fallback = fallbackById.get(profile.id) || {};
+    nextProfiles.push(sanitizeAquariumCreatureProfile(profile, fallback));
+  }
+  if (nextProfiles.length > 0) {
+    return nextProfiles;
+  }
+  return fallbackProfiles.map((profile) => sanitizeAquariumCreatureProfile(profile, profile));
+}
+
+function readAquariumCreatureProfilesFromStorage() {
+  try {
+    const raw = window.localStorage.getItem(AQUARIUM_CREATURE_PROFILES_STORAGE_KEY);
+    if (!raw) {
+      return [];
+    }
+    const parsed = JSON.parse(raw);
+    return sanitizeAquariumCreatureProfiles(parsed);
+  } catch {
+    return [];
+  }
+}
+
+function writeAquariumCreatureProfilesToStorage(profiles) {
+  try {
+    window.localStorage.setItem(AQUARIUM_CREATURE_PROFILES_STORAGE_KEY, JSON.stringify(profiles));
+  } catch {
+    // Ignore storage write failures.
+  }
+}
+
+function setAquariumCreatureProfiles(profiles, { replaceTouched = false, touchedIds = [] } = {}) {
+  aquariumCreatureProfiles = sanitizeAquariumCreatureProfiles(profiles);
+  if (replaceTouched) {
+    aquariumTouchedCreatureProfileIds.clear();
+  }
+  touchedIds.forEach((id) => {
+    if (typeof id === 'string' && id.trim()) {
+      aquariumTouchedCreatureProfileIds.add(id.trim());
+    }
+  });
+  syncAquariumWildlifeGuiData();
+}
+
+function getAquariumCreatureProfileSpecs() {
+  if (aquariumCreatureProfiles.length > 0) {
+    return aquariumCreatureProfiles;
+  }
+  aquariumCreatureProfiles = sanitizeAquariumCreatureProfiles(AQUARIUM_DISNEY_CHARACTER_SPECS);
+  return aquariumCreatureProfiles;
+}
+
+function setAquariumSavedCreatureProfiles(profiles) {
+  aquariumSavedCreatureProfilesById = new Map(
+    sanitizeAquariumCreatureProfiles(profiles).map((profile) => [profile.id, profile])
+  );
+}
+
+function getAquariumSavedCreatureProfiles() {
+  if (aquariumSavedCreatureProfilesById.size === 0) {
+    return getAquariumCreatureProfileSpecs();
+  }
+  return Array.from(aquariumSavedCreatureProfilesById.values());
+}
+
+function buildAquariumCreatureSavePayloadFromTouchedProfiles() {
+  const mergedById = new Map(
+    getAquariumSavedCreatureProfiles().map((profile) => [profile.id, profile])
+  );
+  getAquariumCreatureProfileSpecs().forEach((profile) => {
+    if (aquariumTouchedCreatureProfileIds.has(profile.id)) {
+      mergedById.set(profile.id, profile);
+    }
+  });
+  return Array.from(mergedById.values());
+}
+
+function normalizeAquariumCreatureFilename(value) {
+  return typeof value === 'string' ? value.trim().toLowerCase() : '';
+}
+
+function ensureAquariumCreatureProfilesForAssetFilenames(fileNames = []) {
+  if (!Array.isArray(fileNames) || fileNames.length === 0) {
+    return;
+  }
+  const existingProfiles = getAquariumCreatureProfileSpecs();
+  const existingByFileName = new Set(existingProfiles.map((profile) => normalizeAquariumCreatureFilename(profile.imageFilename)).filter(Boolean));
+  const nextProfiles = [...existingProfiles];
+  let hasChanges = false;
+  fileNames.forEach((fileName) => {
+    const normalizedFileName = normalizeAquariumCreatureFilename(fileName);
+    if (!normalizedFileName || existingByFileName.has(normalizedFileName)) {
+      return;
+    }
+    nextProfiles.push(createDefaultAquariumCreatureProfileForFilename(fileName));
+    existingByFileName.add(normalizedFileName);
+    hasChanges = true;
+  });
+  if (hasChanges) {
+    setAquariumCreatureProfiles(nextProfiles);
+    writeAquariumCreatureProfilesToStorage(nextProfiles);
+  }
+}
+
+async function fetchAquariumCreatureAssetManifestFilenames() {
+  try {
+    const response = await fetch(AQUARIUM_CREATURE_PROFILE_MANIFEST_URL, {
+      method: 'GET',
+      cache: 'no-store',
+      credentials: 'same-origin'
+    });
+    if (!response.ok) {
+      return [];
+    }
+    const payload = await response.json();
+    if (!Array.isArray(payload)) {
+      return [];
+    }
+    return payload.filter((fileName) => typeof fileName === 'string' && fileName.trim().length > 0);
+  } catch {
+    return [];
+  }
+}
+
+async function fetchAquariumCreatureProfilesFromRoomState() {
+  try {
+    const response = await fetch(AQUARIUM_CREATURE_ROOM_STATE_PATH, {
+      method: 'GET',
+      cache: 'no-store',
+      credentials: 'include'
+    });
+    if (!response.ok) {
+      return null;
+    }
+    const payload = await response.json();
+    const stateValue = payload?.state && typeof payload.state === 'object'
+      ? payload.state[AQUARIUM_CREATURE_ROOM_STATE_KEY]
+      : null;
+    if (!stateValue || typeof stateValue !== 'object') {
+      return null;
+    }
+    return stateValue;
+  } catch {
+    return null;
+  }
+}
+
+async function putAquariumCreatureProfilesToRoomState(profiles) {
+  const payload = {
+    profiles,
+    updatedAt: new Date().toISOString()
+  };
+  const response = await fetch(AQUARIUM_CREATURE_ROOM_STATE_PATH, {
+    method: 'PUT',
+    credentials: 'include',
+    headers: {
+      'content-type': 'application/json'
+    },
+    body: JSON.stringify({
+      key: AQUARIUM_CREATURE_ROOM_STATE_KEY,
+      value: payload
+    })
+  });
+  if (!response.ok) {
+    throw new Error('Unable to save aquarium state to your Discord profile.');
+  }
+}
+
+async function ensureAquariumDiscordAuthState() {
+  if (state.discordAuthState === null) {
+    await fetchDiscordAuthState();
+  }
+  return state.discordAuthState?.authenticated === true;
+}
+
+async function initializeAquariumCreatureProfiles() {
+  aquariumSaveAuthProfileEnabled = readAquariumSaveAuthProfilePreference();
+  const localProfiles = readAquariumCreatureProfilesFromStorage();
+  const initialProfiles = localProfiles.length > 0
+    ? localProfiles
+    : sanitizeAquariumCreatureProfiles(AQUARIUM_DISNEY_CHARACTER_SPECS);
+  setAquariumCreatureProfiles(initialProfiles, { replaceTouched: true });
+  setAquariumSavedCreatureProfiles(initialProfiles);
+
+  const manifestFilenames = await fetchAquariumCreatureAssetManifestFilenames();
+  if (manifestFilenames.length > 0) {
+    ensureAquariumCreatureProfilesForAssetFilenames(manifestFilenames);
+    setAquariumSavedCreatureProfiles(getAquariumCreatureProfileSpecs());
+  }
+
+  if (!aquariumSaveAuthProfileEnabled) {
+    return;
+  }
+  const isAuthenticated = await ensureAquariumDiscordAuthState();
+  if (!isAuthenticated) {
+    return;
+  }
+  const roomStatePayload = await fetchAquariumCreatureProfilesFromRoomState();
+  const roomStateProfiles = sanitizeAquariumCreatureProfiles(roomStatePayload?.profiles);
+  if (!Array.isArray(roomStateProfiles) || roomStateProfiles.length === 0) {
+    return;
+  }
+  setAquariumCreatureProfiles(roomStateProfiles, { replaceTouched: true });
+  setAquariumSavedCreatureProfiles(roomStateProfiles);
+  writeAquariumCreatureProfilesToStorage(roomStateProfiles);
+  if (state._cb.rerenderAquariumFishEffectPreservingDepthOverlays) {
+    state._cb.rerenderAquariumFishEffectPreservingDepthOverlays();
   }
 }
 
@@ -228,6 +553,7 @@ function syncAquariumWildlifeGuiData() {
   }
   const snapshot = collectAquariumWildlifeSnapshot();
   const overrides = readAquariumWildlifeOverrides();
+  const profiles = getAquariumCreatureProfileSpecs();
   if (aquariumWildlifeGuiState.textareaEl) {
     aquariumWildlifeGuiState.textareaEl.value = snapshot ? JSON.stringify(snapshot, null, 2) : 'No aquarium snapshot available.';
   }
@@ -237,7 +563,13 @@ function syncAquariumWildlifeGuiData() {
   if (aquariumWildlifeGuiState.overridesTextareaEl) {
     aquariumWildlifeGuiState.overridesTextareaEl.value = JSON.stringify(overrides, null, 2);
   }
-  syncAquariumWildlifeGuiStatus(snapshot ? `Loaded ${snapshot.creatures.length} creatures.` : 'Scene not ready yet.');
+  if (aquariumWildlifeGuiState.profilesTextareaEl) {
+    aquariumWildlifeGuiState.profilesTextareaEl.value = JSON.stringify(profiles, null, 2);
+  }
+  if (aquariumWildlifeGuiState.saveAuthProfileCheckboxEl) {
+    aquariumWildlifeGuiState.saveAuthProfileCheckboxEl.checked = aquariumSaveAuthProfileEnabled;
+  }
+  syncAquariumWildlifeGuiStatus(snapshot ? `Loaded ${snapshot.creatures.length} creatures (${profiles.length} profiles).` : 'Scene not ready yet.');
 }
 
 function ensureAquariumWildlifeGuiStyle() {
@@ -296,9 +628,17 @@ function ensureAquariumWildlifeGuiPanel() {
       <button type="button" data-action="refresh">Refresh</button>
       <button type="button" data-action="copy-json">Copy JSON</button>
       <button type="button" data-action="copy-prompt">Copy Gemini Prompt</button>
+      <button type="button" data-action="apply-profiles">Apply Profiles</button>
       <button type="button" data-action="apply-overrides">Apply Overrides</button>
+      <button type="button" data-action="save-aquarium-state">Save Aquarium State</button>
+      <button type="button" data-action="factory-reset">Factory Reset</button>
       <button type="button" data-action="clear-overrides">Clear Overrides</button>
     </div>
+    <div class="aquarium-wildlife-gui-label">
+      <label><input type="checkbox" data-role="save-auth-profile" /> Save to Discord-auth profile (static tank)</label>
+    </div>
+    <div class="aquarium-wildlife-gui-label">Creature Profiles JSON</div>
+    <textarea data-role="profiles"></textarea>
     <div class="aquarium-wildlife-gui-label">Overrides JSON</div>
     <textarea data-role="overrides"></textarea>
     <div class="aquarium-wildlife-gui-label">Creature Snapshot JSON</div>
@@ -313,6 +653,8 @@ function ensureAquariumWildlifeGuiPanel() {
     aquariumWildlifeGuiState.textareaEl = null;
     aquariumWildlifeGuiState.promptTextareaEl = null;
     aquariumWildlifeGuiState.overridesTextareaEl = null;
+    aquariumWildlifeGuiState.profilesTextareaEl = null;
+    aquariumWildlifeGuiState.saveAuthProfileCheckboxEl = null;
     aquariumWildlifeGuiState.statusEl = null;
   });
   panelEl.querySelector('[data-action="refresh"]')?.addEventListener('click', () => {
@@ -325,6 +667,22 @@ function ensureAquariumWildlifeGuiPanel() {
   panelEl.querySelector('[data-action="copy-prompt"]')?.addEventListener('click', () => {
     void copyTextToClipboard(aquariumWildlifeGuiState.promptTextareaEl?.value || '')
       .then(() => syncAquariumWildlifeGuiStatus('Gemini prompt copied.'));
+  });
+  panelEl.querySelector('[data-action="apply-profiles"]')?.addEventListener('click', () => {
+    try {
+      const raw = aquariumWildlifeGuiState.profilesTextareaEl?.value || '[]';
+      const parsed = JSON.parse(raw);
+      const nextProfiles = sanitizeAquariumCreatureProfiles(parsed, getAquariumCreatureProfileSpecs());
+      setAquariumCreatureProfiles(nextProfiles, {
+        touchedIds: nextProfiles.map((profile) => profile.id)
+      });
+      writeAquariumCreatureProfilesToStorage(nextProfiles);
+      rerenderAquariumFishEffectPreservingDepthOverlays();
+      syncAquariumWildlifeGuiData();
+      syncAquariumWildlifeGuiStatus(`Applied ${nextProfiles.length} creature profiles.`);
+    } catch (error) {
+      syncAquariumWildlifeGuiStatus(error instanceof Error ? error.message : 'Unable to parse creature profiles JSON.');
+    }
   });
   panelEl.querySelector('[data-action="apply-overrides"]')?.addEventListener('click', () => {
     try {
@@ -342,16 +700,67 @@ function ensureAquariumWildlifeGuiPanel() {
       syncAquariumWildlifeGuiStatus(error instanceof Error ? error.message : 'Unable to parse overrides JSON.');
     }
   });
+  panelEl.querySelector('[data-action="save-aquarium-state"]')?.addEventListener('click', () => {
+    void (async () => {
+      try {
+        const nextProfiles = buildAquariumCreatureSavePayloadFromTouchedProfiles();
+        const saveToAuthProfile = aquariumWildlifeGuiState.saveAuthProfileCheckboxEl?.checked === true;
+        writeAquariumSaveAuthProfilePreference(saveToAuthProfile);
+        writeAquariumCreatureProfilesToStorage(nextProfiles);
+        if (saveToAuthProfile) {
+          const isAuthenticated = await ensureAquariumDiscordAuthState();
+          if (!isAuthenticated) {
+            throw new Error('Sign in with Discord before saving to your authenticated profile.');
+          }
+          await putAquariumCreatureProfilesToRoomState(nextProfiles);
+        }
+        setAquariumSavedCreatureProfiles(nextProfiles);
+        aquariumTouchedCreatureProfileIds.clear();
+        syncAquariumWildlifeGuiData();
+        syncAquariumWildlifeGuiStatus(saveToAuthProfile ? 'Aquarium state saved to Discord profile.' : 'Aquarium state saved locally.');
+      } catch (error) {
+        syncAquariumWildlifeGuiStatus(error instanceof Error ? error.message : 'Unable to save aquarium state.');
+      }
+    })();
+  });
+  panelEl.querySelector('[data-action="factory-reset"]')?.addEventListener('click', () => {
+    void (async () => {
+      writeAquariumWildlifeOverrides({});
+      writeAquariumCreatureProfilesToStorage([]);
+      writeAquariumSaveAuthProfilePreference(false);
+      aquariumTouchedCreatureProfileIds.clear();
+      setAquariumSavedCreatureProfiles([]);
+      setAquariumCreatureProfiles([], { replaceTouched: true });
+      const isAuthenticated = await ensureAquariumDiscordAuthState();
+      if (isAuthenticated) {
+        try {
+          await putAquariumCreatureProfilesToRoomState([]);
+        } catch {
+          // Ignore remote reset failure and still clear local state.
+        }
+      }
+      rerenderAquariumFishEffectPreservingDepthOverlays();
+      syncAquariumWildlifeGuiData();
+      syncAquariumWildlifeGuiStatus('Factory reset complete. Aquarium profile state cleared.');
+    })();
+  });
   panelEl.querySelector('[data-action="clear-overrides"]')?.addEventListener('click', () => {
     writeAquariumWildlifeOverrides({});
     rerenderAquariumFishEffectPreservingDepthOverlays();
     syncAquariumWildlifeGuiData();
     syncAquariumWildlifeGuiStatus('Overrides cleared.');
   });
+  panelEl.querySelector('[data-role="save-auth-profile"]')?.addEventListener('change', (event) => {
+    const isEnabled = event.target instanceof HTMLInputElement && event.target.checked;
+    writeAquariumSaveAuthProfilePreference(isEnabled);
+    syncAquariumWildlifeGuiStatus(isEnabled ? 'Discord profile saving enabled.' : 'Discord profile saving disabled.');
+  });
   aquariumWildlifeGuiState.panelEl = panelEl;
   aquariumWildlifeGuiState.textareaEl = panelEl.querySelector('[data-role="snapshot"]');
   aquariumWildlifeGuiState.promptTextareaEl = panelEl.querySelector('[data-role="prompt"]');
   aquariumWildlifeGuiState.overridesTextareaEl = panelEl.querySelector('[data-role="overrides"]');
+  aquariumWildlifeGuiState.profilesTextareaEl = panelEl.querySelector('[data-role="profiles"]');
+  aquariumWildlifeGuiState.saveAuthProfileCheckboxEl = panelEl.querySelector('[data-role="save-auth-profile"]');
   aquariumWildlifeGuiState.statusEl = panelEl.querySelector('[data-role="status"]');
   document.body.appendChild(panelEl);
   syncAquariumWildlifeGuiData();
@@ -363,10 +772,20 @@ function installAquariumWildlifeApi() {
     getSnapshot: () => collectAquariumWildlifeSnapshot(),
     getGeminiPrompt: () => buildAquariumWildlifeGeminiPrompt(),
     getOverrides: () => readAquariumWildlifeOverrides(),
+    getCreatureProfiles: () => getAquariumCreatureProfileSpecs(),
     setOverrides: (overrides = {}) => {
       writeAquariumWildlifeOverrides(overrides);
       rerenderAquariumFishEffectPreservingDepthOverlays();
       return readAquariumWildlifeOverrides();
+    },
+    setCreatureProfiles: (profiles = []) => {
+      const nextProfiles = sanitizeAquariumCreatureProfiles(profiles, getAquariumCreatureProfileSpecs());
+      setAquariumCreatureProfiles(nextProfiles, {
+        touchedIds: nextProfiles.map((profile) => profile.id)
+      });
+      writeAquariumCreatureProfilesToStorage(nextProfiles);
+      rerenderAquariumFishEffectPreservingDepthOverlays();
+      return getAquariumCreatureProfileSpecs();
     },
     clearOverrides: () => {
       writeAquariumWildlifeOverrides({});
@@ -614,7 +1033,7 @@ function createShuffledCopy(items) {
 
 function takeAquariumDisneyFishSpec(specPool) {
   if (specPool.length === 0) {
-    specPool.push(...createShuffledCopy(AQUARIUM_DISNEY_CHARACTER_SPECS));
+    specPool.push(...createShuffledCopy(getAquariumCreatureProfileSpecs()));
   }
   return specPool.pop();
 }
@@ -1058,7 +1477,7 @@ function createAquariumFishEffect() {
     }
   }
 
-  const disneyFishPool = createShuffledCopy(AQUARIUM_DISNEY_CHARACTER_SPECS);
+  const disneyFishPool = createShuffledCopy(getAquariumCreatureProfileSpecs());
 
   // Special guest: one random sea creature/item per load.
   const guests = [
@@ -1966,6 +2385,14 @@ function initializeScene() {
   syncDiscordAuthBodyClass();
   syncDiscordButtonUi();
   syncLoginOverlayUi();
+  aquariumSaveAuthProfileEnabled = readAquariumSaveAuthProfilePreference();
+  const localCreatureProfiles = readAquariumCreatureProfilesFromStorage();
+  const bootCreatureProfiles = localCreatureProfiles.length > 0
+    ? localCreatureProfiles
+    : sanitizeAquariumCreatureProfiles(AQUARIUM_DISNEY_CHARACTER_SPECS);
+  setAquariumCreatureProfiles(bootCreatureProfiles, { replaceTouched: true });
+  setAquariumSavedCreatureProfiles(bootCreatureProfiles);
+  void initializeAquariumCreatureProfiles();
   if (restoredDiscordLoginFlowState?.showLogin) {
     state._cb.setLeftMonitorState?.('login');
     if (restoredDiscordLoginFlowState.restorePowerOn && !state.isCommodorePoweringOn) {
