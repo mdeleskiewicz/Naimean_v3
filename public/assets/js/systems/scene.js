@@ -48,7 +48,7 @@ import { playWrongAudio, syncCornerScoreServerToLocalMad, unlockCornerScoreScori
 import { adjustDvdSpeed, stopBigTvDvdAnimation } from './dvd.js';
 import { stopRadioTuningLoopPlayback } from './flipClock.js';
 import { createHotspots, getRuntimeHotspotById, syncControlledOverlaysFromHotspots, consumeSaveResultFlash, hydrateHotspotsFromServer, hydrateNonCriticalSceneData, refreshDebugObjectActions, refreshDebugObjectSelectOptions, setHotspotDebugLockState, getSelectedDebugHotspotElement, saveDenUrlOverride, saveHotspots, hideSaveModal, encodeDebugSavePassword, hasMatchingDebugSaveCipher, ensureDebugSaveAccess, addResizeHandles } from './hotspots.js';
-import { getAquariumShrimpCount } from './aquariumEffect.js';
+import { getAquariumShrimpCount, resolveAquariumHorizontalMotion } from './aquariumEffect.js';
 
 const hasCoarsePointer = window.matchMedia('(pointer: coarse)').matches;
 const isIOSDevice =
@@ -504,6 +504,36 @@ function createAquariumFishEffect() {
     getRandomAquariumCreatureLayer(backCreatureLayerEl, frontCreatureLayerEl).appendChild(creatureEl);
     return creatureEl;
   };
+  const estimateAquariumEmojiWidthPx = (sizePx, textContent = '') => {
+    const glyphCount = Math.max(1, Array.from(textContent).length);
+    const widthFactor = glyphCount > 1 ? 1.35 : 0.95;
+    return Math.max(12, Math.round(sizePx * widthFactor));
+  };
+  const applyAquariumHorizontalMotion = ({
+    creatureEl,
+    startLeftPct,
+    creatureWidthPx,
+    swimDistPx,
+    distancePropertyName,
+    swimsRight = true,
+    reverseClassName = '',
+    allowDirectionFlip = true,
+  }) => {
+    const motion = resolveAquariumHorizontalMotion({
+      tankWidthPx: spot.w,
+      startLeftPct,
+      creatureWidthPx,
+      swimDistPx,
+      swimsRight,
+      allowDirectionFlip,
+    });
+    creatureEl.style.left = `${motion.startLeftPct}%`;
+    creatureEl.style.setProperty(distancePropertyName, `${motion.swimDistPx}px`);
+    if (reverseClassName) {
+      creatureEl.classList.toggle(reverseClassName, !motion.swimsRight);
+    }
+    return motion;
+  };
 
   // ── Animated water line (subtle surface movement at the top of the tank) ──
   const waterLine = document.createElement('div');
@@ -644,15 +674,19 @@ function createAquariumFishEffect() {
     const swimsRight = Math.random() < 0.5; // 50% chance to swim in each direction
     const shrimp = document.createElement('span');
     shrimp.className = 'aquarium-shrimp';
-    if (!swimsRight) {
-      shrimp.classList.add('aquarium-shrimp-reverse');
-    }
     shrimp.textContent = '🦐';
     shrimp.style.fontSize = `${size}px`;
     shrimp.style.top = `${top}%`;
-    shrimp.style.left = `${startLeft}%`;
     shrimp.style.filter = `hue-rotate(${hue}deg)`;
-    shrimp.style.setProperty('--shrimp-swim-dist', `${swimDist}px`);
+    applyAquariumHorizontalMotion({
+      creatureEl: shrimp,
+      startLeftPct: startLeft,
+      creatureWidthPx: estimateAquariumEmojiWidthPx(size, shrimp.textContent),
+      swimDistPx: swimDist,
+      distancePropertyName: '--shrimp-swim-dist',
+      swimsRight,
+      reverseClassName: 'aquarium-shrimp-reverse',
+    });
     shrimp.style.setProperty('--shrimp-duration', `${duration.toFixed(2)}s`);
     shrimp.style.setProperty('--shrimp-delay', `${delay.toFixed(2)}s`);
     appendAquariumCreature(shrimp);
@@ -700,8 +734,14 @@ function createAquariumFishEffect() {
     snail.textContent = '🐌';
     snail.style.fontSize = `${size}px`;
     snail.style.bottom = '4%';
-    snail.style.left = `${left}%`;
-    snail.style.setProperty('--snail-crawl-dist', `${crawlDist}px`);
+    applyAquariumHorizontalMotion({
+      creatureEl: snail,
+      startLeftPct: left,
+      creatureWidthPx: estimateAquariumEmojiWidthPx(size, snail.textContent),
+      swimDistPx: crawlDist,
+      distancePropertyName: '--snail-crawl-dist',
+      allowDirectionFlip: false,
+    });
     snail.style.setProperty('--snail-duration', `${duration.toFixed(2)}s`);
     snail.style.setProperty('--snail-delay', `${delay.toFixed(2)}s`);
     appendAquariumCreature(snail);
@@ -729,14 +769,18 @@ function createAquariumFishEffect() {
     const swimsRight = Math.random() < 0.5; // 50% chance to swim in each direction
     const turtle = document.createElement('span');
     turtle.className = 'aquarium-turtle';
-    if (!swimsRight) {
-      turtle.classList.add('aquarium-turtle-reverse');
-    }
     turtle.textContent = guestType === 'little-crocodile' ? '🐊' : '🐢';
     turtle.style.fontSize = `${size}px`;
     turtle.style.top = `${top}%`;
-    turtle.style.left = `${startLeft}%`;
-    turtle.style.setProperty('--turtle-swim-dist', `${swimDist}px`);
+    applyAquariumHorizontalMotion({
+      creatureEl: turtle,
+      startLeftPct: startLeft,
+      creatureWidthPx: estimateAquariumEmojiWidthPx(size, turtle.textContent),
+      swimDistPx: swimDist,
+      distancePropertyName: '--turtle-swim-dist',
+      swimsRight,
+      reverseClassName: 'aquarium-turtle-reverse',
+    });
     turtle.style.setProperty('--turtle-duration', `${duration.toFixed(2)}s`);
     turtle.style.setProperty('--turtle-delay', `${delay.toFixed(2)}s`);
     appendAquariumCreature(turtle);
@@ -766,14 +810,18 @@ function createAquariumFishEffect() {
     const swimsRight = Math.random() < 0.5; // 50% chance to swim in each direction
     const nautilus = document.createElement('span');
     nautilus.className = 'aquarium-nautilus';
-    if (!swimsRight) {
-      nautilus.classList.add('aquarium-nautilus-reverse');
-    }
     nautilus.textContent = '🐚';
     nautilus.style.fontSize = `${size}px`;
     nautilus.style.top = `${top}%`;
-    nautilus.style.left = `${startLeft}%`;
-    nautilus.style.setProperty('--nautilus-swim-dist', `${swimDist}px`);
+    applyAquariumHorizontalMotion({
+      creatureEl: nautilus,
+      startLeftPct: startLeft,
+      creatureWidthPx: estimateAquariumEmojiWidthPx(size, nautilus.textContent),
+      swimDistPx: swimDist,
+      distancePropertyName: '--nautilus-swim-dist',
+      swimsRight,
+      reverseClassName: 'aquarium-nautilus-reverse',
+    });
     nautilus.style.setProperty('--nautilus-duration', `${duration.toFixed(2)}s`);
     nautilus.style.setProperty('--nautilus-delay', `${delay.toFixed(2)}s`);
     appendAquariumCreature(nautilus);
@@ -787,14 +835,18 @@ function createAquariumFishEffect() {
     const swimsRight = Math.random() < 0.5; // 50% chance to swim in each direction
     const octopus = document.createElement('span');
     octopus.className = 'aquarium-octopus';
-    if (!swimsRight) {
-      octopus.classList.add('aquarium-octopus-reverse');
-    }
     octopus.textContent = guestType === 'vampire-octopus' ? '🐙🧛' : '🐙';
     octopus.style.fontSize = `${size}px`;
     octopus.style.top = `${top}%`;
-    octopus.style.left = `${startLeft}%`;
-    octopus.style.setProperty('--octopus-swim-dist', `${swimDist}px`);
+    applyAquariumHorizontalMotion({
+      creatureEl: octopus,
+      startLeftPct: startLeft,
+      creatureWidthPx: estimateAquariumEmojiWidthPx(size, octopus.textContent),
+      swimDistPx: swimDist,
+      distancePropertyName: '--octopus-swim-dist',
+      swimsRight,
+      reverseClassName: 'aquarium-octopus-reverse',
+    });
     octopus.style.setProperty('--octopus-duration', `${duration.toFixed(2)}s`);
     octopus.style.setProperty('--octopus-delay', `${delay.toFixed(2)}s`);
     appendAquariumCreature(octopus);
@@ -809,8 +861,14 @@ function createAquariumFishEffect() {
     frog.textContent = '🐸';
     frog.style.fontSize = `${size}px`;
     frog.style.bottom = '4%';
-    frog.style.left = `${left}%`;
-    frog.style.setProperty('--frog-hop-dist', `${hopDist}px`);
+    applyAquariumHorizontalMotion({
+      creatureEl: frog,
+      startLeftPct: left,
+      creatureWidthPx: estimateAquariumEmojiWidthPx(size, frog.textContent),
+      swimDistPx: hopDist,
+      distancePropertyName: '--frog-hop-dist',
+      allowDirectionFlip: false,
+    });
     frog.style.setProperty('--frog-duration', `${duration.toFixed(2)}s`);
     frog.style.setProperty('--frog-delay', `${delay.toFixed(2)}s`);
     appendAquariumCreature(frog);
@@ -824,14 +882,18 @@ function createAquariumFishEffect() {
     const swimsRight = Math.random() < 0.5; // 50% chance to swim in each direction
     const manta = document.createElement('span');
     manta.className = 'aquarium-manta-ray';
-    if (!swimsRight) {
-      manta.classList.add('aquarium-manta-ray-reverse');
-    }
     manta.textContent = '🐡';
     manta.style.fontSize = `${size}px`;
     manta.style.top = `${top}%`;
-    manta.style.left = `${startLeft}%`;
-    manta.style.setProperty('--manta-swim-dist', `${swimDist}px`);
+    applyAquariumHorizontalMotion({
+      creatureEl: manta,
+      startLeftPct: startLeft,
+      creatureWidthPx: estimateAquariumEmojiWidthPx(size, manta.textContent),
+      swimDistPx: swimDist,
+      distancePropertyName: '--manta-swim-dist',
+      swimsRight,
+      reverseClassName: 'aquarium-manta-ray-reverse',
+    });
     manta.style.setProperty('--manta-duration', `${duration.toFixed(2)}s`);
     manta.style.setProperty('--manta-delay', `${delay.toFixed(2)}s`);
     appendAquariumCreature(manta);
@@ -845,9 +907,6 @@ function createAquariumFishEffect() {
     const swimsRight = Math.random() < 0.5; // 50% chance to swim in each direction
     const shark = document.createElement('span');
     shark.className = 'aquarium-shark';
-    if (!swimsRight) {
-      shark.classList.add('aquarium-shark-reverse');
-    }
     if (guestType === 'anglerfish') {
       shark.textContent = '🐟💡';
     } else if (guestType === 'baby-barracuda') {
@@ -857,8 +916,15 @@ function createAquariumFishEffect() {
     }
     shark.style.fontSize = `${size}px`;
     shark.style.top = `${top}%`;
-    shark.style.left = `${startLeft}%`;
-    shark.style.setProperty('--shark-swim-dist', `${swimDist}px`);
+    applyAquariumHorizontalMotion({
+      creatureEl: shark,
+      startLeftPct: startLeft,
+      creatureWidthPx: estimateAquariumEmojiWidthPx(size, shark.textContent),
+      swimDistPx: swimDist,
+      distancePropertyName: '--shark-swim-dist',
+      swimsRight,
+      reverseClassName: 'aquarium-shark-reverse',
+    });
     shark.style.setProperty('--shark-duration', `${duration.toFixed(2)}s`);
     shark.style.setProperty('--shark-delay', `${delay.toFixed(2)}s`);
     appendAquariumCreature(shark);
@@ -872,14 +938,18 @@ function createAquariumFishEffect() {
     const swimsRight = Math.random() < 0.5; // 50% chance to swim in each direction
     const eel = document.createElement('span');
     eel.className = 'aquarium-electric-eel';
-    if (!swimsRight) {
-      eel.classList.add('aquarium-electric-eel-reverse');
-    }
     eel.textContent = '🐍';
     eel.style.fontSize = `${size}px`;
     eel.style.top = `${top}%`;
-    eel.style.left = `${startLeft}%`;
-    eel.style.setProperty('--electric-eel-swim-dist', `${swimDist}px`);
+    applyAquariumHorizontalMotion({
+      creatureEl: eel,
+      startLeftPct: startLeft,
+      creatureWidthPx: estimateAquariumEmojiWidthPx(size, eel.textContent),
+      swimDistPx: swimDist,
+      distancePropertyName: '--electric-eel-swim-dist',
+      swimsRight,
+      reverseClassName: 'aquarium-electric-eel-reverse',
+    });
     eel.style.setProperty('--electric-eel-duration', `${duration.toFixed(2)}s`);
     eel.style.setProperty('--electric-eel-delay', `${delay.toFixed(2)}s`);
     appendAquariumCreature(eel);
@@ -893,14 +963,18 @@ function createAquariumFishEffect() {
     const swimsRight = Math.random() < 0.5; // 50% chance to swim in each direction
     const moray = document.createElement('span');
     moray.className = 'aquarium-moray-eel';
-    if (!swimsRight) {
-      moray.classList.add('aquarium-moray-eel-reverse');
-    }
     moray.textContent = '🐍';
     moray.style.fontSize = `${size}px`;
     moray.style.top = `${top}%`;
-    moray.style.left = `${startLeft}%`;
-    moray.style.setProperty('--moray-swim-dist', `${swimDist}px`);
+    applyAquariumHorizontalMotion({
+      creatureEl: moray,
+      startLeftPct: startLeft,
+      creatureWidthPx: estimateAquariumEmojiWidthPx(size, moray.textContent),
+      swimDistPx: swimDist,
+      distancePropertyName: '--moray-swim-dist',
+      swimsRight,
+      reverseClassName: 'aquarium-moray-eel-reverse',
+    });
     moray.style.setProperty('--moray-duration', `${duration.toFixed(2)}s`);
     moray.style.setProperty('--moray-delay', `${delay.toFixed(2)}s`);
     appendAquariumCreature(moray);
@@ -943,14 +1017,18 @@ function createAquariumFishEffect() {
     const swimsRight = Math.random() < 0.5; // 50% chance to swim in each direction
     const diver = document.createElement('span');
     diver.className = 'aquarium-toy-diver';
-    if (!swimsRight) {
-      diver.classList.add('aquarium-toy-diver-reverse');
-    }
     diver.textContent = '🤿';
     diver.style.fontSize = `${size}px`;
     diver.style.top = `${top}%`;
-    diver.style.left = `${startLeft}%`;
-    diver.style.setProperty('--toy-diver-swim-dist', `${swimDist}px`);
+    applyAquariumHorizontalMotion({
+      creatureEl: diver,
+      startLeftPct: startLeft,
+      creatureWidthPx: estimateAquariumEmojiWidthPx(size, diver.textContent),
+      swimDistPx: swimDist,
+      distancePropertyName: '--toy-diver-swim-dist',
+      swimsRight,
+      reverseClassName: 'aquarium-toy-diver-reverse',
+    });
     diver.style.setProperty('--toy-diver-duration', `${duration.toFixed(2)}s`);
     diver.style.setProperty('--toy-diver-delay', `${delay.toFixed(2)}s`);
     appendAquariumCreature(diver);
@@ -1001,7 +1079,18 @@ function createAquariumFishEffect() {
   const leadingFishConfigs = allFishConfigs.slice(0, 1);
   for (const fishConfig of leadingFishConfigs) {
     fishConfig.delaySec = -(Math.random() * fishConfig.durationSec);
-    appendAquariumDisneyFish(getRandomAquariumCreatureLayer(backCreatureLayerEl, frontCreatureLayerEl), disneyFishPool, fishConfig);
+    const fishMotion = resolveAquariumHorizontalMotion({
+      tankWidthPx: spot.w,
+      startLeftPct: fishConfig.leftPct,
+      creatureWidthPx: fishConfig.widthPx,
+      swimDistPx: fishConfig.swimDistPx,
+      allowDirectionFlip: false,
+    });
+    appendAquariumDisneyFish(getRandomAquariumCreatureLayer(backCreatureLayerEl, frontCreatureLayerEl), disneyFishPool, {
+      ...fishConfig,
+      leftPct: fishMotion.startLeftPct,
+      swimDistPx: fishMotion.swimDistPx,
+    });
   }
 
   // ── Left-side filter (hang-on-back style, upper-left of tank) ────────────

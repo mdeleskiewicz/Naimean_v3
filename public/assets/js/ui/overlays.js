@@ -498,12 +498,8 @@ function createOverlays() {
         btn.setAttribute('aria-label', `GitHub ${label}`);
         btn.textContent = label;
         btn.addEventListener('pointerdown', (e) => e.stopPropagation());
-        btn.addEventListener('click', async (e) => {
+        btn.addEventListener('click', (e) => {
           e.stopPropagation();
-          const isAuthenticated = await state._cb.ensureDiscordAuthForQuadrantAction?.();
-          if (!isAuthenticated) {
-            return;
-          }
           btn.classList.add('is-active');
           window.open(url, '_blank', 'noopener,noreferrer');
         });
@@ -791,12 +787,8 @@ function createOverlays() {
         segment.dataset.quadrant = quadrant;
         segment.textContent = label;
         segment.setAttribute('aria-label', label);
-        segment.addEventListener('click', async () => {
+        segment.addEventListener('click', () => {
           if (!isLeftMonitorInteractive()) return;
-          const isAuthenticated = await state._cb.ensureDiscordAuthForQuadrantAction?.();
-          if (!isAuthenticated) {
-            return;
-          }
           const nextState = segmentState === state.leftMonitorSelectedState ? DEFAULT_LEFT_MONITOR_STATE : segmentState;
           state.shouldAutoStartDiscordLoginOnNextLoginActivation = nextState === 'login' && !state.discordAuthState?.authenticated;
           void activateLeftMonitorQuadrant(nextState);
@@ -822,12 +814,8 @@ function createOverlays() {
         btn.setAttribute('aria-label', `GitHub ${label}`);
         btn.textContent = label;
         btn.addEventListener('pointerdown', (e) => e.stopPropagation());
-        btn.addEventListener('click', async (e) => {
+        btn.addEventListener('click', (e) => {
           e.stopPropagation();
-          const isAuthenticated = await state._cb.ensureDiscordAuthForQuadrantAction?.();
-          if (!isAuthenticated) {
-            return;
-          }
           btn.classList.add('is-active');
           window.open(url, '_blank', 'noopener,noreferrer');
         });
@@ -974,12 +962,9 @@ function createOverlays() {
         quadBtn.className = `left-monitor-card-quadrant github-card-btn ${cls}`;
         quadBtn.textContent = label;
         quadBtn.setAttribute('aria-label', `GitHub ${label}`);
-        quadBtn.addEventListener('click', async (e) => {
+        quadBtn.addEventListener('click', (e) => {
           e.stopPropagation();
-          const isAuthenticated = await state._cb.ensureDiscordAuthForQuadrantAction?.();
-          if (isAuthenticated) {
-            window.open(url, '_blank', 'noopener,noreferrer');
-          }
+          window.open(url, '_blank', 'noopener,noreferrer');
         });
         githubCardGrid.appendChild(quadBtn);
       });
