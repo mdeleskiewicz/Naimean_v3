@@ -61,6 +61,8 @@ const useLiteRendering = isIOSDevice || hasCoarsePointer;
 let sceneEventsBound = false;
 const AQUARIUM_WILDLIFE_OVERRIDES_STORAGE_KEY = 'naimean.aquariumWildlife.overrides';
 const AQUARIUM_WILDLIFE_GUI_STYLE_ID = 'aquarium-wildlife-gui-style';
+const AQUARIUM_SHRIMP_VERTICAL_SPACE_PERCENT = 23;
+const DEFAULT_DISNEY_FISH_COUNT = 1;
 const AQUARIUM_WILDLIFE_CREATURE_CLASS_NAMES = Object.freeze([
   'aquarium-disney-fish',
   'aquarium-shrimp',
@@ -269,8 +271,11 @@ function copyTextToClipboard(value) {
   fallback.style.opacity = '0';
   document.body.appendChild(fallback);
   fallback.select();
-  document.execCommand('copy');
+  const copied = document.execCommand('copy');
   fallback.remove();
+  if (!copied) {
+    return Promise.reject(new Error('Clipboard copy failed.'));
+  }
   return Promise.resolve();
 }
 
@@ -325,7 +330,8 @@ function ensureAquariumWildlifeGuiPanel() {
       const raw = aquariumWildlifeGuiState.overridesTextareaEl?.value || '{}';
       const parsed = JSON.parse(raw);
       if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
-        throw new Error('Overrides must be a JSON object.');
+        const receivedType = Array.isArray(parsed) ? 'array' : typeof parsed;
+        throw new Error(`Overrides must be a JSON object, received: ${receivedType}.`);
       }
       writeAquariumWildlifeOverrides(parsed);
       rerenderAquariumFishEffectPreservingDepthOverlays();
@@ -991,36 +997,38 @@ function createAquariumFishEffect() {
   const shrimpHues = [0, 22, 55, 115, 200, 260, 330];
   const shrimpHuePool = createShuffledCopy(shrimpHues);
   const shrimpCount = getAquariumWildlifeOverrideBounds(wildlifeOverrides.shrimpCount, 0, 12, getAquariumShrimpCount());
-  const slotHeight = shrimpCount > 0 ? 23 / shrimpCount : 0;
+  const slotHeight = shrimpCount > 0 ? AQUARIUM_SHRIMP_VERTICAL_SPACE_PERCENT / shrimpCount : 0;
   const shrimpSizeTiers = [10, 14, 20, 26, 31];
-  for (let i = 0; i < shrimpCount; i++) {
-    const slotStart = 67 + i * slotHeight;
-    const top = Math.floor(slotStart + Math.random() * (slotHeight * 0.7));
-    const size = shrimpSizeTiers[Math.floor(Math.random() * shrimpSizeTiers.length)] + Math.floor(Math.random() * 3);
-    const swimDist = 85 + Math.floor(Math.random() * 65);
-    const duration = 30 + Math.random() * 24;
-    const delay = -(Math.random() * duration);
-    const hue = shrimpHuePool[i % shrimpHuePool.length];
-    const startLeft = 5 + Math.floor(Math.random() * 85); // Randomize across tank width
-    const swimsRight = Math.random() < 0.5; // 50% chance to swim in each direction
-    const shrimp = document.createElement('span');
-    shrimp.className = 'aquarium-shrimp';
-    shrimp.textContent = '🦐';
-    shrimp.style.fontSize = `${size}px`;
-    shrimp.style.top = `${top}%`;
-    shrimp.style.filter = `hue-rotate(${hue}deg)`;
-    applyAquariumHorizontalMotion({
-      creatureEl: shrimp,
-      startLeftPct: startLeft,
-      creatureWidthPx: estimateAquariumEmojiWidthPx(size, shrimp.textContent),
-      swimDistPx: swimDist,
-      distancePropertyName: '--shrimp-swim-dist',
-      swimsRight,
-      reverseClassName: 'aquarium-shrimp-reverse',
-    });
-    shrimp.style.setProperty('--shrimp-duration', `${duration.toFixed(2)}s`);
-    shrimp.style.setProperty('--shrimp-delay', `${delay.toFixed(2)}s`);
-    appendAquariumCreature(shrimp);
+  if (shrimpCount > 0) {
+    for (let i = 0; i < shrimpCount; i++) {
+      const slotStart = 67 + i * slotHeight;
+      const top = Math.floor(slotStart + Math.random() * (slotHeight * 0.7));
+      const size = shrimpSizeTiers[Math.floor(Math.random() * shrimpSizeTiers.length)] + Math.floor(Math.random() * 3);
+      const swimDist = 85 + Math.floor(Math.random() * 65);
+      const duration = 30 + Math.random() * 24;
+      const delay = -(Math.random() * duration);
+      const hue = shrimpHuePool[i % shrimpHuePool.length];
+      const startLeft = 5 + Math.floor(Math.random() * 85); // Randomize across tank width
+      const swimsRight = Math.random() < 0.5; // 50% chance to swim in each direction
+      const shrimp = document.createElement('span');
+      shrimp.className = 'aquarium-shrimp';
+      shrimp.textContent = '🦐';
+      shrimp.style.fontSize = `${size}px`;
+      shrimp.style.top = `${top}%`;
+      shrimp.style.filter = `hue-rotate(${hue}deg)`;
+      applyAquariumHorizontalMotion({
+        creatureEl: shrimp,
+        startLeftPct: startLeft,
+        creatureWidthPx: estimateAquariumEmojiWidthPx(size, shrimp.textContent),
+        swimDistPx: swimDist,
+        distancePropertyName: '--shrimp-swim-dist',
+        swimsRight,
+        reverseClassName: 'aquarium-shrimp-reverse',
+      });
+      shrimp.style.setProperty('--shrimp-duration', `${duration.toFixed(2)}s`);
+      shrimp.style.setProperty('--shrimp-delay', `${delay.toFixed(2)}s`);
+      appendAquariumCreature(shrimp);
+    }
   }
 
   const disneyFishPool = createShuffledCopy(AQUARIUM_DISNEY_CHARACTER_SPECS);
@@ -1409,7 +1417,12 @@ function createAquariumFishEffect() {
       delaySec: 0
     }
   ];
-  const disneyFishCount = getAquariumWildlifeOverrideBounds(wildlifeOverrides.disneyFishCount, 0, allFishConfigs.length, 1);
+  const disneyFishCount = getAquariumWildlifeOverrideBounds(
+    wildlifeOverrides.disneyFishCount,
+    0,
+    allFishConfigs.length,
+    DEFAULT_DISNEY_FISH_COUNT,
+  );
   const leadingFishConfigs = allFishConfigs.slice(0, disneyFishCount);
   for (const fishConfig of leadingFishConfigs) {
     fishConfig.delaySec = -(Math.random() * fishConfig.durationSec);
