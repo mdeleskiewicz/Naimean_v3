@@ -607,7 +607,32 @@ function createAquariumFishEffect() {
   const disneyFishPool = createShuffledCopy(AQUARIUM_DISNEY_CHARACTER_SPECS);
 
   // Special guest: one random sea creature/item per load.
-  const guests = ['snail', 'starfish', 'turtle', 'jellyfish', 'nautilus', 'octopus', 'frog', 'manta-ray', 'shark', 'electric-eel', 'moray-eel', 'bubble-chest', 'coral', 'anemone', 'toy-diver', 'cthulhu-bubbler', 'skull-bubbler'];
+  const guests = [
+    'snail',
+    'starfish',
+    'turtle',
+    'jellyfish',
+    'nautilus',
+    'octopus',
+    'frog',
+    'manta-ray',
+    'shark',
+    'electric-eel',
+    'moray-eel',
+    'anchor',
+    'mario-jellyfish',
+    'anglerfish',
+    'snapping-turtle',
+    'vampire-octopus',
+    'baby-barracuda',
+    'little-crocodile',
+    'bubble-chest',
+    'coral',
+    'anemone',
+    'toy-diver',
+    'cthulhu-bubbler',
+    'skull-bubbler'
+  ];
   const guestType = guests[Math.floor(Math.random() * guests.length)];
 
   if (guestType === 'snail') {
@@ -626,21 +651,21 @@ function createAquariumFishEffect() {
     snail.style.setProperty('--snail-duration', `${duration.toFixed(2)}s`);
     snail.style.setProperty('--snail-delay', `${delay.toFixed(2)}s`);
     el.appendChild(snail);
-  } else if (guestType === 'starfish') {
+  } else if (guestType === 'starfish' || guestType === 'anchor') {
     const size = 22 + Math.floor(Math.random() * 12);
     const left = 20 + Math.floor(Math.random() * 55);
     const duration = 18 + Math.random() * 10;
     const delay = Math.random() * 7;
     const star = document.createElement('span');
     star.className = 'aquarium-starfish';
-    star.textContent = '⭐';
+    star.textContent = guestType === 'anchor' ? '⚓' : '⭐';
     star.style.fontSize = `${size}px`;
     star.style.bottom = '6%';
     star.style.left = `${left}%`;
     star.style.setProperty('--starfish-duration', `${duration.toFixed(2)}s`);
     star.style.setProperty('--starfish-delay', `${delay.toFixed(2)}s`);
     el.appendChild(star);
-  } else if (guestType === 'turtle') {
+  } else if (guestType === 'turtle' || guestType === 'snapping-turtle' || guestType === 'little-crocodile') {
     const size = 30 + Math.floor(Math.random() * 12);
     const top = 30 + Math.floor(Math.random() * 35);
     const swimDist = 150 + Math.floor(Math.random() * 100);
@@ -648,7 +673,7 @@ function createAquariumFishEffect() {
     const delay = -(Math.random() * duration);
     const turtle = document.createElement('span');
     turtle.className = 'aquarium-turtle';
-    turtle.textContent = '🐢';
+    turtle.textContent = guestType === 'little-crocodile' ? '🐊' : '🐢';
     turtle.style.fontSize = `${size}px`;
     turtle.style.top = `${top}%`;
     turtle.style.left = '5%';
@@ -656,7 +681,7 @@ function createAquariumFishEffect() {
     turtle.style.setProperty('--turtle-duration', `${duration.toFixed(2)}s`);
     turtle.style.setProperty('--turtle-delay', `${delay.toFixed(2)}s`);
     el.appendChild(turtle);
-  } else if (guestType === 'jellyfish') {
+  } else if (guestType === 'jellyfish' || guestType === 'mario-jellyfish') {
     const size = 24 + Math.floor(Math.random() * 14);
     const left = 15 + Math.floor(Math.random() * 65);
     const driftAmt = 30 + Math.floor(Math.random() * 30);
@@ -664,7 +689,7 @@ function createAquariumFishEffect() {
     const delay = Math.random() * 4;
     const jelly = document.createElement('span');
     jelly.className = 'aquarium-jellyfish';
-    jelly.textContent = '🪼';
+    jelly.textContent = guestType === 'mario-jellyfish' ? '🪼🍄' : '🪼';
     jelly.style.fontSize = `${size}px`;
     jelly.style.top = `${15 + Math.floor(Math.random() * 50)}%`;
     jelly.style.left = `${left}%`;
@@ -688,7 +713,7 @@ function createAquariumFishEffect() {
     nautilus.style.setProperty('--nautilus-duration', `${duration.toFixed(2)}s`);
     nautilus.style.setProperty('--nautilus-delay', `${delay.toFixed(2)}s`);
     el.appendChild(nautilus);
-  } else if (guestType === 'octopus') {
+  } else if (guestType === 'octopus' || guestType === 'vampire-octopus') {
     const size = 28 + Math.floor(Math.random() * 14);
     const top = 20 + Math.floor(Math.random() * 50);
     const swimDist = 180 + Math.floor(Math.random() * 110);
@@ -696,7 +721,7 @@ function createAquariumFishEffect() {
     const delay = -(Math.random() * duration);
     const octopus = document.createElement('span');
     octopus.className = 'aquarium-octopus';
-    octopus.textContent = '🐙';
+    octopus.textContent = guestType === 'vampire-octopus' ? '🐙🧛' : '🐙';
     octopus.style.fontSize = `${size}px`;
     octopus.style.top = `${top}%`;
     octopus.style.left = '5%';
@@ -736,7 +761,7 @@ function createAquariumFishEffect() {
     manta.style.setProperty('--manta-duration', `${duration.toFixed(2)}s`);
     manta.style.setProperty('--manta-delay', `${delay.toFixed(2)}s`);
     el.appendChild(manta);
-  } else if (guestType === 'shark') {
+  } else if (guestType === 'shark' || guestType === 'anglerfish' || guestType === 'baby-barracuda') {
     const size = 20 + Math.floor(Math.random() * 8);
     const top = 15 + Math.floor(Math.random() * 50);
     const swimDist = 220 + Math.floor(Math.random() * 130);
@@ -744,7 +769,13 @@ function createAquariumFishEffect() {
     const delay = -(Math.random() * duration);
     const shark = document.createElement('span');
     shark.className = 'aquarium-shark';
-    shark.textContent = '🦈';
+    if (guestType === 'anglerfish') {
+      shark.textContent = '🐟💡';
+    } else if (guestType === 'baby-barracuda') {
+      shark.textContent = '🐟';
+    } else {
+      shark.textContent = '🦈';
+    }
     shark.style.fontSize = `${size}px`;
     shark.style.top = `${top}%`;
     shark.style.left = '2%';
