@@ -449,7 +449,7 @@ async function playAquariumHotspotSequence() {
   if (!state.isRightMonitorAquariumSequenceRunning) {
     void playRightMonitorAquariumSequence();
   }
-  await runAquariumPlaybackSequence(sequenceToken);
+  await runAquariumPlaybackSequence(sequenceToken, { startWithStatic: true });
 }
 
 state._cb.stopAquariumPlaybackSequence = stopAquariumPlaybackSequence;

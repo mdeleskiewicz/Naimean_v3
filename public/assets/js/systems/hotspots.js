@@ -746,7 +746,7 @@ function createHotspots(hotspotList) {
     el.addEventListener('click', (event) => {
       if (spot.id === NOAHS_ARCADE_HOTSPOT_ID) return void window.location.assign(getHotspotEffectiveUrl(spot.id) || NOAHS_ARCADE_URL);
       if (spot.id === 'chapel') return void window.location.assign(getHotspotEffectiveUrl(spot.id) || CHAPEL_URL);
-      if (spot.id === COMMODORE_POWER_BUTTON_CONTROL_ID) return void state._cb.triggerCommodorePowerOnSequence?.();
+      if (spot.id === COMMODORE_POWER_BUTTON_CONTROL_ID) return void (state._cb.triggerPowerOnCard?.() ?? state._cb.triggerCommodorePowerOnSequence?.());
       if (spot.id === MONITOR_GROUP_LEFT_CONTROL_ID) {
         const monitorStateByPos = {
           'top-left': 'tools',
