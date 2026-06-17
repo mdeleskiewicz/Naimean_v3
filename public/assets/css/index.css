@@ -1141,32 +1141,43 @@
     }
 
     /* GitHub Card */
-    .github-card-grid {
-      gap: clamp(2px, 1.5%, 6px);
-      padding: clamp(4px, 2%, 10px);
+    .left-monitor-github-card {
+      top: 0;
+      right: 0;
+      bottom: 0;
+      left: 0;
     }
 
-    .github-card-btn {
+    .left-monitor-github-card .github-card-grid {
+      gap: 0;
+      padding: 0;
+    }
+
+    .left-monitor-github-card .github-card-btn {
       background: linear-gradient(135deg, rgba(13, 17, 23, 0.95), rgba(22, 27, 34, 0.9));
       border: 1px solid rgba(48, 54, 61, 0.7);
-      border-radius: 6px;
+      border-radius: 0;
       color: #fff;
-      font-size: clamp(9px, 4cqw, 16px);
+      font-size: 14.4px;
       font-weight: 700;
       text-transform: uppercase;
       cursor: pointer;
       transition: all 0.2s ease;
-      padding: clamp(8px, 3%, 16px);
+      padding: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
     }
 
-    .github-card-btn:hover {
+    .left-monitor-github-card .github-card-btn:hover {
       background: linear-gradient(135deg, rgba(33, 38, 45, 0.95), rgba(42, 48, 55, 0.9));
       border-color: rgba(88, 96, 105, 0.9);
       transform: translateY(-1px);
       box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
     }
 
-    .github-card-btn:active {
+    .left-monitor-github-card .github-card-btn:active {
       transform: translateY(0);
     }
 
