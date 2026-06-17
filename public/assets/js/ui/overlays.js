@@ -1,5 +1,7 @@
 import {
+  AQUARIUM_DEPTH_OVERLAY_LEFT_ID,
   AQUARIUM_DEPTH_OVERLAY_LEFT_IMAGE_URL,
+  AQUARIUM_DEPTH_OVERLAY_RIGHT_ID,
   AQUARIUM_DEPTH_OVERLAY_RIGHT_IMAGE_URL,
   AQUARIUM_OVERLAY_ID,
   AQUARIUM_STATIC_VIDEO_URL,
@@ -45,6 +47,7 @@ import {
   FLIP_CLOCK_OVERLAY_ID,
   overlayDefaults
 } from '../core/constants.js';
+import { applyAquariumDepthOverlayLayout, createDefaultAquariumDepthOverlayLayout } from '../core/aquariumDepthOverlayLayout.js';
 import { state } from '../core/state.js';
 import { clamp } from '../core/utils.js';
 import { applyDvdColorStep } from '../systems/dvd.js';
@@ -626,11 +629,15 @@ function createOverlays() {
       aquariumDepthOverlayLeftEl.alt = '';
       aquariumDepthOverlayLeftEl.decoding = 'async';
       aquariumDepthOverlayLeftEl.loading = 'eager';
+      aquariumDepthOverlayLeftEl.dataset.debugObjectId = AQUARIUM_DEPTH_OVERLAY_LEFT_ID;
+      aquariumDepthOverlayLeftEl.dataset.label = 'Aquarium Left Depth Overlay';
       aquariumDepthOverlayLeftEl.setAttribute('aria-hidden', 'true');
-      aquariumDepthOverlayLeftEl.style.left = '0px';
-      aquariumDepthOverlayLeftEl.style.top = '0px';
-      aquariumDepthOverlayLeftEl.style.width = `${rect.w}px`;
-      aquariumDepthOverlayLeftEl.style.height = `${rect.h}px`;
+      aquariumDepthOverlayLeftEl.title = aquariumDepthOverlayLeftEl.dataset.label;
+      applyAquariumDepthOverlayLayout(aquariumDepthOverlayLeftEl, createDefaultAquariumDepthOverlayLayout('left', rect.w, rect.h));
+      const aquariumDepthOverlayLeftLabel = document.createElement('span');
+      aquariumDepthOverlayLeftLabel.className = 'hotspot-label';
+      aquariumDepthOverlayLeftLabel.textContent = `${aquariumDepthOverlayLeftEl.dataset.label} (${Math.round(parseFloat(aquariumDepthOverlayLeftEl.style.left))}, ${Math.round(parseFloat(aquariumDepthOverlayLeftEl.style.top))}) ${Math.round(parseFloat(aquariumDepthOverlayLeftEl.style.width))}×${Math.round(parseFloat(aquariumDepthOverlayLeftEl.style.height))}`;
+      aquariumDepthOverlayLeftEl.appendChild(aquariumDepthOverlayLeftLabel);
       addDepthOverlayResizeHandles(aquariumDepthOverlayLeftEl);
       el.appendChild(aquariumDepthOverlayLeftEl);
       const aquariumDepthOverlayRightEl = document.createElement('img');
@@ -639,11 +646,15 @@ function createOverlays() {
       aquariumDepthOverlayRightEl.alt = '';
       aquariumDepthOverlayRightEl.decoding = 'async';
       aquariumDepthOverlayRightEl.loading = 'eager';
+      aquariumDepthOverlayRightEl.dataset.debugObjectId = AQUARIUM_DEPTH_OVERLAY_RIGHT_ID;
+      aquariumDepthOverlayRightEl.dataset.label = 'Aquarium Right Depth Overlay';
       aquariumDepthOverlayRightEl.setAttribute('aria-hidden', 'true');
-      aquariumDepthOverlayRightEl.style.left = '0px';
-      aquariumDepthOverlayRightEl.style.top = '0px';
-      aquariumDepthOverlayRightEl.style.width = `${rect.w}px`;
-      aquariumDepthOverlayRightEl.style.height = `${rect.h}px`;
+      aquariumDepthOverlayRightEl.title = aquariumDepthOverlayRightEl.dataset.label;
+      applyAquariumDepthOverlayLayout(aquariumDepthOverlayRightEl, createDefaultAquariumDepthOverlayLayout('right', rect.w, rect.h));
+      const aquariumDepthOverlayRightLabel = document.createElement('span');
+      aquariumDepthOverlayRightLabel.className = 'hotspot-label';
+      aquariumDepthOverlayRightLabel.textContent = `${aquariumDepthOverlayRightEl.dataset.label} (${Math.round(parseFloat(aquariumDepthOverlayRightEl.style.left))}, ${Math.round(parseFloat(aquariumDepthOverlayRightEl.style.top))}) ${Math.round(parseFloat(aquariumDepthOverlayRightEl.style.width))}×${Math.round(parseFloat(aquariumDepthOverlayRightEl.style.height))}`;
+      aquariumDepthOverlayRightEl.appendChild(aquariumDepthOverlayRightLabel);
       addDepthOverlayResizeHandles(aquariumDepthOverlayRightEl);
       el.appendChild(aquariumDepthOverlayRightEl);
 
@@ -754,7 +765,7 @@ function createOverlays() {
     if (overlay.id === MONITOR_GROUP_LEFT_ID) {
       el.classList.add('monitor-group', 'monitor-group-left');
 
-      // Layer 3 (topmost): L_Frame.png bezel — drawn above shadow and content
+      // Layer 3 (topmost): L_Frame.png bezel — created here, appended last below
       const frameLayer = document.createElement('div');
       frameLayer.className = 'monitor-frame-layer';
       const frameImg = document.createElement('img');
@@ -762,7 +773,6 @@ function createOverlays() {
       frameImg.src = LEFT_MONITOR_SIDE_FRAME_IMAGE_URL;
       frameImg.alt = '';
       frameLayer.appendChild(frameImg);
-      el.appendChild(frameLayer);
 
       // Layer 2: power-on/off black overlay
       const shadowLayer = document.createElement('div');
@@ -1027,6 +1037,7 @@ function createOverlays() {
       state.leftMonitorStaticOverlayEl.appendChild(state.leftMonitorStaticVideoEl);
       windowEl.append(state.leftMonitorStaticOverlayEl);
       el.appendChild(windowEl);
+      el.appendChild(frameLayer); // topmost: appended after shadow/content so DOM order ↔ z-index order
       setLeftMonitorState(state.leftMonitorSelectedState);
     }
 
@@ -1069,7 +1080,7 @@ function createOverlays() {
     if (overlay.id === MONITOR_GROUP_RIGHT_ID) {
       el.classList.add('monitor-group', 'monitor-group-right');
 
-      // Layer 3 (topmost): R_Frame.png bezel
+      // Layer 3 (topmost): R_Frame.png bezel — created here, appended last below
       const frameLayer = document.createElement('div');
       frameLayer.className = 'monitor-frame-layer';
       const frameImg = document.createElement('img');
@@ -1077,7 +1088,6 @@ function createOverlays() {
       frameImg.src = RIGHT_MONITOR_SIDE_FRAME_IMAGE_URL;
       frameImg.alt = '';
       frameLayer.appendChild(frameImg);
-      el.appendChild(frameLayer);
 
       // Layer 2: power-on/off black overlay
       const shadowLayer = document.createElement('div');
@@ -1162,6 +1172,7 @@ function createOverlays() {
       state.rightMonitorShrimpLogoOverlayEl.appendChild(shrimpLogoImg);
       windowEl.appendChild(state.rightMonitorShrimpLogoOverlayEl);
       el.appendChild(windowEl);
+      el.appendChild(frameLayer); // topmost: appended after shadow/content so DOM order ↔ z-index order
       applyDvdColorStep();
     }
 

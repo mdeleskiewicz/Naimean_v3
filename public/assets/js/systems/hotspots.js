@@ -1,6 +1,9 @@
 import {
   API_TIMEOUT_MS,
   AQUARIUM_FISH_EFFECT_ID,
+  AQUARIUM_DEPTH_OVERLAY_IDS,
+  AQUARIUM_DEPTH_OVERLAY_LEFT_ID,
+  AQUARIUM_DEPTH_OVERLAY_RIGHT_ID,
   AQUARIUM_HOTSPOT_IDS,
   AQUARIUM_OVERLAY_ID,
   CHAPEL_URL,
@@ -46,6 +49,7 @@ import {
 import { state } from '../core/state.js';
 import { dom } from '../core/domRefs.js';
 import { wait, sourceHotspotsToRuntime, runtimeHotspotXToSource } from '../core/utils.js';
+import { applyAquariumDepthOverlayLayout, normalizeAquariumDepthOverlayLayout } from '../core/aquariumDepthOverlayLayout.js';
 import { loadAquariumShrimpClipCatalog } from './aquarium.js';
 import { loadCornerScoreFromServer, toggleBigTvHighScoreStats } from './cornerScore.js';
 import { fetchDiscordAuthState, syncDiscordAuthBodyClass, syncDiscordButtonUi } from './login.js';
@@ -87,6 +91,69 @@ function sanitizeSourceHotspots(input) {
   });
 }
 
+function sanitizeAquariumDepthOverlays(input) {
+  if (!Array.isArray(input)) return [];
+  const entriesById = new Map();
+  input.forEach((entry) => {
+    if (!entry || typeof entry !== 'object' || typeof entry.id !== 'string' || !AQUARIUM_DEPTH_OVERLAY_IDS.includes(entry.id)) return;
+    const x = isFiniteNumber(entry.x) ? Math.round(entry.x) : null;
+    const y = isFiniteNumber(entry.y) ? Math.round(entry.y) : null;
+    const w = isFiniteNumber(entry.w) ? Math.max(MIN_HOTSPOT_SIZE, Math.round(entry.w)) : null;
+    const h = isFiniteNumber(entry.h) ? Math.max(MIN_HOTSPOT_SIZE, Math.round(entry.h)) : null;
+    if (x === null || y === null || w === null || h === null) return;
+    entriesById.set(entry.id, { id: entry.id, x, y, w, h });
+  });
+  return AQUARIUM_DEPTH_OVERLAY_IDS.flatMap((id) => {
+    const entry = entriesById.get(id);
+    return entry ? [entry] : [];
+  });
+}
+
+function setAquariumDepthOverlayLayouts(layouts) {
+  state.aquariumDepthOverlayLayoutsById = new Map(
+    sanitizeAquariumDepthOverlays(layouts).map((layout) => [layout.id, layout])
+  );
+}
+
+function getAquariumDepthOverlayLayoutById(id, parentWidth, parentHeight) {
+  const side = id === AQUARIUM_DEPTH_OVERLAY_LEFT_ID ? 'left' : 'right';
+  return normalizeAquariumDepthOverlayLayout(state.aquariumDepthOverlayLayoutsById.get(id), side, parentWidth, parentHeight);
+}
+
+function getAquariumDepthOverlayElements(debugObjectId) {
+  return Array.from(document.querySelectorAll(`.aquarium-depth-overlay[data-debug-object-id="${debugObjectId}"]`));
+}
+
+function syncAquariumDepthOverlaysFromState() {
+  AQUARIUM_DEPTH_OVERLAY_IDS.forEach((debugObjectId) => {
+    getAquariumDepthOverlayElements(debugObjectId).forEach((overlayEl) => {
+      const parentRect = overlayEl.parentElement?.getBoundingClientRect();
+      const parentWidth = parentRect?.width || overlayEl.parentElement?.offsetWidth || 0;
+      const parentHeight = parentRect?.height || overlayEl.parentElement?.offsetHeight || 0;
+      applyAquariumDepthOverlayLayout(
+        overlayEl,
+        getAquariumDepthOverlayLayoutById(debugObjectId, parentWidth, parentHeight)
+      );
+      updateHotspotLabel(overlayEl);
+    });
+  });
+}
+
+function setAquariumDepthOverlayLayout(debugObjectId, rect) {
+  state.aquariumDepthOverlayLayoutsById.set(debugObjectId, {
+    id: debugObjectId,
+    x: Math.round(rect.x),
+    y: Math.round(rect.y),
+    w: Math.max(MIN_HOTSPOT_SIZE, Math.round(rect.w)),
+    h: Math.max(MIN_HOTSPOT_SIZE, Math.round(rect.h))
+  });
+  syncAquariumDepthOverlaysFromState();
+}
+
+function getDebugObjectId(el) {
+  return el?.dataset?.debugObjectId || el?.id || '';
+}
+
 function getSavedHotspotsFromDom() {
   const saved = [];
   dom.hotspotLayer.querySelectorAll('.hotspot').forEach((el) => {
@@ -103,6 +170,20 @@ function getSavedHotspotsFromDom() {
     saved.push(entry);
   });
   return saved;
+}
+
+function getSavedAquariumDepthOverlaysFromDom() {
+  return AQUARIUM_DEPTH_OVERLAY_IDS.flatMap((debugObjectId) => {
+    const overlayEl = getAquariumDepthOverlayElements(debugObjectId)[0];
+    if (!overlayEl) return [];
+    return [{
+      id: debugObjectId,
+      x: Math.round(parseFloat(overlayEl.style.left)),
+      y: Math.round(parseFloat(overlayEl.style.top)),
+      w: Math.round(parseFloat(overlayEl.style.width)),
+      h: Math.round(parseFloat(overlayEl.style.height))
+    }];
+  });
 }
 
 function getRuntimeHotspotById(id) {
@@ -175,6 +256,7 @@ function syncControlledOverlaysFromHotspots() {
       fishEffectEl.style.height = aquariumHotspotEl.style.height;
     }
   }
+  syncAquariumDepthOverlaysFromState();
 }
 
 function runtimeHotspotsToSource(runtimeHotspots) {
@@ -200,11 +282,14 @@ function runtimeHotspotsToSource(runtimeHotspots) {
   });
 }
 
-function getSourceOutput(sourceHotspots) {
+function getSourceOutput(sourceHotspots, aquariumDepthOverlays = []) {
   const lines = sourceHotspots.map((spot) =>
     `  { id: ${JSON.stringify(spot.id)}, x: ${spot.x}, y: ${spot.y}, w: ${spot.w}, h: ${spot.h} },`
   );
-  return `const hotspots = [\n${lines.join('\n')}\n].map((spot) => ({ ...spot, x: spot.x + 3840 }));`;
+  const aquariumDepthOverlayLines = aquariumDepthOverlays.map((overlay) =>
+    `  { id: ${JSON.stringify(overlay.id)}, x: ${overlay.x}, y: ${overlay.y}, w: ${overlay.w}, h: ${overlay.h} },`
+  );
+  return `const hotspotLayout = {\n  hotspots: [\n${lines.join('\n')}\n  ].map((spot) => ({ ...spot, x: spot.x + 3840 })),\n  aquariumDepthOverlays: [\n${aquariumDepthOverlayLines.join('\n')}\n  ]\n};`;
 }
 
 function persistSaveResultFlash(message) {
@@ -226,18 +311,22 @@ function shouldUseLegacyDataApi(status) {
   return status === 404;
 }
 
-function extractSourceHotspotsFromLegacyRows(rows) {
+function extractRuntimeHotspotPayloadFromLegacyRows(rows) {
   if (!Array.isArray(rows)) return null;
   for (const row of rows) {
     if (!row || row.title !== LEGACY_HOTSPOT_RECORD_TITLE) continue;
     let parsed = null;
     if (typeof row.content === 'string') {
       try { parsed = JSON.parse(row.content); } catch (_) {}
-    } else if (Array.isArray(row.content)) {
+    } else if (row.content && typeof row.content === 'object') {
       parsed = row.content;
     }
-    const sanitized = sanitizeSourceHotspots(parsed);
-    if (sanitized) return sanitized;
+    const sourceHotspots = sanitizeSourceHotspots(Array.isArray(parsed) ? parsed : parsed?.hotspots);
+    if (!sourceHotspots) continue;
+    return {
+      hotspots: sourceHotspotsToRuntime(sourceHotspots),
+      aquariumDepthOverlays: sanitizeAquariumDepthOverlays(parsed?.aquariumDepthOverlays)
+    };
   }
   return null;
 }
@@ -247,8 +336,7 @@ async function loadHotspotsFromLegacyServer() {
     const response = await fetch(LEGACY_HOTSPOT_API_PATH, { cache: 'no-store' });
     if (!response.ok) return null;
     const payload = await response.json();
-    const sanitized = extractSourceHotspotsFromLegacyRows(payload);
-    return sanitized ? sourceHotspotsToRuntime(sanitized) : null;
+    return extractRuntimeHotspotPayloadFromLegacyRows(payload);
   } catch (_) {
     return null;
   }
@@ -272,7 +360,10 @@ async function loadHotspotsFromServer() {
     }
     const payload = await response.json();
     const sanitized = sanitizeSourceHotspots(payload?.hotspots);
-    return sanitized ? sourceHotspotsToRuntime(sanitized) : null;
+    return sanitized ? {
+      hotspots: sourceHotspotsToRuntime(sanitized),
+      aquariumDepthOverlays: sanitizeAquariumDepthOverlays(payload?.aquariumDepthOverlays)
+    } : null;
   } catch (_) {
     return null;
   }
@@ -317,14 +408,18 @@ async function readResponseErrorText(response) {
   return '';
 }
 
-async function postHotspotsToLegacyServer(savedSourceHotspots) {
+async function postHotspotsToLegacyServer(savedSourceHotspots, aquariumDepthOverlays) {
   let lastError = null;
   for (let attempt = 1; attempt <= SAVE_RETRY_ATTEMPTS; attempt += 1) {
     try {
+      const legacyPayload = {
+        hotspots: savedSourceHotspots,
+        aquariumDepthOverlays
+      };
       const response = await fetch(LEGACY_HOTSPOT_API_PATH, {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ title: LEGACY_HOTSPOT_RECORD_TITLE, content: JSON.stringify(savedSourceHotspots) }),
+        body: JSON.stringify({ title: LEGACY_HOTSPOT_RECORD_TITLE, content: JSON.stringify(legacyPayload) }),
         cache: 'no-store'
       });
       if (!response.ok) {
@@ -342,9 +437,9 @@ async function postHotspotsToLegacyServer(savedSourceHotspots) {
   throw lastError || new Error('Server save failed');
 }
 
-async function postHotspotsToServer(savedSourceHotspots) {
+async function postHotspotsToServer(savedSourceHotspots, aquariumDepthOverlays) {
   if (state.hotspotApiMode === 'legacy') {
-    await postHotspotsToLegacyServer(savedSourceHotspots);
+    await postHotspotsToLegacyServer(savedSourceHotspots, aquariumDepthOverlays);
     return;
   }
   let lastError = null;
@@ -353,13 +448,13 @@ async function postHotspotsToServer(savedSourceHotspots) {
       const response = await fetch(HOTSPOT_API_PATH, {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ hotspots: savedSourceHotspots }),
+        body: JSON.stringify({ hotspots: savedSourceHotspots, aquariumDepthOverlays }),
         cache: 'no-store'
       });
       if (!response.ok) {
         if (shouldUseLegacyDataApi(response.status)) {
           state.hotspotApiMode = 'legacy';
-          await postHotspotsToLegacyServer(savedSourceHotspots);
+          await postHotspotsToLegacyServer(savedSourceHotspots, aquariumDepthOverlays);
           return;
         }
         const errorDetails = await readResponseErrorText(response);
@@ -397,7 +492,7 @@ function hideSaveModal() {
 
 function showSaveFallbackModal(sourceHotspots, message) {
   dom.saveModalTitle.textContent = message;
-  dom.saveModalTextarea.value = getSourceOutput(sourceHotspots);
+  dom.saveModalTextarea.value = getSourceOutput(sourceHotspots, getSavedAquariumDepthOverlaysFromDom());
   dom.saveModal.classList.remove('hidden');
 }
 
@@ -408,13 +503,15 @@ async function saveHotspots() {
     return;
   }
   const savedRuntimeHotspots = getSavedHotspotsFromDom();
+  const savedAquariumDepthOverlays = getSavedAquariumDepthOverlaysFromDom();
   const savedSourceHotspots = runtimeHotspotsToSource(savedRuntimeHotspots);
   state.hotspots = savedRuntimeHotspots;
+  setAquariumDepthOverlayLayouts(savedAquariumDepthOverlays);
   hideSaveModal();
   setSaveButtonText('Saving...', true);
   state.saveBadge?.saving?.();
   try {
-    await postHotspotsToServer(savedSourceHotspots);
+    await postHotspotsToServer(savedSourceHotspots, savedAquariumDepthOverlays);
     state.saveBadge?.saved?.();
     persistSaveResultFlash('Hotspots saved to the server.');
     document.body.classList.remove('debug');
@@ -452,16 +549,25 @@ function updateHotspotLabel(el) {
 }
 
 function getDebugHotspotElements() {
-  return Array.from(dom.hotspotLayer.querySelectorAll('.hotspot'));
+  const hotspotElements = Array.from(dom.hotspotLayer.querySelectorAll('.hotspot'));
+  const seen = new Set(hotspotElements.map((el) => getDebugObjectId(el)).filter(Boolean));
+  document.querySelectorAll('.aquarium-depth-overlay[data-debug-object-id]').forEach((overlayEl) => {
+    const debugObjectId = getDebugObjectId(overlayEl);
+    if (!debugObjectId || seen.has(debugObjectId)) return;
+    hotspotElements.push(overlayEl);
+    seen.add(debugObjectId);
+  });
+  return hotspotElements;
 }
 
 function getDebugHotspotLabel(hotspotEl) {
-  return hotspotEl.dataset.label || hotspotEl.id;
+  return hotspotEl.dataset.label || getDebugObjectId(hotspotEl);
 }
 
 function getSelectedDebugHotspotElement() {
   const selectedId = dom.debugObjectSelect?.value;
-  return selectedId ? document.getElementById(selectedId) : null;
+  if (!selectedId) return null;
+  return document.getElementById(selectedId) || getAquariumDepthOverlayElements(selectedId)[0] || null;
 }
 
 function getHotspotDefaultUrl(hotspotId) {
@@ -508,11 +614,12 @@ function refreshDebugObjectActions() {
   if (!dom.debugObjectLockButton || !dom.debugObjectUnlockButton || !dom.debugObjectSelect) return;
   const selectedEl = getSelectedDebugHotspotElement();
   const hasSelection = !!selectedEl;
-  const isLocked = hasSelection && selectedEl.classList.contains('locked-debug-hotspot');
-  dom.debugObjectLockButton.disabled = !hasSelection || isLocked;
-  dom.debugObjectUnlockButton.disabled = !hasSelection || !isLocked;
+  const isHotspot = hasSelection && selectedEl.classList.contains('hotspot');
+  const isLocked = isHotspot && selectedEl.classList.contains('locked-debug-hotspot');
+  dom.debugObjectLockButton.disabled = !isHotspot || isLocked;
+  dom.debugObjectUnlockButton.disabled = !isHotspot || !isLocked;
   if (dom.debugUrlRow && dom.debugUrlInput) {
-    const selectedId = hasSelection ? selectedEl.id : null;
+    const selectedId = hasSelection ? getDebugObjectId(selectedEl) : null;
     const defaultUrl = selectedId ? getHotspotDefaultUrl(selectedId) : null;
     if (defaultUrl !== null) {
       dom.debugUrlRow.hidden = false;
@@ -541,14 +648,14 @@ function refreshDebugObjectSelectOptions() {
   }
   hotspotElements.forEach((hotspotEl) => {
     const option = document.createElement('option');
-    option.value = hotspotEl.id;
+    option.value = getDebugObjectId(hotspotEl);
     option.textContent = getDebugHotspotLabel(hotspotEl);
     dom.debugObjectSelect.appendChild(option);
   });
   dom.debugObjectSelect.disabled = false;
-  dom.debugObjectSelect.value = previousSelection && hotspotElements.some((hotspotEl) => hotspotEl.id === previousSelection)
+  dom.debugObjectSelect.value = previousSelection && hotspotElements.some((hotspotEl) => getDebugObjectId(hotspotEl) === previousSelection)
     ? previousSelection
-    : hotspotElements[0].id;
+    : getDebugObjectId(hotspotElements[0]);
   refreshDebugObjectActions();
 }
 
@@ -571,10 +678,11 @@ function hydrateNonCriticalSceneData() {
 }
 
 function hydrateHotspotsFromServer({ hasSaveResultFlash = false } = {}) {
-  void loadHotspotsFromServer().then((serverHotspots) => {
-    const hasServerHotspots = serverHotspots !== null && serverHotspots !== undefined;
+  void loadHotspotsFromServer().then((serverPayload) => {
+    const hasServerHotspots = serverPayload !== null && serverPayload !== undefined;
     if (hasServerHotspots) {
-      state.hotspots = serverHotspots;
+      state.hotspots = serverPayload.hotspots;
+      setAquariumDepthOverlayLayouts(serverPayload.aquariumDepthOverlays);
       state._cb.renderHotspotLayers?.();
       state._cb.resize?.();
     }
@@ -587,13 +695,14 @@ function hydrateHotspotsFromServer({ hasSaveResultFlash = false } = {}) {
 }
 
 async function loadHotspots() {
-  const serverHotspots = await loadHotspotsFromServer();
-  if (serverHotspots) {
-    state.hotspots = serverHotspots;
+  const serverPayload = await loadHotspotsFromServer();
+  if (serverPayload) {
+    state.hotspots = serverPayload.hotspots;
+    setAquariumDepthOverlayLayouts(serverPayload.aquariumDepthOverlays);
     state._cb.renderHotspotLayers?.();
     state._cb.resize?.();
   }
-  return serverHotspots;
+  return serverPayload;
 }
 
 function applyHotspotsToDOM() {
@@ -722,7 +831,11 @@ state.denUrlOverrides = loadDenUrlOverrides();
 
 export {
   isFiniteNumber,
-  extractSourceHotspotsFromLegacyRows,
+  extractRuntimeHotspotPayloadFromLegacyRows,
+  sanitizeAquariumDepthOverlays,
+  setAquariumDepthOverlayLayouts,
+  setAquariumDepthOverlayLayout,
+  syncAquariumDepthOverlaysFromState,
   loadHotspotsFromLegacyServer,
   loadHotspotsFromServer,
   encodeDebugSavePassword,
@@ -758,6 +871,7 @@ export {
   getOverlayRect,
   syncControlledOverlaysFromHotspots,
   getSavedHotspotsFromDom,
+  getSavedAquariumDepthOverlaysFromDom,
   consumeSaveResultFlash,
   persistSaveResultFlash
 };

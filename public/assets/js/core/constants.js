@@ -192,6 +192,16 @@ export const DISCORD_BUTTON_IMAGE_URL = BIG_TV_RIGHT_MONITOR_OVERLAY_BLUE_IMAGE_
 export const STARSHRIMP_LOGO_IMAGE_URL = 'assets/images/starshrimp_logo.png';
 export const AQUARIUM_DEPTH_OVERLAY_LEFT_IMAGE_URL = 'assets/images/aquarium_overlay_left.png';
 export const AQUARIUM_DEPTH_OVERLAY_RIGHT_IMAGE_URL = 'assets/images/aquarium_overlay_right.png';
+export const AQUARIUM_DEPTH_OVERLAY_LEFT_ID = 'aquarium-depth-overlay-left';
+export const AQUARIUM_DEPTH_OVERLAY_RIGHT_ID = 'aquarium-depth-overlay-right';
+export const AQUARIUM_DEPTH_OVERLAY_IDS = Object.freeze([
+  AQUARIUM_DEPTH_OVERLAY_LEFT_ID,
+  AQUARIUM_DEPTH_OVERLAY_RIGHT_ID
+]);
+export const AQUARIUM_DEPTH_OVERLAY_HEIGHT_RATIO = 0.4;
+export const AQUARIUM_DEPTH_OVERLAY_TOP_RATIO = 0.3;
+export const AQUARIUM_DEPTH_OVERLAY_LEFT_OFFSET_RATIO = -0.28;
+export const AQUARIUM_DEPTH_OVERLAY_RIGHT_OFFSET_RATIO = 0.28;
 export const COMMODORE_DESK_IMAGE_URL = 'assets/images/commodore-desk-overlay.png';
 export const LEFT_MONITOR_SIDE_FRAME_IMAGE_URL = 'assets/images/L_Frame.png';
 export const RIGHT_MONITOR_SIDE_FRAME_IMAGE_URL = 'assets/images/R_Frame.png';
@@ -355,6 +365,8 @@ HOTSPOT_READABLE_LABELS.set(WHITEBOARD_CORNER_SCORE_CONTROL_ID, 'Whiteboard Corn
 HOTSPOT_READABLE_LABELS.set(ASHTRAY_SMOKE_CONTROL_ID, 'Ashtray Smoke Effect');
 HOTSPOT_READABLE_LABELS.set(ASHTRAY_CIGARETTE_CONTROL_ID, 'Ashtray Cigarette Effect');
 HOTSPOT_READABLE_LABELS.set(GITHUB_SHELF_OBJECT_CONTROL_ID, 'GitHub');
+HOTSPOT_READABLE_LABELS.set(AQUARIUM_DEPTH_OVERLAY_LEFT_ID, 'Aquarium Left Depth Overlay');
+HOTSPOT_READABLE_LABELS.set(AQUARIUM_DEPTH_OVERLAY_RIGHT_ID, 'Aquarium Right Depth Overlay');
 export const LOCKED_DEBUG_HOTSPOT_IDS = new Set([
   'overlay-monitor-screen-control', // Keep legacy monitor control id locked if present in persisted hotspot data.
   'overlaymonitorscreencontrol'

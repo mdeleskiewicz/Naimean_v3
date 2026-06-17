@@ -1,5 +1,7 @@
 import {
+  AQUARIUM_DEPTH_OVERLAY_LEFT_ID,
   AQUARIUM_DEPTH_OVERLAY_LEFT_IMAGE_URL,
+  AQUARIUM_DEPTH_OVERLAY_RIGHT_ID,
   AQUARIUM_DEPTH_OVERLAY_RIGHT_IMAGE_URL,
   AQUARIUM_FISH_EFFECT_ID,
   AQUARIUM_WALL_GLOW_CLASS,
@@ -40,6 +42,7 @@ import {
 } from '../core/constants.js';
 import { state } from '../core/state.js';
 import { dom } from '../core/domRefs.js';
+import { applyAquariumDepthOverlayLayout, createDefaultAquariumDepthOverlayLayout } from '../core/aquariumDepthOverlayLayout.js';
 import { clamp, isTextEntryTarget, measureSyncSection, scheduleNonCriticalTask, sourceHotspotsToRuntime } from '../core/utils.js';
 import { createOverlays } from '../ui/overlays.js';
 import { consumeDiscordLoginFlowState, syncDiscordAuthBodyClass, syncDiscordButtonUi, syncLoginOverlayUi } from './login.js';
@@ -47,7 +50,7 @@ import { loadCommodorePowerState, syncStoredCommodorePowerState, handlePageShow,
 import { playWrongAudio, syncCornerScoreServerToLocalMad, unlockCornerScoreScoringAudioFromGesture } from './cornerScore.js';
 import { adjustDvdSpeed, stopBigTvDvdAnimation } from './dvd.js';
 import { stopRadioTuningLoopPlayback } from './flipClock.js';
-import { createHotspots, getRuntimeHotspotById, syncControlledOverlaysFromHotspots, consumeSaveResultFlash, hydrateHotspotsFromServer, hydrateNonCriticalSceneData, refreshDebugObjectActions, refreshDebugObjectSelectOptions, setHotspotDebugLockState, getSelectedDebugHotspotElement, saveDenUrlOverride, saveHotspots, hideSaveModal, encodeDebugSavePassword, hasMatchingDebugSaveCipher, ensureDebugSaveAccess, addResizeHandles } from './hotspots.js';
+import { createHotspots, getRuntimeHotspotById, syncControlledOverlaysFromHotspots, consumeSaveResultFlash, hydrateHotspotsFromServer, hydrateNonCriticalSceneData, refreshDebugObjectActions, refreshDebugObjectSelectOptions, setHotspotDebugLockState, getSelectedDebugHotspotElement, saveDenUrlOverride, saveHotspots, hideSaveModal, encodeDebugSavePassword, hasMatchingDebugSaveCipher, ensureDebugSaveAccess, addResizeHandles, setAquariumDepthOverlayLayout } from './hotspots.js';
 import { getAquariumShrimpCount, resolveAquariumHorizontalMotion } from './aquariumEffect.js';
 
 const hasCoarsePointer = window.matchMedia('(pointer: coarse)').matches;
@@ -82,58 +85,59 @@ const AQUARIUM_DISNEY_CHARACTER_SPECS = Object.freeze([
   bobB: 3,
   bobC: -2
 },
-  {
-    name: 'Dory',
+{
+    name: 'Doreee',
     palette: Object.freeze({
-      k: '#162748',
-      b: '#2f7cff',
-      y: '#ffd54a'
+      k: '#1a2e5c', // Deepened navy for a more natural look
+      b: '#3b82f6', // More vibrant, electric blue
+      y: '#facc15'  // Warmer, golden yellow
     }),
     pixels: Object.freeze([
       '................',
       '....kbbbbbyy....',
       '..kbbbbbbbyyyy..',
-      '.kbbbkbbbbyyyyy.',
-      'kbbbbkbbbbyyyyyy',
-      '.kbbbkbbbbyyyyy.',
+      '.kbbkbbbbyyyyy..', // Refined edge
+      'kbbkbbbbbyyyyyy.', // Slightly more tapered
+      '.kbbkbbbbyyyyy..',
       '..kbbbbbbbyyyy..',
       '....kbbbbbyy....'
     ]),
     leftPct: 8,
     topPct: 34,
-    widthPx: 42,
-    swimDistPx: 212,
-    durationSec: 15.6,
-    delaySec: -6.2,
-    bobA: -6,
-    bobB: 5,
-    bobC: -4
+    widthPx: 45, // Slightly larger to match the new proportions
+    swimDistPx: 215,
+    durationSec: 16.5, // A bit slower, more graceful
+    delaySec: -6.5,
+    bobA: -4, // Calmed down to match the cousin's smooth movement
+    bobB: 3,
+    bobC: -2
   },
-  {
-    name: 'Flounder',
+{
+    name: 'Stammer',
     palette: Object.freeze({
-      y: '#ffe347',
-      b: '#2b71ff'
+      y: '#ffd700', // A bit more golden than Flounder
+      b: '#1e40af', // A deeper, sharper blue
+      w: '#ffffff'  // Added white for a nervous "eye" detail
     }),
     pixels: Object.freeze([
       '................',
-      '....yyyyyyyy....',
-      '..yybbyyyybbyy..',
-      '.yybbbyyybbbbyy.',
-      'yybbbbyyyybbbbby',
-      '.yybbbyyybbbbyy.',
-      '..yybbyyyybbyy..',
-      '....yyyyyyyy....'
+      '....yyyyyy......',
+      '..yybbbyyyy.....',
+      '.yybbyyybbbyy...',
+      'yybbbyyyyybbbyy.', // Staggered profile
+      '.yybbyyybbbyy...',
+      '..yybbbyyyy.....',
+      '....yyyyyy......'
     ]),
-    leftPct: 11,
-    topPct: 55,
-    widthPx: 46,
-    swimDistPx: 194,
-    durationSec: 13.7,
-    delaySec: -3.1,
-    bobA: -4,
-    bobB: 3,
-    bobC: -3
+    leftPct: 15,
+    topPct: 45,
+    widthPx: 42,
+    swimDistPx: 180,
+    durationSec: 10.2, // Faster, "jittery" swim speed
+    delaySec: -2.5,
+    bobA: -8, // Wider bob range...
+    bobB: 6,  // ...with more force...
+    bobC: -5  // ...to simulate a "stuttering" swimming style
   },
   {
     name: 'Cleo',
@@ -477,11 +481,15 @@ function createAquariumFishEffect() {
   depthOverlayLeftEl.alt = '';
   depthOverlayLeftEl.decoding = 'async';
   depthOverlayLeftEl.loading = 'eager';
+  depthOverlayLeftEl.dataset.debugObjectId = AQUARIUM_DEPTH_OVERLAY_LEFT_ID;
+  depthOverlayLeftEl.dataset.label = 'Aquarium Left Depth Overlay';
   depthOverlayLeftEl.setAttribute('aria-hidden', 'true');
-  depthOverlayLeftEl.style.left = '0px';
-  depthOverlayLeftEl.style.top = '0px';
-  depthOverlayLeftEl.style.width = `${Math.round(spot.w)}px`;
-  depthOverlayLeftEl.style.height = `${Math.round(spot.h)}px`;
+  depthOverlayLeftEl.title = depthOverlayLeftEl.dataset.label;
+  applyAquariumDepthOverlayLayout(depthOverlayLeftEl, createDefaultAquariumDepthOverlayLayout('left', spot.w, spot.h));
+  const depthOverlayLeftLabel = document.createElement('span');
+  depthOverlayLeftLabel.className = 'hotspot-label';
+  depthOverlayLeftLabel.textContent = `${depthOverlayLeftEl.dataset.label} (${Math.round(parseFloat(depthOverlayLeftEl.style.left))}, ${Math.round(parseFloat(depthOverlayLeftEl.style.top))}) ${Math.round(parseFloat(depthOverlayLeftEl.style.width))}×${Math.round(parseFloat(depthOverlayLeftEl.style.height))}`;
+  depthOverlayLeftEl.appendChild(depthOverlayLeftLabel);
   addResizeHandles(depthOverlayLeftEl);
   const depthOverlayRightEl = document.createElement('img');
   depthOverlayRightEl.className = 'aquarium-depth-overlay aquarium-depth-overlay-right';
@@ -489,11 +497,15 @@ function createAquariumFishEffect() {
   depthOverlayRightEl.alt = '';
   depthOverlayRightEl.decoding = 'async';
   depthOverlayRightEl.loading = 'eager';
+  depthOverlayRightEl.dataset.debugObjectId = AQUARIUM_DEPTH_OVERLAY_RIGHT_ID;
+  depthOverlayRightEl.dataset.label = 'Aquarium Right Depth Overlay';
   depthOverlayRightEl.setAttribute('aria-hidden', 'true');
-  depthOverlayRightEl.style.left = '0px';
-  depthOverlayRightEl.style.top = '0px';
-  depthOverlayRightEl.style.width = `${Math.round(spot.w)}px`;
-  depthOverlayRightEl.style.height = `${Math.round(spot.h)}px`;
+  depthOverlayRightEl.title = depthOverlayRightEl.dataset.label;
+  applyAquariumDepthOverlayLayout(depthOverlayRightEl, createDefaultAquariumDepthOverlayLayout('right', spot.w, spot.h));
+  const depthOverlayRightLabel = document.createElement('span');
+  depthOverlayRightLabel.className = 'hotspot-label';
+  depthOverlayRightLabel.textContent = `${depthOverlayRightEl.dataset.label} (${Math.round(parseFloat(depthOverlayRightEl.style.left))}, ${Math.round(parseFloat(depthOverlayRightEl.style.top))}) ${Math.round(parseFloat(depthOverlayRightEl.style.width))}×${Math.round(parseFloat(depthOverlayRightEl.style.height))}`;
+  depthOverlayRightEl.appendChild(depthOverlayRightLabel);
   addResizeHandles(depthOverlayRightEl);
   const frontCreatureLayerEl = document.createElement('div');
   frontCreatureLayerEl.className = 'aquarium-creature-layer aquarium-creature-layer-front';
@@ -1301,8 +1313,13 @@ function applyDebugEdit(event) {
   const dy = (event.clientY - state.debugEditStartY) / state.scale;
   const { left, top, w, h } = state.debugEditOrigRect;
   const el = state.debugEditEl;
+  const debugObjectId = el?.dataset?.debugObjectId;
   const MIN_SIZE = 20;
   if (state.debugEditType === 'move') {
+    if (debugObjectId) {
+      setAquariumDepthOverlayLayout(debugObjectId, { x: left + dx, y: top + dy, w, h });
+      return;
+    }
     el.style.left = `${left + dx}px`;
     el.style.top = `${top + dy}px`;
   } else {
@@ -1312,6 +1329,10 @@ function applyDebugEdit(event) {
     if (dir.includes('w')) { const clampedW = Math.max(MIN_SIZE, w - dx); newLeft = left + (w - clampedW); newW = clampedW; }
     if (dir.includes('s')) newH = Math.max(MIN_SIZE, h + dy);
     if (dir.includes('n')) { const clampedH = Math.max(MIN_SIZE, h - dy); newTop = top + (h - clampedH); newH = clampedH; }
+    if (debugObjectId) {
+      setAquariumDepthOverlayLayout(debugObjectId, { x: newLeft, y: newTop, w: newW, h: newH });
+      return;
+    }
     el.style.left = `${newLeft}px`; el.style.top = `${newTop}px`; el.style.width = `${newW}px`; el.style.height = `${newH}px`;
   }
   const label = el.querySelector('.hotspot-label');

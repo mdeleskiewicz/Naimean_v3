@@ -388,7 +388,7 @@
       pointer-events: none;
       user-select: none;
       z-index: 3;
-      transform: rotate(90deg);
+      transform: rotate(90deg) scaleY(-1);
     }
 
     .aquarium-depth-overlay-left {
@@ -490,11 +490,11 @@
       overflow: hidden;
       pointer-events: none;
       /* Frame art sits above shadow and screen content.
-         will-change: transform forces this to its own compositor layer so it
+         transform:translateZ(0) forces this to its own GPU compositor layer so it
          always composites above the shadow layer even when the shadow layer is
          promoted by a running filter animation. */
       z-index: 3;
-      will-change: transform;
+      transform: translateZ(0);
     }
 
     .monitor-frame-image {
@@ -595,6 +595,15 @@
 
     .monitor-group-right > .monitor-shadow-layer {
       inset: 17.09% 25.26% 29.297% 24.414%;
+    }
+
+    /* Insets the middle (Commodore) shadow to the actual screen hole within
+       commodore-desk-overlay.png, so the power-on/off animation stays inside
+       the screen and does not bleed over the monitor bezel. Values derived
+       from pixel-accurate detection of the blue screen region in the 1536×1024
+       source image mapped through the element's object-fit:fill scaling. */
+    .monitor-group-middle > .monitor-shadow-layer {
+      inset: 10.97% 24.64% 48.41% 26.92%;
     }
 
     .monitor-group-right .monitor-frame-image {

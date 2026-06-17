@@ -4,6 +4,12 @@ import fs from 'node:fs';
 import path from 'node:path';
 
 import { state } from '../public/assets/js/core/state.js';
+import {
+  AQUARIUM_DEPTH_OVERLAY_HEIGHT_RATIO,
+  AQUARIUM_DEPTH_OVERLAY_LEFT_OFFSET_RATIO,
+  AQUARIUM_DEPTH_OVERLAY_RIGHT_OFFSET_RATIO,
+  AQUARIUM_DEPTH_OVERLAY_TOP_RATIO,
+} from '../public/assets/js/core/constants.js';
 import { getRandomShrimpClipUrl, repopulateAquariumShrimp } from '../public/assets/js/systems/aquarium.js';
 import { getAquariumShrimpCount, resolveAquariumHorizontalMotion } from '../public/assets/js/systems/aquariumEffect.js';
 
@@ -188,9 +194,9 @@ test('aquarium keeps shrimp/random creature flow while generic fish use Disney s
   );
 
   [
-    'Nemo & Marlin',
-    'Dory',
-    'Flounder',
+    'Nemo & Marlin Cousin',
+    'Doreee',
+    'Stammer',
     'Cleo',
     'Bubbles',
     'Gurgle',
@@ -248,12 +254,29 @@ test('aquarium keeps shrimp/random creature flow while generic fish use Disney s
   );
   assert.match(
     aquariumBlock,
+    /applyAquariumDepthOverlayLayout\(depthOverlayLeftEl, createDefaultAquariumDepthOverlayLayout\('left', spot\.w, spot\.h\)\);/,
+    'Expected the left aquarium depth image to use the shared separated layout helper',
+  );
+  assert.match(
+    aquariumBlock,
+    /applyAquariumDepthOverlayLayout\(depthOverlayRightEl, createDefaultAquariumDepthOverlayLayout\('right', spot\.w, spot\.h\)\);/,
+    'Expected the right aquarium depth image to use the shared separated layout helper',
+  );
+  assert.match(
+    aquariumBlock,
     /appendAquariumCreature\(shrimp\);/,
     'Expected shrimp to be assigned to randomized depth layers',
   );
   assert.doesNotMatch(aquariumBlock, /for \(const spec of AQUARIUM_DISNEY_CHARACTER_SPECS\)/, 'Expected aquarium not to render the entire Disney roster at once');
   assert.match(source, /aquarium-disney-fish/, 'Expected aquarium fish to render as Disney pixel sprites');
   assert.match(source, /createPixelSpriteDataUrl/, 'Expected aquarium fish sprites to be generated from pixel art data');
+});
+
+test('aquarium depth overlays use mirrored horizontal separation ratios', () => {
+  assert.equal(AQUARIUM_DEPTH_OVERLAY_HEIGHT_RATIO, 0.4);
+  assert.equal(AQUARIUM_DEPTH_OVERLAY_TOP_RATIO, 0.3);
+  assert.equal(AQUARIUM_DEPTH_OVERLAY_LEFT_OFFSET_RATIO, -0.28);
+  assert.equal(AQUARIUM_DEPTH_OVERLAY_RIGHT_OFFSET_RATIO, 0.28);
 });
 
 test('lite rendering keeps aquarium bubbles and animals animating', () => {
@@ -271,6 +294,15 @@ test('lite rendering keeps aquarium bubbles and animals animating', () => {
       `Expected ${selector} to keep animating on lite rendering (mobile)`,
     );
   });
+});
+
+test('aquarium depth overlays are vertically flipped in CSS', () => {
+  const cssSource = fs.readFileSync(indexCssPath, 'utf8');
+  assert.match(
+    cssSource,
+    /\.aquarium-depth-overlay\s*\{[\s\S]*transform:\s*rotate\(90deg\)\s*scaleY\(-1\);/,
+    'Expected aquarium depth overlays to be rotated and vertically flipped',
+  );
 });
 
 test('aquarium restored creature swim loops return to their starting orientation', () => {
