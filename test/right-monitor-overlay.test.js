@@ -23,6 +23,11 @@ test('right monitor overlay applies sizing classes for monitor images', () => {
   );
   assert.match(
     source,
+    /state\.rightMonitorDiscordQuadrantOverlayEl\.className\s*=\s*'right-monitor-discord-quadrant-overlay';/,
+    'Expected right monitor Discord quadrants overlay class to be applied',
+  );
+  assert.match(
+    source,
     /shrimpLogoImg\.className\s*=\s*'right-monitor-shrimp-logo-image';/,
     'Expected right monitor shrimp logo image class to be applied',
   );
@@ -43,7 +48,7 @@ test('right monitor content bleeds 1px past the frame transparency', () => {
   );
   assert.match(
     source,
-    /\.right-monitor-screen-window\s*>\s*\.overlay-static-layer,\s*\.right-monitor-screen-window\s*>\s*\.right-monitor-shrimp-logo-overlay,\s*\.right-monitor-screen-window\s*>\s*\.right-monitor-corner-score-overlay\s*\{[^}]*top:\s*calc\(0px - var\(--monitor-content-bleed\)\);[^}]*bottom:\s*calc\(0px - var\(--monitor-content-bleed\)\);[^}]*left:\s*calc\(0px - var\(--monitor-content-bleed\)\);[^}]*right:\s*calc\(0px - var\(--monitor-content-bleed\)\);/s,
+    /\.right-monitor-screen-window\s*>\s*\.right-monitor-discord-quadrant-overlay,\s*\.right-monitor-screen-window\s*>\s*\.overlay-static-layer,\s*\.right-monitor-screen-window\s*>\s*\.right-monitor-shrimp-logo-overlay,\s*\.right-monitor-screen-window\s*>\s*\.right-monitor-corner-score-overlay\s*\{[^}]*top:\s*calc\(0px - var\(--monitor-content-bleed\)\);[^}]*bottom:\s*calc\(0px - var\(--monitor-content-bleed\)\);[^}]*left:\s*calc\(0px - var\(--monitor-content-bleed\)\);[^}]*right:\s*calc\(0px - var\(--monitor-content-bleed\)\);/s,
     'Expected right monitor overlays to extend 1px past the frame transparency on every side',
   );
 });
