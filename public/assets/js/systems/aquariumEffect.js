@@ -23,18 +23,32 @@ function resolveAquariumHorizontalMotion({
   const maxLeftPx = Math.max(0, tankWidth - creatureWidth);
   const minLeftPx = Math.min(edgePadding, maxLeftPx);
   const boundedMaxLeftPx = Math.max(minLeftPx, maxLeftPx - edgePadding);
-  const startLeftPx = Math.min(Math.max(requestedStartLeftPx, minLeftPx), boundedMaxLeftPx);
-  const leftRoomPx = Math.max(0, startLeftPx - edgePadding);
-  const rightRoomPx = Math.max(0, tankWidth - edgePadding - creatureWidth - startLeftPx);
+  let startLeftPx = Math.min(Math.max(requestedStartLeftPx, minLeftPx), boundedMaxLeftPx);
 
+  const getRooms = (leftPx) => ({
+    leftRoomPx: Math.max(0, leftPx - edgePadding),
+    rightRoomPx: Math.max(0, tankWidth - edgePadding - creatureWidth - leftPx),
+  });
+
+  let { leftRoomPx, rightRoomPx } = getRooms(startLeftPx);
   let directionRight = swimsRight !== false;
   let availableRoomPx = directionRight ? rightRoomPx : leftRoomPx;
   const oppositeRoomPx = directionRight ? leftRoomPx : rightRoomPx;
 
   if (allowDirectionFlip && requestedSwimDistPx > availableRoomPx && oppositeRoomPx > availableRoomPx) {
     directionRight = !directionRight;
-    availableRoomPx = oppositeRoomPx;
   }
+
+  if (directionRight) {
+    const maxStartForRequestedTravelPx = tankWidth - edgePadding - creatureWidth - requestedSwimDistPx;
+    startLeftPx = Math.max(minLeftPx, Math.min(startLeftPx, Math.min(boundedMaxLeftPx, maxStartForRequestedTravelPx)));
+  } else {
+    const minStartForRequestedTravelPx = edgePadding + requestedSwimDistPx;
+    startLeftPx = Math.min(boundedMaxLeftPx, Math.max(startLeftPx, Math.max(minLeftPx, minStartForRequestedTravelPx)));
+  }
+
+  ({ leftRoomPx, rightRoomPx } = getRooms(startLeftPx));
+  availableRoomPx = directionRight ? rightRoomPx : leftRoomPx;
 
   return {
     startLeftPct: tankWidth > 0 ? Number(((startLeftPx / tankWidth) * 100).toFixed(2)) : 0,

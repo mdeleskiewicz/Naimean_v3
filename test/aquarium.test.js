@@ -117,8 +117,8 @@ test('resolveAquariumHorizontalMotion keeps aquarium creatures inside the tank b
       allowDirectionFlip: false,
     }),
     {
-      startLeftPct: 87.5,
-      swimDistPx: 0,
+      startLeftPct: 57.5,
+      swimDistPx: 120,
       swimsRight: true,
     },
   );
