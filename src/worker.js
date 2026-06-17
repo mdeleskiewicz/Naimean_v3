@@ -654,7 +654,6 @@ function requireSessionSecret(env) {
       return hotspotJson({ ok: true, ...payload });
     }
     return hotspotJson({ error: 'Method not allowed.' }, 405);
-  }
 }
 
 // ─── Aquarium / shrimp clips ──────────────────────────────────────────────────
