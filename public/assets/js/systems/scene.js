@@ -584,8 +584,8 @@ function createAquariumFishEffect() {
 
   const disneyFishPool = createShuffledCopy(AQUARIUM_DISNEY_CHARACTER_SPECS);
 
-  // Special guest: one random creature per load.
-  const guests = ['snail', 'starfish', 'betta', 'turtle', 'jellyfish', 'nautilus', 'octopus'];
+  // Special guest: one random sea creature per load.
+  const guests = ['snail', 'starfish', 'turtle', 'jellyfish', 'nautilus', 'octopus'];
   const guestType = guests[Math.floor(Math.random() * guests.length)];
 
   if (guestType === 'snail') {
@@ -618,20 +618,6 @@ function createAquariumFishEffect() {
     star.style.setProperty('--starfish-duration', `${duration.toFixed(2)}s`);
     star.style.setProperty('--starfish-delay', `${delay.toFixed(2)}s`);
     el.appendChild(star);
-  } else if (guestType === 'betta') {
-    const widthPx = 36 + Math.floor(Math.random() * 12);
-    const top = 20 + Math.floor(Math.random() * 45);
-    const swimDist = 190 + Math.floor(Math.random() * 110);
-    const duration = 9 + Math.random() * 7;
-    const delay = -(Math.random() * duration);
-    appendAquariumDisneyFish(el, disneyFishPool, {
-      widthPx,
-      topPct: top,
-      leftPct: 6,
-      swimDistPx: swimDist,
-      durationSec: duration,
-      delaySec: delay
-    });
   } else if (guestType === 'turtle') {
     const size = 30 + Math.floor(Math.random() * 12);
     const top = 30 + Math.floor(Math.random() * 35);
@@ -698,8 +684,8 @@ function createAquariumFishEffect() {
     el.appendChild(octopus);
   }
 
-  // Generic fish slots now draw from the Disney sprite roster instead of emoji fish.
-  const leadingFishConfigs = [
+  // Generic fish slots: 1 or 2 fish drawn from the Disney sprite roster.
+  const allFishConfigs = [
     {
       widthPx: 40 + Math.floor(Math.random() * 8),
       topPct: 22 + Math.floor(Math.random() * 28),
@@ -717,6 +703,7 @@ function createAquariumFishEffect() {
       delaySec: 0
     }
   ];
+  const leadingFishConfigs = Math.random() < 0.5 ? allFishConfigs.slice(0, 1) : allFishConfigs;
   for (const fishConfig of leadingFishConfigs) {
     fishConfig.delaySec = -(Math.random() * fishConfig.durationSec);
     appendAquariumDisneyFish(el, disneyFishPool, fishConfig);
