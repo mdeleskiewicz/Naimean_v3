@@ -1,9 +1,11 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { readFile } from 'node:fs/promises';
-import vm from 'node:vm';
+import { execFile } from 'node:child_process';
+import { promisify } from 'node:util';
 
 test('overlays module parses without syntax errors', async () => {
-  const source = await readFile(new URL('../public/assets/js/ui/overlays.js', import.meta.url), 'utf8');
-  assert.doesNotThrow(() => new vm.SourceTextModule(source, { identifier: 'ui/overlays.js' }));
+  const execFileAsync = promisify(execFile);
+  await assert.doesNotReject(() =>
+    execFileAsync(process.execPath, ['--check', new URL('../public/assets/js/ui/overlays.js', import.meta.url).pathname])
+  );
 });
