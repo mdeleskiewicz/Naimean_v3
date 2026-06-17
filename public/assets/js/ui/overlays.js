@@ -578,6 +578,124 @@ function createOverlays() {
       });
       state.bigTvHighScoreStatsEl.append(highScoreStatsTitleEl, highScoreStatsGridEl);
       state.bigTvDvdOverlayEl.appendChild(state.bigTvHighScoreStatsEl);
+
+      // "New Personal Best!" banner — shown at top of bigscreen for 30s on PB milestone
+      state.bigTvPersonalBestBannerEl = document.createElement('div');
+      state.bigTvPersonalBestBannerEl.className = 'big-tv-personal-best-banner';
+      state.bigTvPersonalBestBannerEl.setAttribute('aria-hidden', 'true');
+      const pbBannerLabel = document.createElement('p');
+      pbBannerLabel.className = 'big-tv-milestone-banner-label';
+      pbBannerLabel.textContent = 'New Personal Best!';
+      state.bigTvPersonalBestBannerEl.appendChild(pbBannerLabel);
+      state.bigTvDvdOverlayEl.appendChild(state.bigTvPersonalBestBannerEl);
+
+      // "New Server High-Score!" banner — shown at top of bigscreen for 30s on server HS milestone
+      state.bigTvServerHighScoreBannerEl = document.createElement('div');
+      state.bigTvServerHighScoreBannerEl.className = 'big-tv-server-high-score-banner';
+      state.bigTvServerHighScoreBannerEl.setAttribute('aria-hidden', 'true');
+      const shsBannerLabel = document.createElement('p');
+      shsBannerLabel.className = 'big-tv-milestone-banner-label';
+      shsBannerLabel.textContent = 'New Server High-Score!';
+      state.bigTvServerHighScoreBannerEl.appendChild(shsBannerLabel);
+      state.bigTvDvdOverlayEl.appendChild(state.bigTvServerHighScoreBannerEl);
+
+      // CornerScore bottom panel — revealed when a left-monitor card quadrant is clicked
+      state.bigTvCornerScoreBottomPanelEl = document.createElement('div');
+      state.bigTvCornerScoreBottomPanelEl.className = 'big-tv-cs-bottom-panel';
+      state.bigTvCornerScoreBottomPanelEl.setAttribute('aria-hidden', 'true');
+
+      // View: Current Run
+      const crViewEl = document.createElement('div');
+      crViewEl.className = 'big-tv-cs-panel-view';
+      crViewEl.dataset.view = 'current-run';
+      const crTitleEl = document.createElement('p');
+      crTitleEl.className = 'big-tv-cs-panel-title';
+      crTitleEl.textContent = 'Current Run';
+      crViewEl.appendChild(crTitleEl);
+      const crGrid = document.createElement('div');
+      crGrid.className = 'big-tv-cs-panel-grid';
+      [
+        { label: 'Score',       stateKey: 'bigTvPanelCurrentScoreEl' },
+        { label: 'Time',        stateKey: 'bigTvPanelCurrentTimeEl' },
+        { label: 'Bounces',     stateKey: 'bigTvPanelCurrentBouncesEl' },
+        { label: 'Near Misses', stateKey: 'bigTvPanelCurrentNearMissesEl' },
+      ].forEach(({ label, stateKey }) => {
+        const lEl = document.createElement('span');
+        lEl.className = 'big-tv-cs-panel-label';
+        lEl.textContent = label;
+        const vEl = document.createElement('span');
+        vEl.className = 'big-tv-cs-panel-value';
+        vEl.textContent = '—';
+        state[stateKey] = vEl;
+        crGrid.append(lEl, vEl);
+      });
+      crViewEl.appendChild(crGrid);
+
+      // View: Personal Best (run history table)
+      const pbViewEl2 = document.createElement('div');
+      pbViewEl2.className = 'big-tv-cs-panel-view';
+      pbViewEl2.dataset.view = 'personal-best';
+      const pbViewTitle = document.createElement('p');
+      pbViewTitle.className = 'big-tv-cs-panel-title';
+      pbViewTitle.textContent = 'Personal Best';
+      pbViewEl2.appendChild(pbViewTitle);
+      const pbTable = document.createElement('table');
+      pbTable.className = 'big-tv-cs-panel-table';
+      const pbThead = document.createElement('thead');
+      pbThead.innerHTML = '<tr><th>#</th><th>Score</th><th>Time</th><th>Bounces</th><th>Near Misses</th></tr>';
+      const pbTbody = document.createElement('tbody');
+      state.bigTvPbTableBodyEl = pbTbody;
+      pbTable.append(pbThead, pbTbody);
+      pbViewEl2.appendChild(pbTable);
+
+      // View: Server Best (run history table)
+      const sbViewEl = document.createElement('div');
+      sbViewEl.className = 'big-tv-cs-panel-view';
+      sbViewEl.dataset.view = 'server-best';
+      const sbViewTitle = document.createElement('p');
+      sbViewTitle.className = 'big-tv-cs-panel-title';
+      sbViewTitle.textContent = 'Server Best';
+      sbViewEl.appendChild(sbViewTitle);
+      const sbTable = document.createElement('table');
+      sbTable.className = 'big-tv-cs-panel-table';
+      const sbThead = document.createElement('thead');
+      sbThead.innerHTML = '<tr><th>#</th><th>Score</th><th>Time</th><th>Bounces</th><th>Near Misses</th></tr>';
+      const sbTbody = document.createElement('tbody');
+      state.bigTvServerHsTableBodyEl = sbTbody;
+      sbTable.append(sbThead, sbTbody);
+      sbViewEl.appendChild(sbTable);
+
+      // View: Server Stats
+      const ssViewEl = document.createElement('div');
+      ssViewEl.className = 'big-tv-cs-panel-view';
+      ssViewEl.dataset.view = 'server-stats';
+      const ssViewTitle = document.createElement('p');
+      ssViewTitle.className = 'big-tv-cs-panel-title';
+      ssViewTitle.textContent = 'Server Stats';
+      ssViewEl.appendChild(ssViewTitle);
+      const ssGrid = document.createElement('div');
+      ssGrid.className = 'big-tv-cs-panel-grid';
+      [
+        { label: 'Total Scores',     stateKey: 'bigTvPanelServerTotalScoresEl' },
+        { label: 'Total Bounces',    stateKey: 'bigTvPanelServerTotalBouncesEl' },
+        { label: 'Total Near Misses',stateKey: 'bigTvPanelServerTotalNearMissesEl' },
+        { label: 'Total Time',       stateKey: 'bigTvPanelServerTotalTimeEl' },
+        { label: 'Total Runs',       stateKey: 'bigTvPanelServerTotalRunsEl' },
+      ].forEach(({ label, stateKey }) => {
+        const lEl = document.createElement('span');
+        lEl.className = 'big-tv-cs-panel-label';
+        lEl.textContent = label;
+        const vEl = document.createElement('span');
+        vEl.className = 'big-tv-cs-panel-value';
+        vEl.textContent = '—';
+        state[stateKey] = vEl;
+        ssGrid.append(lEl, vEl);
+      });
+      ssViewEl.appendChild(ssGrid);
+
+      state.bigTvCornerScoreBottomPanelEl.append(crViewEl, pbViewEl2, sbViewEl, ssViewEl);
+      state.bigTvDvdOverlayEl.appendChild(state.bigTvCornerScoreBottomPanelEl);
+
       el.appendChild(state.bigTvDvdOverlayEl);
       applyDvdColorStep();
       if (DISCORD_WIDGET_URL) {
@@ -850,83 +968,41 @@ function createOverlays() {
       renderPersonalBestStats();
 
       // === LEFT MONITOR CARD SYSTEM ===
-      // Card 1: CornerScore (4 quadrants)
+      // Card 1: CornerScore (4 nav quadrants — click to show bigscreen view)
       state.leftMonitorCornerScoreCardEl = document.createElement('div');
       state.leftMonitorCornerScoreCardEl.className = 'left-monitor-card left-monitor-cornerscore-card';
       state.leftMonitorCornerScoreCardEl.setAttribute('aria-hidden', 'true');
-      
+
       const csCardGrid = document.createElement('div');
       csCardGrid.className = 'left-monitor-card-grid';
-      
-      // Quadrant UL: Current Run
-      const csCurrentRunQuad = document.createElement('div');
-      csCurrentRunQuad.className = 'left-monitor-card-quadrant cs-card-quad-ul';
-      csCurrentRunQuad.innerHTML = `
-        <div class="cs-card-quadrant-title">Current Run</div>
-        <div class="cs-card-quadrant-content">
-          <div class="cs-card-metric">
-            <span class="cs-card-label">Score</span>
-            <span class="cs-card-value cs-card-current-run-score">0</span>
-          </div>
-          <div class="cs-card-metric">
-            <span class="cs-card-label">Time</span>
-            <span class="cs-card-value cs-card-current-run-time">0:00</span>
-          </div>
-        </div>
-      `;
-      
-      // Quadrant UR: Best Personal Run
-      const csPBQuad = document.createElement('div');
-      csPBQuad.className = 'left-monitor-card-quadrant cs-card-quad-ur';
-      csPBQuad.innerHTML = `
-        <div class="cs-card-quadrant-title">Personal Best</div>
-        <div class="cs-card-quadrant-content">
-          <div class="cs-card-metric">
-            <span class="cs-card-label">Score</span>
-            <span class="cs-card-value cs-card-pb-score">—</span>
-          </div>
-          <div class="cs-card-metric">
-            <span class="cs-card-label">Time</span>
-            <span class="cs-card-value cs-card-pb-time">—</span>
-          </div>
-        </div>
-      `;
-      
-      // Quadrant LL: High-Score Run
-      const csHighScoreQuad = document.createElement('div');
-      csHighScoreQuad.className = 'left-monitor-card-quadrant cs-card-quad-ll';
-      csHighScoreQuad.innerHTML = `
-        <div class="cs-card-quadrant-title">High Score</div>
-        <div class="cs-card-quadrant-content">
-          <div class="cs-card-metric">
-            <span class="cs-card-label">Score</span>
-            <span class="cs-card-value cs-card-high-score">—</span>
-          </div>
-          <div class="cs-card-metric">
-            <span class="cs-card-label">Initials</span>
-            <span class="cs-card-value cs-card-high-score-initials">—</span>
-          </div>
-        </div>
-      `;
-      
-      // Quadrant LR: Server Stats
-      const csServerStatsQuad = document.createElement('div');
-      csServerStatsQuad.className = 'left-monitor-card-quadrant cs-card-quad-lr';
-      csServerStatsQuad.innerHTML = `
-        <div class="cs-card-quadrant-title">Server Stats</div>
-        <div class="cs-card-quadrant-content">
-          <div class="cs-card-metric">
-            <span class="cs-card-label">Scores</span>
-            <span class="cs-card-value cs-card-server-scores">—</span>
-          </div>
-          <div class="cs-card-metric">
-            <span class="cs-card-label">Bounces</span>
-            <span class="cs-card-value cs-card-server-bounces">—</span>
-          </div>
-        </div>
-      `;
-      
-      csCardGrid.append(csCurrentRunQuad, csPBQuad, csHighScoreQuad, csServerStatsQuad);
+
+      const csNavQuadrants = [
+        { viewId: 'current-run',   words: ['Current', 'Run'],   cls: 'cs-card-quad-ul' },
+        { viewId: 'personal-best', words: ['Personal', 'Best'], cls: 'cs-card-quad-ur' },
+        { viewId: 'server-best',   words: ['Server', 'Best'],   cls: 'cs-card-quad-ll' },
+        { viewId: 'server-stats',  words: ['Server', 'Stats'],  cls: 'cs-card-quad-lr' },
+      ];
+      csNavQuadrants.forEach(({ viewId, words, cls }) => {
+        const quadBtn = document.createElement('button');
+        quadBtn.type = 'button';
+        quadBtn.className = `left-monitor-card-quadrant cs-nav-quadrant ${cls}`;
+        quadBtn.setAttribute('aria-label', words.join(' '));
+        quadBtn.dataset.view = viewId;
+        const word1 = document.createElement('span');
+        word1.className = 'cs-nav-word';
+        word1.textContent = words[0];
+        const word2 = document.createElement('span');
+        word2.className = 'cs-nav-word';
+        word2.textContent = words[1];
+        quadBtn.append(word1, word2);
+        quadBtn.addEventListener('pointerdown', (e) => e.stopPropagation());
+        quadBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          state._cb.showCornerScoreBottomView?.(viewId);
+        });
+        csCardGrid.appendChild(quadBtn);
+      });
+
       state.leftMonitorCornerScoreCardEl.appendChild(csCardGrid);
       windowEl.appendChild(state.leftMonitorCornerScoreCardEl);
 

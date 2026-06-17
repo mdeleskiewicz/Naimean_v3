@@ -1122,39 +1122,42 @@
       overflow: auto;
     }
 
-    /* CornerScore Card */
-    .left-monitor-cornerscore-card .cs-card-quadrant-title {
-      font-size: clamp(8px, 3.5cqw, 14px);
-      font-weight: 700;
-      color: rgba(57, 255, 20, 0.9);
-      text-transform: uppercase;
-      margin-bottom: clamp(4px, 1.5%, 8px);
-      text-align: center;
-    }
-
-    .left-monitor-cornerscore-card .cs-card-quadrant-content {
-      display: flex;
-      flex-direction: column;
-      gap: clamp(2px, 1%, 6px);
-      width: 100%;
-    }
-
-    .left-monitor-cornerscore-card .cs-card-metric {
-      display: flex;
-      justify-content: space-between;
+    /* CornerScore Card — nav-only buttons with stacked two-word labels */
+    .left-monitor-cornerscore-card .cs-nav-quadrant {
+      -webkit-appearance: none;
+      appearance: none;
+      justify-content: center;
       align-items: center;
-      gap: clamp(4px, 2%, 8px);
+      overflow: hidden;
+      cursor: pointer;
+      padding: 4px;
+      transition: background 0.15s ease, border-color 0.15s ease;
+      border: 1px solid rgba(57, 255, 20, 0.35);
+      background: rgba(0, 20, 40, 0.8);
     }
 
-    .left-monitor-cornerscore-card .cs-card-label {
-      font-size: clamp(6px, 2.8cqw, 11px);
-      color: rgba(255, 255, 255, 0.7);
+    .left-monitor-cornerscore-card .cs-nav-quadrant:hover,
+    .left-monitor-cornerscore-card .cs-nav-quadrant:focus-visible {
+      background: rgba(57, 255, 20, 0.1);
+      border-color: rgba(57, 255, 20, 0.65);
+      outline: none;
     }
 
-    .left-monitor-cornerscore-card .cs-card-value {
-      font-size: clamp(7px, 3.2cqw, 13px);
-      font-weight: 700;
-      color: #fff;
+    .left-monitor-cornerscore-card .cs-nav-quadrant:active {
+      background: rgba(57, 255, 20, 0.2);
+    }
+
+    .left-monitor-cornerscore-card .cs-nav-word {
+      display: block;
+      font-size: 18px;
+      font-weight: 900;
+      text-align: center;
+      text-transform: uppercase;
+      color: rgba(57, 255, 20, 0.92);
+      line-height: 1.15;
+      letter-spacing: 0.06em;
+      text-shadow: 0 0 8px rgba(57, 255, 20, 0.45);
+      pointer-events: none;
     }
 
     /* Discord Card */
@@ -2242,6 +2245,171 @@
       text-shadow:
         0 0 20px color-mix(in srgb, var(--corner-score-color, #40d6ff) 72%, transparent),
         0 0 36px color-mix(in srgb, var(--corner-score-color, #40d6ff) 48%, transparent);
+    }
+
+    /* Personal Best banner */
+    .big-tv-personal-best-banner {
+      position: absolute;
+      top: clamp(10px, 2%, 24px);
+      left: 50%;
+      z-index: 3;
+      transform: translateX(-50%);
+      max-width: min(92%, 860px);
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+      transition: opacity 140ms ease;
+    }
+
+    .big-tv-personal-best-banner.is-active {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    /* Server High-Score banner — sits below the Personal Best banner */
+    .big-tv-server-high-score-banner {
+      position: absolute;
+      top: calc(clamp(10px, 2%, 24px) + clamp(42px, 7%, 72px));
+      left: 50%;
+      z-index: 3;
+      transform: translateX(-50%);
+      max-width: min(92%, 860px);
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+      transition: opacity 140ms ease;
+    }
+
+    .big-tv-server-high-score-banner.is-active {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    .big-tv-milestone-banner-label {
+      margin: 0;
+      font: 900 clamp(20px, 4vw, 48px) / 1.1 "Trebuchet MS", "Arial Black", sans-serif;
+      letter-spacing: 0.07em;
+      text-transform: uppercase;
+      text-align: center;
+      white-space: nowrap;
+    }
+
+    .big-tv-personal-best-banner .big-tv-milestone-banner-label {
+      color: #39ff14;
+      text-shadow:
+        0 0 16px rgba(57, 255, 20, 0.75),
+        0 0 32px rgba(57, 255, 20, 0.45);
+    }
+
+    .big-tv-server-high-score-banner .big-tv-milestone-banner-label {
+      color: #ffd700;
+      text-shadow:
+        0 0 16px rgba(255, 215, 0, 0.75),
+        0 0 32px rgba(255, 215, 0, 0.45);
+    }
+
+    /* CornerScore bottom panel — shows stats beneath the DVD game */
+    .big-tv-cs-bottom-panel {
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      height: 42%;
+      z-index: 2;
+      background:
+        linear-gradient(180deg, rgba(0, 0, 0, 0) 0%, rgba(2, 6, 12, 0.92) 10%, rgba(2, 6, 12, 0.95) 100%);
+      border-top: 1px solid rgba(64, 214, 255, 0.18);
+      padding: clamp(10px, 1.6%, 18px) clamp(12px, 2%, 24px) clamp(8px, 1.2%, 14px);
+      display: flex;
+      flex-direction: column;
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+      transition: opacity 200ms ease;
+    }
+
+    .big-tv-cs-bottom-panel.is-active {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    .big-tv-cs-panel-view {
+      display: none;
+      flex-direction: column;
+      flex: 1;
+      min-height: 0;
+      gap: clamp(6px, 1.2%, 12px);
+    }
+
+    .big-tv-cs-panel-view.is-active {
+      display: flex;
+    }
+
+    .big-tv-cs-panel-title {
+      margin: 0;
+      font: 700 clamp(12px, 2.2cqh, 20px) / 1 "Trebuchet MS", "Arial Black", sans-serif;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--corner-score-color, #40d6ff);
+      text-shadow: 0 0 10px color-mix(in srgb, var(--corner-score-color, #40d6ff) 55%, transparent);
+    }
+
+    .big-tv-cs-panel-grid {
+      display: grid;
+      grid-template-columns: max-content 1fr max-content 1fr;
+      align-items: baseline;
+      column-gap: clamp(8px, 2%, 18px);
+      row-gap: clamp(4px, 1%, 8px);
+    }
+
+    .big-tv-cs-panel-label {
+      font-size: clamp(10px, 1.8cqh, 16px);
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      opacity: 0.7;
+      white-space: nowrap;
+    }
+
+    .big-tv-cs-panel-value {
+      font-weight: 900;
+      font-size: clamp(14px, 3cqh, 28px);
+      font-variant-numeric: tabular-nums lining-nums;
+      color: #fff;
+      text-shadow: 0 0 10px color-mix(in srgb, var(--corner-score-color, #40d6ff) 45%, transparent);
+    }
+
+    /* CornerScore panel run-history tables */
+    .big-tv-cs-panel-table {
+      border-collapse: collapse;
+      width: 100%;
+      font-size: clamp(10px, 1.9cqh, 17px);
+      overflow: auto;
+    }
+
+    .big-tv-cs-panel-table thead th {
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      opacity: 0.7;
+      font-weight: 700;
+      padding: 2px 8px 4px;
+      text-align: left;
+      border-bottom: 1px solid rgba(64, 214, 255, 0.2);
+    }
+
+    .big-tv-cs-panel-table tbody tr {
+      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    }
+
+    .big-tv-cs-panel-table tbody td {
+      padding: 3px 8px;
+      font-variant-numeric: tabular-nums;
+      color: #fff;
+    }
+
+    .big-tv-cs-panel-table tbody tr:last-child {
+      color: var(--corner-score-color, #40d6ff);
+      font-weight: 900;
+      text-shadow: 0 0 8px color-mix(in srgb, var(--corner-score-color, #40d6ff) 55%, transparent);
     }
 
     .big-tv-corner-score-initials-prompt {

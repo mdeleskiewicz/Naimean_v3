@@ -22,6 +22,10 @@ function playWrongAudio() {
 
 function hideCornerScoreStatus() {
   state.cornerScoreStatusScoreValue = null;
+  if (state.bigTvCornerScoreStatusTimeoutId !== null) {
+    window.clearTimeout(state.bigTvCornerScoreStatusTimeoutId);
+    state.bigTvCornerScoreStatusTimeoutId = null;
+  }
   if (!state.bigTvCornerScoreStatusEl) {
     return;
   }
@@ -33,10 +37,113 @@ function showCornerScoreStatus(message, scoreValue = state.cornerScoreValue) {
   if (!state.bigTvCornerScoreStatusEl || !state.bigTvCornerScoreStatusLabelEl) {
     return;
   }
+  if (state.bigTvCornerScoreStatusTimeoutId !== null) {
+    window.clearTimeout(state.bigTvCornerScoreStatusTimeoutId);
+    state.bigTvCornerScoreStatusTimeoutId = null;
+  }
   state.cornerScoreStatusScoreValue = scoreValue;
   state.bigTvCornerScoreStatusLabelEl.textContent = message;
   state.bigTvCornerScoreStatusEl.classList.add('is-active');
   state.bigTvCornerScoreStatusEl.setAttribute('aria-hidden', 'false');
+  state.bigTvCornerScoreStatusTimeoutId = window.setTimeout(() => {
+    state.bigTvCornerScoreStatusTimeoutId = null;
+    hideCornerScoreStatus();
+  }, 30_000);
+}
+
+function showPersonalBestBanner() {
+  if (!state.bigTvPersonalBestBannerEl) return;
+  if (state.bigTvPersonalBestBannerTimeoutId !== null) {
+    window.clearTimeout(state.bigTvPersonalBestBannerTimeoutId);
+  }
+  state.bigTvPersonalBestBannerEl.classList.add('is-active');
+  state.bigTvPersonalBestBannerEl.setAttribute('aria-hidden', 'false');
+  state.bigTvPersonalBestBannerTimeoutId = window.setTimeout(() => {
+    state.bigTvPersonalBestBannerTimeoutId = null;
+    state.bigTvPersonalBestBannerEl?.classList.remove('is-active');
+    state.bigTvPersonalBestBannerEl?.setAttribute('aria-hidden', 'true');
+  }, 30_000);
+}
+
+function showServerHighScoreBanner() {
+  if (!state.bigTvServerHighScoreBannerEl) return;
+  if (state.bigTvServerHighScoreBannerTimeoutId !== null) {
+    window.clearTimeout(state.bigTvServerHighScoreBannerTimeoutId);
+  }
+  state.bigTvServerHighScoreBannerEl.classList.add('is-active');
+  state.bigTvServerHighScoreBannerEl.setAttribute('aria-hidden', 'false');
+  state.bigTvServerHighScoreBannerTimeoutId = window.setTimeout(() => {
+    state.bigTvServerHighScoreBannerTimeoutId = null;
+    state.bigTvServerHighScoreBannerEl?.classList.remove('is-active');
+    state.bigTvServerHighScoreBannerEl?.setAttribute('aria-hidden', 'true');
+  }, 30_000);
+}
+
+function addPersonalBestTableRow() {
+  if (!state.bigTvPbTableBodyEl) return;
+  state.bigTvPbTableRowCount += 1;
+  const tr = document.createElement('tr');
+  tr.innerHTML = `<td>#${state.bigTvPbTableRowCount}</td><td>${state.cornerScoreValue}</td><td>${formatElapsedMs(state.cornerScoreRunElapsedMs)}</td><td>${state.cornerScoreRunBounces}</td><td>${state.cornerScoreRunNearMisses}</td>`;
+  state.bigTvPbTableBodyEl.appendChild(tr);
+}
+
+function addServerHighScoreTableRow() {
+  if (!state.bigTvServerHsTableBodyEl) return;
+  state.bigTvServerHsTableRowCount += 1;
+  const tr = document.createElement('tr');
+  tr.innerHTML = `<td>#${state.bigTvServerHsTableRowCount}</td><td>${state.cornerScoreValue}</td><td>${formatElapsedMs(state.cornerScoreRunElapsedMs)}</td><td>${state.cornerScoreRunBounces}</td><td>${state.cornerScoreRunNearMisses}</td>`;
+  state.bigTvServerHsTableBodyEl.appendChild(tr);
+}
+
+function syncBottomPanelCurrentRunView() {
+  if (state.bigTvPanelCurrentScoreEl) {
+    state.bigTvPanelCurrentScoreEl.textContent = String(state.cornerScoreValue);
+  }
+  if (state.bigTvPanelCurrentTimeEl) {
+    state.bigTvPanelCurrentTimeEl.textContent = formatElapsedMs(state.cornerScoreRunElapsedMs);
+  }
+  if (state.bigTvPanelCurrentBouncesEl) {
+    state.bigTvPanelCurrentBouncesEl.textContent = String(state.cornerScoreRunBounces);
+  }
+  if (state.bigTvPanelCurrentNearMissesEl) {
+    state.bigTvPanelCurrentNearMissesEl.textContent = String(state.cornerScoreRunNearMisses);
+  }
+}
+
+function syncBottomPanelServerStatsView() {
+  const stats = state.cornerScoreServerStats;
+  if (state.bigTvPanelServerTotalScoresEl) {
+    state.bigTvPanelServerTotalScoresEl.textContent = stats ? String(stats.totalScores) : '—';
+  }
+  if (state.bigTvPanelServerTotalBouncesEl) {
+    state.bigTvPanelServerTotalBouncesEl.textContent = stats ? String(stats.totalBounces) : '—';
+  }
+  if (state.bigTvPanelServerTotalNearMissesEl) {
+    state.bigTvPanelServerTotalNearMissesEl.textContent = stats ? String(stats.totalNearMisses) : '—';
+  }
+  if (state.bigTvPanelServerTotalTimeEl) {
+    state.bigTvPanelServerTotalTimeEl.textContent = stats ? formatElapsedMs(stats.totalTimeMs) : '—';
+  }
+  if (state.bigTvPanelServerTotalRunsEl) {
+    state.bigTvPanelServerTotalRunsEl.textContent = stats ? String(stats.totalRuns) : '—';
+  }
+}
+
+function showCornerScoreBottomView(viewId) {
+  const panelEl = state.bigTvCornerScoreBottomPanelEl;
+  if (!panelEl) return;
+  // Sync live data for the requested view before showing
+  if (viewId === 'current-run') syncBottomPanelCurrentRunView();
+  if (viewId === 'server-stats') syncBottomPanelServerStatsView();
+  // Activate the correct child view
+  panelEl.querySelectorAll('.big-tv-cs-panel-view').forEach((v) => {
+    const match = v.dataset.view === viewId;
+    v.classList.toggle('is-active', match);
+    v.setAttribute('aria-hidden', match ? 'false' : 'true');
+  });
+  state.bigTvCornerScoreBottomPanelView = viewId;
+  panelEl.classList.add('is-active');
+  panelEl.setAttribute('aria-hidden', 'false');
 }
 
 function clearDvdMissIndicatorTimeout(corner) {
@@ -178,6 +285,10 @@ function renderRunStats() {
   if (state.rightMonitorCornerScoreNearMissesEl) {
     state.rightMonitorCornerScoreNearMissesEl.textContent = String(nearMisses);
   }
+  // Keep bottom panel current-run view in sync when it is active
+  if (state.bigTvCornerScoreBottomPanelView === 'current-run') {
+    syncBottomPanelCurrentRunView();
+  }
 }
 
 function renderPersonalBestStats() {
@@ -212,6 +323,10 @@ function renderServerStats() {
   if (totalNearMissesEl) totalNearMissesEl.textContent = stats ? String(stats.totalNearMisses) : '—';
   if (totalTimeEl) totalTimeEl.textContent = stats ? formatElapsedMs(stats.totalTimeMs) : '—';
   if (totalRunsEl) totalRunsEl.textContent = stats ? String(stats.totalRuns) : '—';
+  // Keep bottom panel server-stats view in sync when it is active
+  if (state.bigTvCornerScoreBottomPanelView === 'server-stats') {
+    syncBottomPanelServerStatsView();
+  }
 }
 
 function startRunStats() {
@@ -341,6 +456,10 @@ function setCornerScore(nextScore) {
   state.cornerScoreValue = normalizedScore;
   renderCornerScore();
   syncCornerScoreInitialsPromptVisibility();
+  // Keep bottom panel current-run view in sync
+  if (state.bigTvCornerScoreBottomPanelView === 'current-run') {
+    syncBottomPanelCurrentRunView();
+  }
   // Update the card data if the CornerScore card is active
   state._cb.updateCornerScoreCardData?.();
 }
@@ -639,4 +758,7 @@ function activateRightMonitorCornerScoreMode() {
   state._cb.syncDvdScreensaverState?.();
 }
 
-export { sanitizeCornerScoreInitialsInput, playWrongAudio, hideCornerScoreStatus, showCornerScoreStatus, clearDvdMissIndicatorTimeout, hideDvdMissIndicator, hideAllDvdMissIndicators, showDvdMissIndicator, syncCornerScoreInitialsSubmitState, hideCornerScoreInitialsPrompt, showCornerScoreInitialsPrompt, syncCornerScoreInitialsPromptVisibility, renderCornerScore, setCornerScore, setCornerScoreHighScore, loadCornerScoreFromServer, queueCornerScoreUpdate, submitCornerScoreInitials, clearCornerScore, syncCornerScoreServerToLocalMad, unlockCornerScoreScoringAudioFromGesture, playRightMonitorScoringNoise, activateRightMonitorCornerScoreMode, toggleBigTvHighScoreStats, getMedalForScore, formatElapsedMs, renderRunStats, renderPersonalBestStats, renderServerStats, startRunStats, stopRunStats, resetRunStats, recordBounce, recordNearMiss, loadPersonalBestFromStorage, savePersonalBestIfImproved };
+// Register showCornerScoreBottomView as a callback so left-monitor card quadrants can trigger it
+state._cb.showCornerScoreBottomView = showCornerScoreBottomView;
+
+export { sanitizeCornerScoreInitialsInput, playWrongAudio, hideCornerScoreStatus, showCornerScoreStatus, showPersonalBestBanner, showServerHighScoreBanner, addPersonalBestTableRow, addServerHighScoreTableRow, showCornerScoreBottomView, clearDvdMissIndicatorTimeout, hideDvdMissIndicator, hideAllDvdMissIndicators, showDvdMissIndicator, syncCornerScoreInitialsSubmitState, hideCornerScoreInitialsPrompt, showCornerScoreInitialsPrompt, syncCornerScoreInitialsPromptVisibility, renderCornerScore, setCornerScore, setCornerScoreHighScore, loadCornerScoreFromServer, queueCornerScoreUpdate, submitCornerScoreInitials, clearCornerScore, syncCornerScoreServerToLocalMad, unlockCornerScoreScoringAudioFromGesture, playRightMonitorScoringNoise, activateRightMonitorCornerScoreMode, toggleBigTvHighScoreStats, getMedalForScore, formatElapsedMs, renderRunStats, renderPersonalBestStats, renderServerStats, startRunStats, stopRunStats, resetRunStats, recordBounce, recordNearMiss, loadPersonalBestFromStorage, savePersonalBestIfImproved };
