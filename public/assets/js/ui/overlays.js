@@ -219,14 +219,16 @@ function getDiscordQuadrantDefinitions() {
   ];
 }
 
-function appendDiscordQuadrantButtons(containerEl, { buttonClassName, useLeftMonitorCardClass = false } = {}) {
+function appendDiscordQuadrantButtons(containerEl, { buttonClassName, useLeftMonitorCardClass = false, showLabel = true } = {}) {
   getDiscordQuadrantDefinitions().forEach(({ label, action, cls }) => {
     const quadBtn = document.createElement('button');
     quadBtn.type = 'button';
     quadBtn.className = useLeftMonitorCardClass
       ? `left-monitor-card-quadrant ${buttonClassName} ${cls}`
       : `${buttonClassName} ${cls}`;
-    quadBtn.textContent = label;
+    if (showLabel) {
+      quadBtn.textContent = label;
+    }
     quadBtn.setAttribute('aria-label', label);
     quadBtn.addEventListener('click', (event) => {
       event.preventDefault();
@@ -1274,9 +1276,9 @@ function createOverlays() {
       state.rightMonitorDiscordQuadrantOverlayEl.className = 'right-monitor-discord-quadrant-overlay';
       state.rightMonitorDiscordQuadrantOverlayEl.setAttribute('aria-hidden', 'true');
       appendDiscordQuadrantButtons(state.rightMonitorDiscordQuadrantOverlayEl, {
-        buttonClassName: 'right-monitor-discord-quadrant-btn'
+        buttonClassName: 'right-monitor-discord-quadrant-btn',
+        showLabel: false
       });
-      windowEl.appendChild(state.rightMonitorDiscordQuadrantOverlayEl);
       state.rightMonitorCornerScoreOverlayEl = document.createElement('div');
       state.rightMonitorCornerScoreOverlayEl.className = 'right-monitor-corner-score-overlay';
       const rightMonitorCornerScoreLabelEl = document.createElement('p');
@@ -1358,6 +1360,7 @@ function createOverlays() {
       state.rightMonitorCornerpieceOverlayEl.appendChild(cornerpieceImg);
       windowEl.appendChild(state.rightMonitorCornerpieceOverlayEl);
       el.appendChild(windowEl);
+      el.appendChild(state.rightMonitorDiscordQuadrantOverlayEl); // centered at monitor-group (frame) level
       el.appendChild(frameLayer); // topmost: appended after shadow/content so DOM order ↔ z-index order
       applyDvdColorStep();
     }
