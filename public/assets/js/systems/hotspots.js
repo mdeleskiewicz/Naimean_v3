@@ -530,9 +530,10 @@ async function saveHotspots() {
 function addResizeHandles(el) {
   ['n', 'ne', 'e', 'se', 's', 'sw', 'w', 'nw'].forEach((dir) => {
     const handle = document.createElement('div');
-    handle.className = `resize-handle resize-${dir}`;
+    handle.className = `resize-handle resize-anchor-point resize-${dir}`;
     handle.dataset.dir = dir;
     handle.setAttribute('aria-hidden', 'true');
+    handle.title = 'Resize anchor';
     el.appendChild(handle);
   });
 }

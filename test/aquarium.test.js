@@ -285,8 +285,8 @@ test('aquarium keeps shrimp/random creature flow while generic fish use Disney s
 test('aquarium depth overlays use mirrored horizontal separation ratios', () => {
   assert.equal(AQUARIUM_DEPTH_OVERLAY_HEIGHT_RATIO, 0.4);
   assert.equal(AQUARIUM_DEPTH_OVERLAY_TOP_RATIO, 0.3);
-  assert.equal(AQUARIUM_DEPTH_OVERLAY_LEFT_OFFSET_RATIO, -0.28);
-  assert.equal(AQUARIUM_DEPTH_OVERLAY_RIGHT_OFFSET_RATIO, 0.28);
+  assert.equal(AQUARIUM_DEPTH_OVERLAY_LEFT_OFFSET_RATIO, -0.6);
+  assert.equal(AQUARIUM_DEPTH_OVERLAY_RIGHT_OFFSET_RATIO, 0.6);
 });
 
 test('lite rendering keeps aquarium bubbles and animals animating', () => {
