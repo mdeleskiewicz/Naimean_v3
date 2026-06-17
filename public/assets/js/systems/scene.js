@@ -1,10 +1,6 @@
 import {
   AQUARIUM_DEPTH_OVERLAY_LEFT_IMAGE_URL,
-  AQUARIUM_DEPTH_OVERLAY_HEIGHT_RATIO,
-  AQUARIUM_DEPTH_OVERLAY_LEFT_OFFSET_RATIO,
-  AQUARIUM_DEPTH_OVERLAY_RIGHT_OFFSET_RATIO,
   AQUARIUM_DEPTH_OVERLAY_RIGHT_IMAGE_URL,
-  AQUARIUM_DEPTH_OVERLAY_TOP_RATIO,
   AQUARIUM_FISH_EFFECT_ID,
   AQUARIUM_WALL_GLOW_CLASS,
   ASHTRAY_CIGARETTE_CONTROL_ID,
@@ -44,6 +40,7 @@ import {
 } from '../core/constants.js';
 import { state } from '../core/state.js';
 import { dom } from '../core/domRefs.js';
+import { applyAquariumDepthOverlayLayout } from '../core/aquariumDepthOverlayLayout.js';
 import { clamp, isTextEntryTarget, measureSyncSection, scheduleNonCriticalTask, sourceHotspotsToRuntime } from '../core/utils.js';
 import { createOverlays } from '../ui/overlays.js';
 import { consumeDiscordLoginFlowState, syncDiscordAuthBodyClass, syncDiscordButtonUi, syncLoginOverlayUi } from './login.js';
@@ -60,16 +57,6 @@ const isIOSDevice =
   (window.navigator.platform === 'MacIntel' && window.navigator.maxTouchPoints > 1);
 const useLiteRendering = isIOSDevice || hasCoarsePointer;
 let sceneEventsBound = false;
-
-function applyAquariumDepthOverlayLayout(depthOverlayEl, side, width, height) {
-  const horizontalOffsetRatio = side === 'left'
-    ? AQUARIUM_DEPTH_OVERLAY_LEFT_OFFSET_RATIO
-    : AQUARIUM_DEPTH_OVERLAY_RIGHT_OFFSET_RATIO;
-  depthOverlayEl.style.left = `${Math.round(width * horizontalOffsetRatio)}px`;
-  depthOverlayEl.style.top = `${Math.round(height * AQUARIUM_DEPTH_OVERLAY_TOP_RATIO)}px`;
-  depthOverlayEl.style.width = `${Math.round(width)}px`;
-  depthOverlayEl.style.height = `${Math.round(height * AQUARIUM_DEPTH_OVERLAY_HEIGHT_RATIO)}px`;
-}
 
 const AQUARIUM_DISNEY_CHARACTER_SPECS = Object.freeze([
   {

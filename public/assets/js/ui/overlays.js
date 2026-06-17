@@ -1,10 +1,6 @@
 import {
   AQUARIUM_DEPTH_OVERLAY_LEFT_IMAGE_URL,
-  AQUARIUM_DEPTH_OVERLAY_HEIGHT_RATIO,
-  AQUARIUM_DEPTH_OVERLAY_LEFT_OFFSET_RATIO,
-  AQUARIUM_DEPTH_OVERLAY_RIGHT_OFFSET_RATIO,
   AQUARIUM_DEPTH_OVERLAY_RIGHT_IMAGE_URL,
-  AQUARIUM_DEPTH_OVERLAY_TOP_RATIO,
   AQUARIUM_OVERLAY_ID,
   AQUARIUM_STATIC_VIDEO_URL,
   BIG_TV_FULLSCREEN_OVERLAY_IDS,
@@ -49,6 +45,7 @@ import {
   FLIP_CLOCK_OVERLAY_ID,
   overlayDefaults
 } from '../core/constants.js';
+import { applyAquariumDepthOverlayLayout } from '../core/aquariumDepthOverlayLayout.js';
 import { state } from '../core/state.js';
 import { clamp } from '../core/utils.js';
 import { applyDvdColorStep } from '../systems/dvd.js';
@@ -69,16 +66,6 @@ function addDepthOverlayResizeHandles(el) {
     handle.setAttribute('aria-hidden', 'true');
     el.appendChild(handle);
   });
-}
-
-function applyAquariumDepthOverlayLayout(depthOverlayEl, side, width, height) {
-  const horizontalOffsetRatio = side === 'left'
-    ? AQUARIUM_DEPTH_OVERLAY_LEFT_OFFSET_RATIO
-    : AQUARIUM_DEPTH_OVERLAY_RIGHT_OFFSET_RATIO;
-  depthOverlayEl.style.left = `${Math.round(width * horizontalOffsetRatio)}px`;
-  depthOverlayEl.style.top = `${Math.round(height * AQUARIUM_DEPTH_OVERLAY_TOP_RATIO)}px`;
-  depthOverlayEl.style.width = `${Math.round(width)}px`;
-  depthOverlayEl.style.height = `${Math.round(height * AQUARIUM_DEPTH_OVERLAY_HEIGHT_RATIO)}px`;
 }
 
 function hasActiveBigTvContentOverlay() {
