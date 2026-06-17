@@ -11,6 +11,7 @@ This section documents implemented room/tool functionality with two goals:
 2. [Big TV Tools Overlay](Big-TV-Tools.md)
 3. [Hotspot Debug + Persistence](Hotspot-Debug-and-Persistence.md)
 4. [Discord Auth + Protected Pages](Discord-Auth-and-Protected-Pages.md)
+5. [Card System Update Notes](Card-System-Update-Notes.md)
 
 ---
 
