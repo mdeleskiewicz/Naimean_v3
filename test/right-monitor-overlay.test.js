@@ -6,6 +6,7 @@ import path from 'node:path';
 const repoRoot = path.resolve(import.meta.dirname, '..');
 const overlaysJsPath = path.join(repoRoot, 'public', 'assets', 'js', 'ui', 'overlays.js');
 const indexCssPath = path.join(repoRoot, 'public', 'assets', 'css', 'index.css');
+const RIGHT_MONITOR_INSET_PATTERN = 'calc\\(29\\.19921875% - 1px\\)\\s+calc\\(25\\.1953125% - 1px\\)\\s+calc\\(17\\.08984375% - 1px\\)\\s+calc\\(24\\.4140625% - 1px\\)';
 
 test('right monitor overlay applies sizing classes for monitor images', () => {
   const source = fs.readFileSync(overlaysJsPath, 'utf8');
@@ -52,12 +53,12 @@ test('right monitor frame is vertically corrected and uses flipped screen bounds
 
   assert.match(
     source,
-    /\.right-monitor-screen-window\s*\{[^}]*inset:\s*29\.297%\s+25\.26%\s+17\.09%\s+24\.414%;/s,
+    new RegExp(`\\.right-monitor-screen-window\\s*\\{[^}]*inset:\\s*${RIGHT_MONITOR_INSET_PATTERN};`, 's'),
     'Expected right monitor screen bounds to align with the vertically flipped right frame hole',
   );
   assert.match(
     source,
-    /\.monitor-group-right\s*>\s*\.monitor-shadow-layer\s*\{[^}]*inset:\s*29\.297%\s+25\.26%\s+17\.09%\s+24\.414%;/s,
+    new RegExp(`\\.monitor-group-right\\s*>\\s*\\.monitor-shadow-layer\\s*\\{[^}]*inset:\\s*${RIGHT_MONITOR_INSET_PATTERN};`, 's'),
     'Expected right monitor shadow bounds to align with the vertically flipped right frame hole',
   );
   assert.match(

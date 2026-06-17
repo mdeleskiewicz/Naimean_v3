@@ -352,7 +352,8 @@ export const COMMODORE_POWER_BUTTON_BOUNDS = Object.freeze({ x: 2143, y: 1637, w
 export const LEFT_MONITOR_FRAME_BOUNDS = Object.freeze({ x: 1331, y: 1020, w: 280, h: 220 });
 export const RIGHT_MONITOR_FRAME_BOUNDS = Object.freeze({ x: 1758, y: 1014, w: 288, h: 228 });
 export const LEFT_MONITOR_SCREEN_WINDOW_INSETS = Object.freeze({ top: 0.1709, right: 0.24414, bottom: 0.29297, left: 0.252 });
-export const RIGHT_MONITOR_SCREEN_WINDOW_INSETS = Object.freeze({ top: 0.29297, right: 0.2526, bottom: 0.1709, left: 0.24414 });
+// Exact right frame-hole insets derived from R_Frame.png transparent-window pixels (299/1024, 387/1536, 175/1024, 375/1536).
+export const RIGHT_MONITOR_SCREEN_WINDOW_INSETS = Object.freeze({ top: 0.2919921875, right: 0.251953125, bottom: 0.1708984375, left: 0.244140625 });
 export const LEFT_MONITOR_SCREEN_BOUNDS = Object.freeze(frameBoundsToScreenBoundsForConstants(LEFT_MONITOR_FRAME_BOUNDS, LEFT_MONITOR_SCREEN_WINDOW_INSETS));
 export const RIGHT_MONITOR_SCREEN_BOUNDS = Object.freeze(frameBoundsToScreenBoundsForConstants(RIGHT_MONITOR_FRAME_BOUNDS, RIGHT_MONITOR_SCREEN_WINDOW_INSETS));
 HOTSPOT_READABLE_LABELS.set(COMMODORE_OVERLAY_CONTROL_ID, 'Commodore Screen');
