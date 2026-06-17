@@ -22,7 +22,7 @@ DISCORD_ALLOWED_ROLE_IDS = ""
 [[d1_databases]]
 binding = "DB"
 database_name = "naimean-v3-db"
-database_id = "0798d2f2-618b-4044-91f5-a2c762922184"
+database_id = "85d52ed1ca1933df067bf0c167d65a84"
 
 [[durable_objects.bindings]]
 name = "HOTSPOT_STORE"
