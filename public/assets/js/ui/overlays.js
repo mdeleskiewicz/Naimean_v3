@@ -998,6 +998,17 @@ function createOverlays() {
       state.leftMonitorLoggedInCardEl.appendChild(loggedInCardGrid);
       windowEl.appendChild(state.leftMonitorLoggedInCardEl);
 
+      // Shrimp Card - simple centered logo display
+      state.leftMonitorShrimpCardEl = document.createElement('div');
+      state.leftMonitorShrimpCardEl.className = 'left-monitor-card left-monitor-shrimp-card';
+      state.leftMonitorShrimpCardEl.setAttribute('aria-hidden', 'true');
+      const shrimpLogo = document.createElement('img');
+      shrimpLogo.className = 'left-monitor-shrimp-logo';
+      shrimpLogo.src = 'assets/images/starshrimp_logo.png';
+      shrimpLogo.alt = 'Shrimp';
+      state.leftMonitorShrimpCardEl.appendChild(shrimpLogo);
+      windowEl.appendChild(state.leftMonitorShrimpCardEl);
+
       state.leftMonitorStaticOverlayEl = document.createElement('div');
       state.leftMonitorStaticOverlayEl.className = 'overlay-static-layer';
       state.leftMonitorStaticVideoEl = document.createElement('video');

@@ -1,4 +1,4 @@
-import { API_TIMEOUT_MS, AQUARIUM_CLIP_CATALOG_API_URL, AQUARIUM_CLIP_SOURCE_GOOGLE_DRIVE, AQUARIUM_CLIP_SOURCE_LOCAL_FALLBACK, BIG_TV_DEBUG_WATERMARK_DEFAULT_TOP_PX, BIG_TV_DEBUG_WATERMARK_LETTERBOX_CLEARANCE_PX, BIG_TV_DEBUG_WATERMARK_MIN_TOP_MARGIN_PX, BIG_TV_DEBUG_WATERMARK_SERVER_ASSET, BIG_TV_DEBUG_WATERMARK_SHRIMP_CITY, DEFAULT_LEFT_MONITOR_STATE, NEDRY_GATE_VIDEO_URL } from '../core/constants.js';
+import { API_TIMEOUT_MS, AQUARIUM_CLIP_CATALOG_API_URL, AQUARIUM_CLIP_SOURCE_GOOGLE_DRIVE, AQUARIUM_CLIP_SOURCE_LOCAL_FALLBACK, BIG_TV_DEBUG_WATERMARK_DEFAULT_TOP_PX, BIG_TV_DEBUG_WATERMARK_LETTERBOX_CLEARANCE_PX, BIG_TV_DEBUG_WATERMARK_MIN_TOP_MARGIN_PX, BIG_TV_DEBUG_WATERMARK_SERVER_ASSET, BIG_TV_DEBUG_WATERMARK_SHRIMP_CITY, DEFAULT_LEFT_MONITOR_STATE, LEFT_MONITOR_CARD_SHRIMP, NEDRY_GATE_VIDEO_URL } from '../core/constants.js';
 import { state } from '../core/state.js';
 import { wait, shuffleArrayInPlace } from '../core/utils.js';
 import { waitForMediaPlaybackToEnd } from '../core/media.js';
@@ -92,6 +92,12 @@ function getRandomShrimpClipUrl() {
     shuffleArrayInPlace(state.aquariumShrimpClipQueue);
   }
   return state.aquariumShrimpClipQueue.pop();
+}
+
+function repopulateAquariumShrimp() {
+  // Repopulate with a fresh shuffled queue
+  state.aquariumShrimpClipQueue = [...state.aquariumShrimpClips];
+  shuffleArrayInPlace(state.aquariumShrimpClipQueue);
 }
 
 function getBigTvDebugWatermarkText() {
@@ -424,7 +430,7 @@ async function playAquariumHotspotSequence() {
   hideNedryGateOverlay();
   hideAquariumStaticOverlay();
   state._cb.hideBigTvPromptOverlay?.({ clearInput: false });
-  state._cb.setLeftMonitorState?.(DEFAULT_LEFT_MONITOR_STATE);
+  state._cb.activateLeftMonitorCard?.(LEFT_MONITOR_CARD_SHRIMP);
   state._cb.syncBigTvContentVisibility?.();
   if (!state.isRightMonitorAquariumSequenceRunning) {
     void playRightMonitorAquariumSequence();
@@ -447,5 +453,6 @@ state._cb.isRightMonitorShrimpLogoActive = isRightMonitorShrimpLogoActive;
 state._cb.setNedryGateVideoSource = setNedryGateVideoSource;
 state._cb.syncBigTvDebugWatermark = syncBigTvDebugWatermark;
 state._cb.updateBigTvDebugWatermarkPlacement = updateBigTvDebugWatermarkPlacement;
+state._cb.repopulateAquariumShrimp = repopulateAquariumShrimp;
 
-export { cancelAquariumPlaybackSequence, isAquariumPlaybackSequenceActive, stopAquariumPlaybackSequence, replayAquariumPlaybackSequenceFromStatic, interruptAquariumPlaybackSequence, recordAquariumClipInHistory, skipToAquariumClip, skipAquariumToNextClip, skipAquariumToPreviousClip, getRandomShrimpClipUrl, getBigTvDebugWatermarkText, syncBigTvDebugWatermark, updateBigTvDebugWatermarkPlacement, loadAquariumShrimpClipCatalog, hideAquariumStaticOverlay, playRightMonitorStaticPass, playAquariumStaticPass, setNedryGateVideoSource, hideNedryGateOverlay, playAquariumClipPass, runAquariumPlaybackSequence, isRightMonitorShrimpLogoActive, transitionAquariumToDvdCornerScoreFromRightMonitor, playRightMonitorAquariumSequence, playAquariumHotspotSequence };
+export { cancelAquariumPlaybackSequence, isAquariumPlaybackSequenceActive, stopAquariumPlaybackSequence, replayAquariumPlaybackSequenceFromStatic, interruptAquariumPlaybackSequence, recordAquariumClipInHistory, skipToAquariumClip, skipAquariumToNextClip, skipAquariumToPreviousClip, getRandomShrimpClipUrl, repopulateAquariumShrimp, getBigTvDebugWatermarkText, syncBigTvDebugWatermark, updateBigTvDebugWatermarkPlacement, loadAquariumShrimpClipCatalog, hideAquariumStaticOverlay, playRightMonitorStaticPass, playAquariumStaticPass, setNedryGateVideoSource, hideNedryGateOverlay, playAquariumClipPass, runAquariumPlaybackSequence, isRightMonitorShrimpLogoActive, transitionAquariumToDvdCornerScoreFromRightMonitor, playRightMonitorAquariumSequence, playAquariumHotspotSequence };

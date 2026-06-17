@@ -160,6 +160,7 @@ export const state = {
   leftMonitorDiscordCardEl: null,
   leftMonitorGithubCardEl: null,
   leftMonitorLoggedInCardEl: null,
+  leftMonitorShrimpCardEl: null,
   discordJoinButtonEl: null,
   discordButtonImgEl: null,
   discordWidgetFrameEl: null,

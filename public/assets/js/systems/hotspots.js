@@ -26,6 +26,7 @@ import {
   MONITOR_GROUP_LEFT_CONTROL_ID,
   MONITOR_GROUP_RIGHT_CONTROL_ID,
   NEDRY_GATE_TRIGGER_HOTSPOT_IDS,
+  NEON_SIGN_HOTSPOT_ID,
   NOAHS_ARCADE_HOTSPOT_ID,
   NOAHS_ARCADE_URL,
   NOTES_URL,
@@ -684,6 +685,7 @@ function createHotspots(hotspotList) {
       }
       if (WHITEBOARD_HOTSPOT_IDS.has(spot.id)) return void window.open(getHotspotEffectiveUrl(spot.id) || WHITEBOARD_HOTSPOT_URLS[spot.id] || WHITEBOARD_HOTSPOT_URLS.whiteboard, '_blank', 'noopener,noreferrer');
       if (AQUARIUM_HOTSPOT_IDS.has(spot.id)) return void state._cb.playAquariumHotspotSequence?.();
+      if (spot.id === NEON_SIGN_HOTSPOT_ID) return void state._cb.repopulateAquariumShrimp?.();
       if (
         NEDRY_GATE_TRIGGER_HOTSPOT_IDS.has(spot.id) &&
         spot.id !== MONITOR_GROUP_RIGHT_CONTROL_ID &&

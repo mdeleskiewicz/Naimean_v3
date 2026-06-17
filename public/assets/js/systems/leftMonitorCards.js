@@ -3,6 +3,7 @@ import {
   LEFT_MONITOR_CARD_DISCORD,
   LEFT_MONITOR_CARD_GITHUB,
   LEFT_MONITOR_CARD_LOGGED_IN,
+  LEFT_MONITOR_CARD_SHRIMP,
   LEFT_MONITOR_CARD_NONE,
   DEFAULT_LEFT_MONITOR_CARD,
   GITHUB_V3_ISSUES_URL,
@@ -52,6 +53,9 @@ async function activateLeftMonitorCard(cardType) {
       break;
     case LEFT_MONITOR_CARD_LOGGED_IN:
       showLoggedInCard();
+      break;
+    case LEFT_MONITOR_CARD_SHRIMP:
+      showShrimpCard();
       break;
     case LEFT_MONITOR_CARD_NONE:
     default:
@@ -146,6 +150,10 @@ function hideAllLeftMonitorCardOverlays() {
   if (state.leftMonitorLoggedInCardEl) {
     state.leftMonitorLoggedInCardEl.classList.remove('is-active');
     state.leftMonitorLoggedInCardEl.setAttribute('aria-hidden', 'true');
+  }
+  if (state.leftMonitorShrimpCardEl) {
+    state.leftMonitorShrimpCardEl.classList.remove('is-active');
+    state.leftMonitorShrimpCardEl.setAttribute('aria-hidden', 'true');
   }
 
   // Also hide the legacy left monitor selector and overlays
@@ -250,6 +258,16 @@ function showLoggedInCard() {
 }
 
 /**
+ * Show the Shrimp card
+ */
+function showShrimpCard() {
+  if (!state.leftMonitorShrimpCardEl) return;
+
+  state.leftMonitorShrimpCardEl.classList.add('is-active');
+  state.leftMonitorShrimpCardEl.setAttribute('aria-hidden', 'false');
+}
+
+/**
  * Trigger CornerScore card when corner score game is active
  */
 function triggerCornerScoreCard() {
@@ -283,6 +301,15 @@ async function triggerLoggedInCard() {
 }
 
 /**
+ * Trigger Shrimp card and start aquarium playback
+ */
+function triggerShrimpCard() {
+  void activateLeftMonitorCard(LEFT_MONITOR_CARD_SHRIMP);
+  // Also trigger aquarium playback sequence
+  state._cb.playAquariumHotspotSequence?.();
+}
+
+/**
  * Reset to no active card
  */
 function resetLeftMonitorCard() {
@@ -295,6 +322,7 @@ state._cb.triggerCornerScoreCard = triggerCornerScoreCard;
 state._cb.triggerDiscordCard = triggerDiscordCard;
 state._cb.triggerGithubCard = triggerGithubCard;
 state._cb.triggerLoggedInCard = triggerLoggedInCard;
+state._cb.triggerShrimpCard = triggerShrimpCard;
 state._cb.resetLeftMonitorCard = resetLeftMonitorCard;
 state._cb.updateCornerScoreCardData = updateCornerScoreCardData;
 
@@ -304,6 +332,7 @@ export {
   triggerDiscordCard,
   triggerGithubCard,
   triggerLoggedInCard,
+  triggerShrimpCard,
   resetLeftMonitorCard,
   updateCornerScoreCardData
 };
