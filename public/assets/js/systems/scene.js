@@ -59,6 +59,323 @@ const isIOSDevice =
   (window.navigator.platform === 'MacIntel' && window.navigator.maxTouchPoints > 1);
 const useLiteRendering = isIOSDevice || hasCoarsePointer;
 let sceneEventsBound = false;
+const AQUARIUM_WILDLIFE_OVERRIDES_STORAGE_KEY = 'naimean.aquariumWildlife.overrides';
+const AQUARIUM_WILDLIFE_GUI_STYLE_ID = 'aquarium-wildlife-gui-style';
+const AQUARIUM_SHRIMP_VERTICAL_SPACE_PERCENT = 23;
+const DEFAULT_DISNEY_FISH_COUNT = 1;
+const AQUARIUM_WILDLIFE_CREATURE_CLASS_NAMES = Object.freeze([
+  'aquarium-disney-fish',
+  'aquarium-shrimp',
+  'aquarium-snail',
+  'aquarium-starfish',
+  'aquarium-turtle',
+  'aquarium-jellyfish',
+  'aquarium-nautilus',
+  'aquarium-octopus',
+  'aquarium-frog',
+  'aquarium-manta-ray',
+  'aquarium-shark',
+  'aquarium-electric-eel',
+  'aquarium-moray-eel',
+  'aquarium-bubble-chest',
+  'aquarium-coral',
+  'aquarium-anemone',
+  'aquarium-toy-diver',
+  'aquarium-cthulhu-bubbler',
+  'aquarium-skull-bubbler'
+]);
+const aquariumWildlifeGuiState = {
+  panelEl: null,
+  textareaEl: null,
+  promptTextareaEl: null,
+  overridesTextareaEl: null,
+  statusEl: null
+};
+
+function getAquariumWildlifeOverrideBounds(value, min, max, fallback) {
+  if (!Number.isFinite(value)) {
+    return fallback;
+  }
+  return clamp(Math.round(value), min, max);
+}
+
+function readAquariumWildlifeOverrides() {
+  try {
+    const raw = window.localStorage.getItem(AQUARIUM_WILDLIFE_OVERRIDES_STORAGE_KEY);
+    if (!raw) {
+      return {};
+    }
+    const parsed = JSON.parse(raw);
+    if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
+      return {};
+    }
+    return parsed;
+  } catch {
+    return {};
+  }
+}
+
+function writeAquariumWildlifeOverrides(overrides) {
+  try {
+    window.localStorage.setItem(AQUARIUM_WILDLIFE_OVERRIDES_STORAGE_KEY, JSON.stringify(overrides ?? {}));
+  } catch {
+    // Ignore storage write failures.
+  }
+}
+
+function getPrimaryAquariumCreatureClass(element) {
+  if (!(element instanceof HTMLElement)) {
+    return '';
+  }
+  for (const className of AQUARIUM_WILDLIFE_CREATURE_CLASS_NAMES) {
+    if (element.classList.contains(className) || element.classList.contains(`${className}-reverse`)) {
+      return className;
+    }
+  }
+  return '';
+}
+
+function collectAquariumCreatureCssVariables(element) {
+  const cssVars = {};
+  for (let index = 0; index < element.style.length; index += 1) {
+    const name = element.style[index];
+    if (!name || !name.startsWith('--')) {
+      continue;
+    }
+    cssVars[name] = element.style.getPropertyValue(name).trim();
+  }
+  return cssVars;
+}
+
+function collectAquariumCreatureAnimationData(computedStyle) {
+  const normalizeList = (value) => value.split(',').map((item) => item.trim()).filter((item) => item.length > 0);
+  return {
+    names: normalizeList(computedStyle.animationName),
+    durations: normalizeList(computedStyle.animationDuration),
+    delays: normalizeList(computedStyle.animationDelay),
+    timingFunctions: normalizeList(computedStyle.animationTimingFunction),
+    directions: normalizeList(computedStyle.animationDirection),
+    iterationCounts: normalizeList(computedStyle.animationIterationCount)
+  };
+}
+
+function collectAquariumWildlifeSnapshot() {
+  const aquariumEffectEl = state.overlayElementsById.get(AQUARIUM_FISH_EFFECT_ID);
+  if (!aquariumEffectEl) {
+    return null;
+  }
+  const creatureElements = Array.from(aquariumEffectEl.querySelectorAll('*'))
+    .filter((element) => getPrimaryAquariumCreatureClass(element).length > 0);
+  const creatures = creatureElements.map((creatureEl, index) => {
+    const computedStyle = window.getComputedStyle(creatureEl);
+    const className = getPrimaryAquariumCreatureClass(creatureEl);
+    const motionDirection = creatureEl.classList.contains(`${className}-reverse`) ? 'right-to-left' : 'left-to-right';
+    return {
+      id: `creature-${index + 1}`,
+      type: className.replace('aquarium-', ''),
+      label: creatureEl.dataset.character || className.replace('aquarium-', '').replaceAll('-', ' '),
+      emoji: creatureEl.textContent?.trim() || '',
+      motionDirection,
+      position: {
+        left: creatureEl.style.left || computedStyle.left,
+        top: creatureEl.style.top || computedStyle.top,
+        bottom: creatureEl.style.bottom || computedStyle.bottom
+      },
+      size: {
+        width: creatureEl.style.width || computedStyle.width,
+        height: creatureEl.style.height || computedStyle.height,
+        fontSize: creatureEl.style.fontSize || computedStyle.fontSize
+      },
+      animations: collectAquariumCreatureAnimationData(computedStyle),
+      cssVariables: collectAquariumCreatureCssVariables(creatureEl)
+    };
+  });
+  return {
+    generatedAt: new Date().toISOString(),
+    tank: {
+      widthPx: Math.round(aquariumEffectEl.clientWidth),
+      heightPx: Math.round(aquariumEffectEl.clientHeight)
+    },
+    overrides: readAquariumWildlifeOverrides(),
+    creatures
+  };
+}
+
+function buildAquariumWildlifeGeminiPrompt(snapshot = collectAquariumWildlifeSnapshot()) {
+  if (!snapshot) {
+    return 'No aquarium wildlife snapshot is available yet. Render the scene first.';
+  }
+  return [
+    'Create a visual animation preview storyboard for this aquarium wildlife scene.',
+    'Use each creature entry as the source of appearance and movement behavior.',
+    'Preserve loop timing, horizontal direction, and bob/drift intent from the CSS variables and animation values.',
+    '',
+    JSON.stringify(snapshot, null, 2)
+  ].join('\n');
+}
+
+function syncAquariumWildlifeGuiStatus(message) {
+  if (!aquariumWildlifeGuiState.statusEl) {
+    return;
+  }
+  aquariumWildlifeGuiState.statusEl.textContent = message;
+}
+
+function syncAquariumWildlifeGuiData() {
+  if (!aquariumWildlifeGuiState.panelEl) {
+    return;
+  }
+  const snapshot = collectAquariumWildlifeSnapshot();
+  const overrides = readAquariumWildlifeOverrides();
+  if (aquariumWildlifeGuiState.textareaEl) {
+    aquariumWildlifeGuiState.textareaEl.value = snapshot ? JSON.stringify(snapshot, null, 2) : 'No aquarium snapshot available.';
+  }
+  if (aquariumWildlifeGuiState.promptTextareaEl) {
+    aquariumWildlifeGuiState.promptTextareaEl.value = buildAquariumWildlifeGeminiPrompt(snapshot);
+  }
+  if (aquariumWildlifeGuiState.overridesTextareaEl) {
+    aquariumWildlifeGuiState.overridesTextareaEl.value = JSON.stringify(overrides, null, 2);
+  }
+  syncAquariumWildlifeGuiStatus(snapshot ? `Loaded ${snapshot.creatures.length} creatures.` : 'Scene not ready yet.');
+}
+
+function ensureAquariumWildlifeGuiStyle() {
+  if (document.getElementById(AQUARIUM_WILDLIFE_GUI_STYLE_ID)) {
+    return;
+  }
+  const styleEl = document.createElement('style');
+  styleEl.id = AQUARIUM_WILDLIFE_GUI_STYLE_ID;
+  styleEl.textContent = `
+    .aquarium-wildlife-gui { position: fixed; right: 12px; bottom: 12px; width: 360px; max-height: 80vh; z-index: 24000; background: rgba(5, 8, 16, 0.95); color: #dce8ff; border: 1px solid rgba(115, 165, 255, 0.55); border-radius: 8px; box-shadow: 0 12px 30px rgba(0, 0, 0, 0.45); font: 12px/1.4 'JetBrains Mono', Menlo, Consolas, monospace; display: flex; flex-direction: column; }
+    .aquarium-wildlife-gui-header { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 8px 10px; border-bottom: 1px solid rgba(115, 165, 255, 0.35); }
+    .aquarium-wildlife-gui-header strong { font-size: 12px; letter-spacing: 0.02em; }
+    .aquarium-wildlife-gui-actions { display: flex; flex-wrap: wrap; gap: 6px; padding: 8px 10px; border-bottom: 1px solid rgba(115, 165, 255, 0.24); }
+    .aquarium-wildlife-gui button { background: rgba(56, 106, 204, 0.9); color: #fff; border: 1px solid rgba(157, 194, 255, 0.55); border-radius: 4px; padding: 4px 8px; cursor: pointer; font: inherit; }
+    .aquarium-wildlife-gui button:hover { background: rgba(78, 130, 231, 0.95); }
+    .aquarium-wildlife-gui-label { margin: 8px 10px 4px; font-size: 11px; opacity: 0.88; text-transform: uppercase; letter-spacing: 0.04em; }
+    .aquarium-wildlife-gui textarea { width: calc(100% - 20px); min-height: 86px; margin: 0 10px 8px; padding: 7px; background: rgba(7, 15, 29, 0.92); color: #dce8ff; border: 1px solid rgba(115, 165, 255, 0.4); border-radius: 4px; resize: vertical; font: inherit; }
+    .aquarium-wildlife-gui-status { margin: 0 10px 10px; font-size: 11px; opacity: 0.85; }
+  `;
+  document.head.appendChild(styleEl);
+}
+
+function copyTextToClipboard(value) {
+  const text = typeof value === 'string' ? value : String(value ?? '');
+  if (navigator.clipboard?.writeText) {
+    return navigator.clipboard.writeText(text);
+  }
+  const fallback = document.createElement('textarea');
+  fallback.value = text;
+  fallback.setAttribute('readonly', 'readonly');
+  fallback.style.position = 'fixed';
+  fallback.style.opacity = '0';
+  document.body.appendChild(fallback);
+  fallback.select();
+  const copied = document.execCommand('copy');
+  fallback.remove();
+  if (!copied) {
+    return Promise.reject(new Error('Clipboard copy failed.'));
+  }
+  return Promise.resolve();
+}
+
+function ensureAquariumWildlifeGuiPanel() {
+  if (aquariumWildlifeGuiState.panelEl) {
+    return aquariumWildlifeGuiState.panelEl;
+  }
+  ensureAquariumWildlifeGuiStyle();
+  const panelEl = document.createElement('section');
+  panelEl.className = 'aquarium-wildlife-gui';
+  panelEl.innerHTML = `
+    <div class="aquarium-wildlife-gui-header">
+      <strong>Aquarium Wildlife GUI</strong>
+      <button type="button" data-action="close">Close</button>
+    </div>
+    <div class="aquarium-wildlife-gui-actions">
+      <button type="button" data-action="refresh">Refresh</button>
+      <button type="button" data-action="copy-json">Copy JSON</button>
+      <button type="button" data-action="copy-prompt">Copy Gemini Prompt</button>
+      <button type="button" data-action="apply-overrides">Apply Overrides</button>
+      <button type="button" data-action="clear-overrides">Clear Overrides</button>
+    </div>
+    <div class="aquarium-wildlife-gui-label">Overrides JSON</div>
+    <textarea data-role="overrides"></textarea>
+    <div class="aquarium-wildlife-gui-label">Creature Snapshot JSON</div>
+    <textarea data-role="snapshot" readonly></textarea>
+    <div class="aquarium-wildlife-gui-label">Gemini Prompt</div>
+    <textarea data-role="prompt" readonly></textarea>
+    <div class="aquarium-wildlife-gui-status" data-role="status"></div>
+  `;
+  panelEl.querySelector('[data-action="close"]')?.addEventListener('click', () => {
+    panelEl.remove();
+    aquariumWildlifeGuiState.panelEl = null;
+    aquariumWildlifeGuiState.textareaEl = null;
+    aquariumWildlifeGuiState.promptTextareaEl = null;
+    aquariumWildlifeGuiState.overridesTextareaEl = null;
+    aquariumWildlifeGuiState.statusEl = null;
+  });
+  panelEl.querySelector('[data-action="refresh"]')?.addEventListener('click', () => {
+    syncAquariumWildlifeGuiData();
+  });
+  panelEl.querySelector('[data-action="copy-json"]')?.addEventListener('click', () => {
+    void copyTextToClipboard(aquariumWildlifeGuiState.textareaEl?.value || '')
+      .then(() => syncAquariumWildlifeGuiStatus('Snapshot JSON copied.'));
+  });
+  panelEl.querySelector('[data-action="copy-prompt"]')?.addEventListener('click', () => {
+    void copyTextToClipboard(aquariumWildlifeGuiState.promptTextareaEl?.value || '')
+      .then(() => syncAquariumWildlifeGuiStatus('Gemini prompt copied.'));
+  });
+  panelEl.querySelector('[data-action="apply-overrides"]')?.addEventListener('click', () => {
+    try {
+      const raw = aquariumWildlifeGuiState.overridesTextareaEl?.value || '{}';
+      const parsed = JSON.parse(raw);
+      if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
+        const receivedType = Array.isArray(parsed) ? 'array' : typeof parsed;
+        throw new Error(`Overrides must be a JSON object, received: ${receivedType}.`);
+      }
+      writeAquariumWildlifeOverrides(parsed);
+      rerenderAquariumFishEffectPreservingDepthOverlays();
+      syncAquariumWildlifeGuiData();
+      syncAquariumWildlifeGuiStatus('Overrides applied.');
+    } catch (error) {
+      syncAquariumWildlifeGuiStatus(error instanceof Error ? error.message : 'Unable to parse overrides JSON.');
+    }
+  });
+  panelEl.querySelector('[data-action="clear-overrides"]')?.addEventListener('click', () => {
+    writeAquariumWildlifeOverrides({});
+    rerenderAquariumFishEffectPreservingDepthOverlays();
+    syncAquariumWildlifeGuiData();
+    syncAquariumWildlifeGuiStatus('Overrides cleared.');
+  });
+  aquariumWildlifeGuiState.panelEl = panelEl;
+  aquariumWildlifeGuiState.textareaEl = panelEl.querySelector('[data-role="snapshot"]');
+  aquariumWildlifeGuiState.promptTextareaEl = panelEl.querySelector('[data-role="prompt"]');
+  aquariumWildlifeGuiState.overridesTextareaEl = panelEl.querySelector('[data-role="overrides"]');
+  aquariumWildlifeGuiState.statusEl = panelEl.querySelector('[data-role="status"]');
+  document.body.appendChild(panelEl);
+  syncAquariumWildlifeGuiData();
+  return panelEl;
+}
+
+function installAquariumWildlifeApi() {
+  const api = {
+    getSnapshot: () => collectAquariumWildlifeSnapshot(),
+    getGeminiPrompt: () => buildAquariumWildlifeGeminiPrompt(),
+    getOverrides: () => readAquariumWildlifeOverrides(),
+    setOverrides: (overrides = {}) => {
+      writeAquariumWildlifeOverrides(overrides);
+      rerenderAquariumFishEffectPreservingDepthOverlays();
+      return readAquariumWildlifeOverrides();
+    },
+    clearOverrides: () => {
+      writeAquariumWildlifeOverrides({});
+      rerenderAquariumFishEffectPreservingDepthOverlays();
+    },
+    openGui: () => ensureAquariumWildlifeGuiPanel(),
+    refreshGui: () => syncAquariumWildlifeGuiData()
+  };
+  window.naimeanAquariumWildlife = api;
+}
 
 const AQUARIUM_DISNEY_CHARACTER_SPECS = Object.freeze([
   {
@@ -466,6 +783,7 @@ function createAquariumFishEffect() {
   }
   const spot = getRuntimeHotspotById('aquarium');
   if (!spot) return;
+  const wildlifeOverrides = readAquariumWildlifeOverrides();
   const el = document.createElement('div');
   el.id = AQUARIUM_FISH_EFFECT_ID;
   el.className = 'aquarium-fish-effect';
@@ -678,37 +996,39 @@ function createAquariumFishEffect() {
   // Now spawns across full tank width with bidirectional movement for diversity.
   const shrimpHues = [0, 22, 55, 115, 200, 260, 330];
   const shrimpHuePool = createShuffledCopy(shrimpHues);
-  const shrimpCount = getAquariumShrimpCount();
-  const slotHeight = 23 / shrimpCount;
+  const shrimpCount = getAquariumWildlifeOverrideBounds(wildlifeOverrides.shrimpCount, 0, 12, getAquariumShrimpCount());
+  const slotHeight = shrimpCount > 0 ? AQUARIUM_SHRIMP_VERTICAL_SPACE_PERCENT / shrimpCount : 0;
   const shrimpSizeTiers = [10, 14, 20, 26, 31];
-  for (let i = 0; i < shrimpCount; i++) {
-    const slotStart = 67 + i * slotHeight;
-    const top = Math.floor(slotStart + Math.random() * (slotHeight * 0.7));
-    const size = shrimpSizeTiers[Math.floor(Math.random() * shrimpSizeTiers.length)] + Math.floor(Math.random() * 3);
-    const swimDist = 85 + Math.floor(Math.random() * 65);
-    const duration = 30 + Math.random() * 24;
-    const delay = -(Math.random() * duration);
-    const hue = shrimpHuePool[i % shrimpHuePool.length];
-    const startLeft = 5 + Math.floor(Math.random() * 85); // Randomize across tank width
-    const swimsRight = Math.random() < 0.5; // 50% chance to swim in each direction
-    const shrimp = document.createElement('span');
-    shrimp.className = 'aquarium-shrimp';
-    shrimp.textContent = '🦐';
-    shrimp.style.fontSize = `${size}px`;
-    shrimp.style.top = `${top}%`;
-    shrimp.style.filter = `hue-rotate(${hue}deg)`;
-    applyAquariumHorizontalMotion({
-      creatureEl: shrimp,
-      startLeftPct: startLeft,
-      creatureWidthPx: estimateAquariumEmojiWidthPx(size, shrimp.textContent),
-      swimDistPx: swimDist,
-      distancePropertyName: '--shrimp-swim-dist',
-      swimsRight,
-      reverseClassName: 'aquarium-shrimp-reverse',
-    });
-    shrimp.style.setProperty('--shrimp-duration', `${duration.toFixed(2)}s`);
-    shrimp.style.setProperty('--shrimp-delay', `${delay.toFixed(2)}s`);
-    appendAquariumCreature(shrimp);
+  if (shrimpCount > 0) {
+    for (let i = 0; i < shrimpCount; i++) {
+      const slotStart = 67 + i * slotHeight;
+      const top = Math.floor(slotStart + Math.random() * (slotHeight * 0.7));
+      const size = shrimpSizeTiers[Math.floor(Math.random() * shrimpSizeTiers.length)] + Math.floor(Math.random() * 3);
+      const swimDist = 85 + Math.floor(Math.random() * 65);
+      const duration = 30 + Math.random() * 24;
+      const delay = -(Math.random() * duration);
+      const hue = shrimpHuePool[i % shrimpHuePool.length];
+      const startLeft = 5 + Math.floor(Math.random() * 85); // Randomize across tank width
+      const swimsRight = Math.random() < 0.5; // 50% chance to swim in each direction
+      const shrimp = document.createElement('span');
+      shrimp.className = 'aquarium-shrimp';
+      shrimp.textContent = '🦐';
+      shrimp.style.fontSize = `${size}px`;
+      shrimp.style.top = `${top}%`;
+      shrimp.style.filter = `hue-rotate(${hue}deg)`;
+      applyAquariumHorizontalMotion({
+        creatureEl: shrimp,
+        startLeftPct: startLeft,
+        creatureWidthPx: estimateAquariumEmojiWidthPx(size, shrimp.textContent),
+        swimDistPx: swimDist,
+        distancePropertyName: '--shrimp-swim-dist',
+        swimsRight,
+        reverseClassName: 'aquarium-shrimp-reverse',
+      });
+      shrimp.style.setProperty('--shrimp-duration', `${duration.toFixed(2)}s`);
+      shrimp.style.setProperty('--shrimp-delay', `${delay.toFixed(2)}s`);
+      appendAquariumCreature(shrimp);
+    }
   }
 
   const disneyFishPool = createShuffledCopy(AQUARIUM_DISNEY_CHARACTER_SPECS);
@@ -740,7 +1060,9 @@ function createAquariumFishEffect() {
     'cthulhu-bubbler',
     'skull-bubbler'
   ];
-  const guestType = guests[Math.floor(Math.random() * guests.length)];
+  const guestType = typeof wildlifeOverrides.guestType === 'string' && guests.includes(wildlifeOverrides.guestType)
+    ? wildlifeOverrides.guestType
+    : guests[Math.floor(Math.random() * guests.length)];
 
   if (guestType === 'snail') {
     const size = 20 + Math.floor(Math.random() * 10);
@@ -1095,7 +1417,13 @@ function createAquariumFishEffect() {
       delaySec: 0
     }
   ];
-  const leadingFishConfigs = allFishConfigs.slice(0, 1);
+  const disneyFishCount = getAquariumWildlifeOverrideBounds(
+    wildlifeOverrides.disneyFishCount,
+    0,
+    allFishConfigs.length,
+    DEFAULT_DISNEY_FISH_COUNT,
+  );
+  const leadingFishConfigs = allFishConfigs.slice(0, disneyFishCount);
   for (const fishConfig of leadingFishConfigs) {
     fishConfig.delaySec = -(Math.random() * fishConfig.durationSec);
     const fishMotion = resolveAquariumHorizontalMotion({
@@ -1188,6 +1516,7 @@ function createAquariumFishEffect() {
   dom.effectsLayer.appendChild(el);
 
   state.overlayElementsById.set(AQUARIUM_FISH_EFFECT_ID, el);
+  syncAquariumWildlifeGuiData();
 }
 
 function rerenderAquariumFishEffectPreservingDepthOverlays() {
@@ -1210,6 +1539,7 @@ function rerenderAquariumFishEffectPreservingDepthOverlays() {
       .querySelector(`.aquarium-depth-overlay[data-debug-object-id="${debugObjectId}"]`)
       ?.replaceWith(overlayEl);
   });
+  syncAquariumWildlifeGuiData();
 }
 
 function renderHotspotLayers() {
@@ -1681,6 +2011,7 @@ state._cb.renderHotspotLayers = renderHotspotLayers;
 state._cb.renderAquariumFishEffect = createAquariumFishEffect;
 state._cb.rerenderAquariumFishEffectPreservingDepthOverlays = rerenderAquariumFishEffectPreservingDepthOverlays;
 state._cb.resize = resize;
+installAquariumWildlifeApi();
 
 export {
   applyTransforms,

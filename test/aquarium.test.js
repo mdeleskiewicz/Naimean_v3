@@ -214,7 +214,11 @@ test('aquarium keeps shrimp/random creature flow while generic fish use Disney s
   assert.match(source, /import \{ getAquariumShrimpCount, resolveAquariumHorizontalMotion \} from '\.\/aquariumEffect\.js';/);
   assert.match(aquariumBlock, /applyAquariumHorizontalMotion\(\{/, 'Expected aquarium swimmers to use bounded horizontal motion');
   assert.match(aquariumBlock, /resolveAquariumHorizontalMotion\(\{\s*tankWidthPx: spot\.w,/, 'Expected generic fish to clamp travel inside the aquarium width');
-  assert.match(aquariumBlock, /const shrimpCount = getAquariumShrimpCount\(\);/, 'Expected aquarium to keep the shrimp population flow');
+  assert.match(
+    aquariumBlock,
+    /const shrimpCount = getAquariumWildlifeOverrideBounds\(wildlifeOverrides\.shrimpCount, 0, 12, getAquariumShrimpCount\(\)\);/,
+    'Expected aquarium to keep the shrimp population flow with optional GUI overrides',
+  );
   [
     'snail',
     'starfish',
