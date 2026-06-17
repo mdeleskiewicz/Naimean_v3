@@ -168,8 +168,13 @@ test('aquarium keeps shrimp/random creature flow while generic fish use Disney s
   );
   assert.match(
     aquariumBlock,
-    /depthOverlayEl\.className = 'aquarium-depth-overlay aquarium-fish-depth-overlay';/,
+    /depthOverlayLeftEl\.className = 'aquarium-depth-overlay aquarium-depth-overlay-left';/,
     'Expected the aquarium depth image to be inserted between the back and front creature layers',
+  );
+  assert.match(
+    aquariumBlock,
+    /depthOverlayRightEl\.className = 'aquarium-depth-overlay aquarium-depth-overlay-right';/,
+    'Expected the aquarium right depth image to be inserted between the back and front creature layers',
   );
   assert.match(
     aquariumBlock,

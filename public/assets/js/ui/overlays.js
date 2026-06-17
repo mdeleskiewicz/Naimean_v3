@@ -1,5 +1,6 @@
 import {
-  AQUARIUM_DEPTH_OVERLAY_IMAGE_URL,
+  AQUARIUM_DEPTH_OVERLAY_LEFT_IMAGE_URL,
+  AQUARIUM_DEPTH_OVERLAY_RIGHT_IMAGE_URL,
   AQUARIUM_OVERLAY_ID,
   AQUARIUM_STATIC_VIDEO_URL,
   BIG_TV_FULLSCREEN_OVERLAY_IDS,
@@ -613,14 +614,22 @@ function createOverlays() {
       state.nedryGateOverlayEl.appendChild(state.bigTvDebugWatermarkEl);
       el.appendChild(state.nedryGateOverlayEl);
 
-      const aquariumDepthOverlayEl = document.createElement('img');
-      aquariumDepthOverlayEl.className = 'aquarium-depth-overlay';
-      aquariumDepthOverlayEl.src = AQUARIUM_DEPTH_OVERLAY_IMAGE_URL;
-      aquariumDepthOverlayEl.alt = '';
-      aquariumDepthOverlayEl.decoding = 'async';
-      aquariumDepthOverlayEl.loading = 'eager';
-      aquariumDepthOverlayEl.setAttribute('aria-hidden', 'true');
-      el.appendChild(aquariumDepthOverlayEl);
+      const aquariumDepthOverlayLeftEl = document.createElement('img');
+      aquariumDepthOverlayLeftEl.className = 'aquarium-depth-overlay aquarium-depth-overlay-left';
+      aquariumDepthOverlayLeftEl.src = AQUARIUM_DEPTH_OVERLAY_LEFT_IMAGE_URL;
+      aquariumDepthOverlayLeftEl.alt = '';
+      aquariumDepthOverlayLeftEl.decoding = 'async';
+      aquariumDepthOverlayLeftEl.loading = 'eager';
+      aquariumDepthOverlayLeftEl.setAttribute('aria-hidden', 'true');
+      el.appendChild(aquariumDepthOverlayLeftEl);
+      const aquariumDepthOverlayRightEl = document.createElement('img');
+      aquariumDepthOverlayRightEl.className = 'aquarium-depth-overlay aquarium-depth-overlay-right';
+      aquariumDepthOverlayRightEl.src = AQUARIUM_DEPTH_OVERLAY_RIGHT_IMAGE_URL;
+      aquariumDepthOverlayRightEl.alt = '';
+      aquariumDepthOverlayRightEl.decoding = 'async';
+      aquariumDepthOverlayRightEl.loading = 'eager';
+      aquariumDepthOverlayRightEl.setAttribute('aria-hidden', 'true');
+      el.appendChild(aquariumDepthOverlayRightEl);
 
       state.bigTvPromptOverlayEl = document.createElement('div');
       state.bigTvPromptOverlayEl.className = 'big-tv-prompt-overlay';

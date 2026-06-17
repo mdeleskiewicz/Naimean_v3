@@ -1,5 +1,6 @@
 import {
-  AQUARIUM_DEPTH_OVERLAY_IMAGE_URL,
+  AQUARIUM_DEPTH_OVERLAY_LEFT_IMAGE_URL,
+  AQUARIUM_DEPTH_OVERLAY_RIGHT_IMAGE_URL,
   AQUARIUM_FISH_EFFECT_ID,
   AQUARIUM_WALL_GLOW_CLASS,
   ASHTRAY_CIGARETTE_CONTROL_ID,
@@ -463,13 +464,20 @@ function createAquariumFishEffect() {
   el.style.height = `${Math.round(spot.h)}px`;
   const backCreatureLayerEl = document.createElement('div');
   backCreatureLayerEl.className = 'aquarium-creature-layer aquarium-creature-layer-back';
-  const depthOverlayEl = document.createElement('img');
-  depthOverlayEl.className = 'aquarium-depth-overlay aquarium-fish-depth-overlay';
-  depthOverlayEl.src = AQUARIUM_DEPTH_OVERLAY_IMAGE_URL;
-  depthOverlayEl.alt = '';
-  depthOverlayEl.decoding = 'async';
-  depthOverlayEl.loading = 'eager';
-  depthOverlayEl.setAttribute('aria-hidden', 'true');
+  const depthOverlayLeftEl = document.createElement('img');
+  depthOverlayLeftEl.className = 'aquarium-depth-overlay aquarium-depth-overlay-left';
+  depthOverlayLeftEl.src = AQUARIUM_DEPTH_OVERLAY_LEFT_IMAGE_URL;
+  depthOverlayLeftEl.alt = '';
+  depthOverlayLeftEl.decoding = 'async';
+  depthOverlayLeftEl.loading = 'eager';
+  depthOverlayLeftEl.setAttribute('aria-hidden', 'true');
+  const depthOverlayRightEl = document.createElement('img');
+  depthOverlayRightEl.className = 'aquarium-depth-overlay aquarium-depth-overlay-right';
+  depthOverlayRightEl.src = AQUARIUM_DEPTH_OVERLAY_RIGHT_IMAGE_URL;
+  depthOverlayRightEl.alt = '';
+  depthOverlayRightEl.decoding = 'async';
+  depthOverlayRightEl.loading = 'eager';
+  depthOverlayRightEl.setAttribute('aria-hidden', 'true');
   const frontCreatureLayerEl = document.createElement('div');
   frontCreatureLayerEl.className = 'aquarium-creature-layer aquarium-creature-layer-front';
   const appendAquariumCreature = (creatureEl) => {
@@ -1000,7 +1008,7 @@ function createAquariumFishEffect() {
     el.appendChild(bubble);
   }
 
-  el.append(backCreatureLayerEl, depthOverlayEl, frontCreatureLayerEl);
+  el.append(backCreatureLayerEl, depthOverlayLeftEl, depthOverlayRightEl, frontCreatureLayerEl);
 
   dom.effectsLayer.appendChild(el);
 
