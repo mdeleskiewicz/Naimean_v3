@@ -219,6 +219,16 @@ export const GITHUB_V3_ISSUES_URL = 'https://github.com/naimean/Naimean_v3/issue
 export const GITHUB_V3_AGENTS_URL = 'https://github.com/naimean/Naimean_v3/agents';
 export const GITHUB_V3_WIKI_URL = 'https://github.com/naimean/Naimean_v3/wiki';
 export const GITHUB_V3_ACTIONS_URL = 'https://github.com/naimean/Naimean_v3/actions';
+export const CLOUDFLARE_SCREENSAVER_LOGO_URL = 'assets/images/cloudflare-logo.svg';
+export const CLOUDFLARE_GAMEPIECE_IMAGE_URL = 'assets/images/dvd-logo-shelf.svg';
+// CloudFlare mp4: most-recent upload to assets/images folder
+export const CLOUDFLARE_VIDEO_URL = 'assets/images/cloudflare.mp4';
+export const CLOUDFLARE_DASHBOARD_URL = 'https://dash.cloudflare.com';
+export const CLOUDFLARE_LOGS_URL = 'https://dash.cloudflare.com/?to=/:account/analytics-and-logs/logpush';
+export const CLOUDFLARE_DURABLE_OBJECTS_URL = 'https://dash.cloudflare.com/?to=/:account/workers/durable-objects';
+export const CLOUDFLARE_TRIGGERS_URL = 'https://dash.cloudflare.com/?to=/:account/workers-and-pages';
+export const CLOUDFLARE_DEPLOYMENTS_URL = 'https://dash.cloudflare.com/?to=/:account/pages/view/Naimean_v3/deployments';
+export const DEN_CARD_MODE_STORAGE_KEY = 'naimean.den.cardMode';
 export const LOGIN_LOGO_URL = 'assets/images/login_logo.png';
 export const CALENDAR_MONTH_IMAGE_BASE_URL = 'assets/image/calendar';
 export const CALENDAR_MONTH_IMAGE_START = Object.freeze({ year: 2026, month: 4 }); // May 2026, zero-based month
@@ -278,6 +288,7 @@ export const LEFT_MONITOR_IMAGE_URLS = Object.freeze({
 export const LEFT_MONITOR_CARD_CORNERSCORE = 'cornerscore';
 export const LEFT_MONITOR_CARD_DISCORD = 'discord';
 export const LEFT_MONITOR_CARD_GITHUB = 'github';
+export const LEFT_MONITOR_CARD_CLOUDFLARE = 'cloudflare';
 export const LEFT_MONITOR_CARD_LOGGED_IN = 'logged-in';
 export const LEFT_MONITOR_CARD_SHRIMP = 'shrimp';
 export const LEFT_MONITOR_CARD_NONE = 'none';
@@ -285,6 +296,7 @@ export const LEFT_MONITOR_CARDS = Object.freeze([
   LEFT_MONITOR_CARD_CORNERSCORE,
   LEFT_MONITOR_CARD_DISCORD,
   LEFT_MONITOR_CARD_GITHUB,
+  LEFT_MONITOR_CARD_CLOUDFLARE,
   LEFT_MONITOR_CARD_LOGGED_IN,
   LEFT_MONITOR_CARD_SHRIMP,
   LEFT_MONITOR_CARD_NONE
