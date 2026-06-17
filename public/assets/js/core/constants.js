@@ -200,8 +200,8 @@ export const AQUARIUM_DEPTH_OVERLAY_IDS = Object.freeze([
 ]);
 export const AQUARIUM_DEPTH_OVERLAY_HEIGHT_RATIO = 0.4;
 export const AQUARIUM_DEPTH_OVERLAY_TOP_RATIO = 0.3;
-export const AQUARIUM_DEPTH_OVERLAY_LEFT_OFFSET_RATIO = -0.28;
-export const AQUARIUM_DEPTH_OVERLAY_RIGHT_OFFSET_RATIO = 0.28;
+export const AQUARIUM_DEPTH_OVERLAY_LEFT_OFFSET_RATIO = -0.6;
+export const AQUARIUM_DEPTH_OVERLAY_RIGHT_OFFSET_RATIO = 0.6;
 export const COMMODORE_DESK_IMAGE_URL = 'assets/images/commodore-desk-overlay.png';
 export const LEFT_MONITOR_SIDE_FRAME_IMAGE_URL = 'assets/images/L_Frame.png';
 export const RIGHT_MONITOR_SIDE_FRAME_IMAGE_URL = 'assets/images/R_Frame.png';

@@ -1,8 +1,4 @@
 import {
-  AQUARIUM_DEPTH_OVERLAY_LEFT_ID,
-  AQUARIUM_DEPTH_OVERLAY_LEFT_IMAGE_URL,
-  AQUARIUM_DEPTH_OVERLAY_RIGHT_ID,
-  AQUARIUM_DEPTH_OVERLAY_RIGHT_IMAGE_URL,
   AQUARIUM_OVERLAY_ID,
   AQUARIUM_STATIC_VIDEO_URL,
   BIG_TV_FULLSCREEN_OVERLAY_IDS,
@@ -47,7 +43,6 @@ import {
   FLIP_CLOCK_OVERLAY_ID,
   overlayDefaults
 } from '../core/constants.js';
-import { applyAquariumDepthOverlayLayout, createDefaultAquariumDepthOverlayLayout } from '../core/aquariumDepthOverlayLayout.js';
 import { state } from '../core/state.js';
 import { clamp } from '../core/utils.js';
 import { applyDvdColorStep } from '../systems/dvd.js';
@@ -59,16 +54,6 @@ import { getOverlayRect, syncControlledOverlaysFromHotspots } from '../systems/h
 const isIOSDevice =
   /iPad|iPhone|iPod/.test(window.navigator.userAgent) ||
   (window.navigator.platform === 'MacIntel' && window.navigator.maxTouchPoints > 1);
-
-function addDepthOverlayResizeHandles(el) {
-  ['n', 'ne', 'e', 'se', 's', 'sw', 'w', 'nw'].forEach((dir) => {
-    const handle = document.createElement('div');
-    handle.className = `resize-handle resize-${dir}`;
-    handle.dataset.dir = dir;
-    handle.setAttribute('aria-hidden', 'true');
-    el.appendChild(handle);
-  });
-}
 
 function hasActiveBigTvContentOverlay() {
   return Boolean(
@@ -622,51 +607,6 @@ function createOverlays() {
       state.bigTvDebugWatermarkEl.className = 'big-tv-debug-watermark';
       state.nedryGateOverlayEl.appendChild(state.bigTvDebugWatermarkEl);
       el.appendChild(state.nedryGateOverlayEl);
-
-      const aquariumDepthOverlayLeftEl = document.createElement('div');
-      aquariumDepthOverlayLeftEl.className = 'aquarium-depth-overlay aquarium-depth-overlay-left';
-      aquariumDepthOverlayLeftEl.dataset.debugObjectId = AQUARIUM_DEPTH_OVERLAY_LEFT_ID;
-      aquariumDepthOverlayLeftEl.dataset.label = 'Aquarium Left Depth Overlay';
-      aquariumDepthOverlayLeftEl.setAttribute('aria-hidden', 'true');
-      aquariumDepthOverlayLeftEl.title = aquariumDepthOverlayLeftEl.dataset.label;
-      const aquariumDepthOverlayLeftImageEl = document.createElement('img');
-      aquariumDepthOverlayLeftImageEl.className = 'aquarium-depth-overlay-image';
-      aquariumDepthOverlayLeftImageEl.src = AQUARIUM_DEPTH_OVERLAY_LEFT_IMAGE_URL;
-      aquariumDepthOverlayLeftImageEl.alt = '';
-      aquariumDepthOverlayLeftImageEl.decoding = 'async';
-      aquariumDepthOverlayLeftImageEl.loading = 'eager';
-      aquariumDepthOverlayLeftImageEl.draggable = false;
-      aquariumDepthOverlayLeftImageEl.setAttribute('aria-hidden', 'true');
-      aquariumDepthOverlayLeftEl.appendChild(aquariumDepthOverlayLeftImageEl);
-      applyAquariumDepthOverlayLayout(aquariumDepthOverlayLeftEl, createDefaultAquariumDepthOverlayLayout('left', rect.w, rect.h));
-      const aquariumDepthOverlayLeftLabel = document.createElement('span');
-      aquariumDepthOverlayLeftLabel.className = 'hotspot-label';
-      aquariumDepthOverlayLeftLabel.textContent = `${aquariumDepthOverlayLeftEl.dataset.label} (${Math.round(parseFloat(aquariumDepthOverlayLeftEl.style.left))}, ${Math.round(parseFloat(aquariumDepthOverlayLeftEl.style.top))}) ${Math.round(parseFloat(aquariumDepthOverlayLeftEl.style.width))}×${Math.round(parseFloat(aquariumDepthOverlayLeftEl.style.height))}`;
-      aquariumDepthOverlayLeftEl.appendChild(aquariumDepthOverlayLeftLabel);
-      addDepthOverlayResizeHandles(aquariumDepthOverlayLeftEl);
-      el.appendChild(aquariumDepthOverlayLeftEl);
-      const aquariumDepthOverlayRightEl = document.createElement('div');
-      aquariumDepthOverlayRightEl.className = 'aquarium-depth-overlay aquarium-depth-overlay-right';
-      aquariumDepthOverlayRightEl.dataset.debugObjectId = AQUARIUM_DEPTH_OVERLAY_RIGHT_ID;
-      aquariumDepthOverlayRightEl.dataset.label = 'Aquarium Right Depth Overlay';
-      aquariumDepthOverlayRightEl.setAttribute('aria-hidden', 'true');
-      aquariumDepthOverlayRightEl.title = aquariumDepthOverlayRightEl.dataset.label;
-      const aquariumDepthOverlayRightImageEl = document.createElement('img');
-      aquariumDepthOverlayRightImageEl.className = 'aquarium-depth-overlay-image';
-      aquariumDepthOverlayRightImageEl.src = AQUARIUM_DEPTH_OVERLAY_RIGHT_IMAGE_URL;
-      aquariumDepthOverlayRightImageEl.alt = '';
-      aquariumDepthOverlayRightImageEl.decoding = 'async';
-      aquariumDepthOverlayRightImageEl.loading = 'eager';
-      aquariumDepthOverlayRightImageEl.draggable = false;
-      aquariumDepthOverlayRightImageEl.setAttribute('aria-hidden', 'true');
-      aquariumDepthOverlayRightEl.appendChild(aquariumDepthOverlayRightImageEl);
-      applyAquariumDepthOverlayLayout(aquariumDepthOverlayRightEl, createDefaultAquariumDepthOverlayLayout('right', rect.w, rect.h));
-      const aquariumDepthOverlayRightLabel = document.createElement('span');
-      aquariumDepthOverlayRightLabel.className = 'hotspot-label';
-      aquariumDepthOverlayRightLabel.textContent = `${aquariumDepthOverlayRightEl.dataset.label} (${Math.round(parseFloat(aquariumDepthOverlayRightEl.style.left))}, ${Math.round(parseFloat(aquariumDepthOverlayRightEl.style.top))}) ${Math.round(parseFloat(aquariumDepthOverlayRightEl.style.width))}×${Math.round(parseFloat(aquariumDepthOverlayRightEl.style.height))}`;
-      aquariumDepthOverlayRightEl.appendChild(aquariumDepthOverlayRightLabel);
-      addDepthOverlayResizeHandles(aquariumDepthOverlayRightEl);
-      el.appendChild(aquariumDepthOverlayRightEl);
 
       state.bigTvPromptOverlayEl = document.createElement('div');
       state.bigTvPromptOverlayEl.className = 'big-tv-prompt-overlay';
