@@ -677,7 +677,11 @@ function createHotspots(hotspotList) {
         return;
       }
       if (spot.id === FLIP_CLOCK_OVERLAY_CONTROL_ID) return void state._cb.openClockApp?.();
-      if (spot.id === WHITEBOARD_CORNER_SCORE_CONTROL_ID) return void toggleBigTvHighScoreStats();
+      if (spot.id === WHITEBOARD_CORNER_SCORE_CONTROL_ID) {
+        // Clicking the whiteboard corner score also triggers the CornerScore card
+        state._cb.triggerCornerScoreCard?.();
+        return void toggleBigTvHighScoreStats();
+      }
       if (WHITEBOARD_HOTSPOT_IDS.has(spot.id)) return void window.open(getHotspotEffectiveUrl(spot.id) || WHITEBOARD_HOTSPOT_URLS[spot.id] || WHITEBOARD_HOTSPOT_URLS.whiteboard, '_blank', 'noopener,noreferrer');
       if (AQUARIUM_HOTSPOT_IDS.has(spot.id)) return void state._cb.playAquariumHotspotSequence?.();
       if (
@@ -694,6 +698,8 @@ function createHotspots(hotspotList) {
       }
       if (spot.id === PENCIL_SHARPENER_HOTSPOT_ID) return void window.location.assign(getHotspotEffectiveUrl(spot.id) || NOTES_URL);
       if (spot.id === GITHUB_SHELF_OBJECT_CONTROL_ID) {
+        // Clicking the GitHub object triggers the GitHub card on the left monitor
+        state._cb.triggerGithubCard?.();
         if (state.isGithubScreensaverMode) {
           state._cb.deactivateGithubScreensaverMode?.();
           state._cb.restoreBigTvDvdLoop?.();

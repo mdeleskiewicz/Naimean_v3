@@ -236,6 +236,8 @@ function tickBigTvDvdAnimation(timestamp) {
     setCornerScore(nextCornerScore);
     playRightMonitorScoringNoise();
     state.isDvdCornerCountEnabled = true;
+    // Trigger the CornerScore card on the left monitor
+    state._cb.triggerCornerScoreCard?.();
     if (cornerScoreDelta > 0) {
       if (nextCornerScore === previousHighScore) {
         showCornerScoreStatus('Tied for high-score!', nextCornerScore);
