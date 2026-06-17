@@ -5,7 +5,7 @@ import { promisify } from 'node:util';
 
 test('overlays module parses without syntax errors', async () => {
   const execFileAsync = promisify(execFile);
-  await assert.doesNotReject(() =>
+  await assert.doesNotReject(
     execFileAsync(process.execPath, ['--check', new URL('../public/assets/js/ui/overlays.js', import.meta.url).pathname])
   );
 });
