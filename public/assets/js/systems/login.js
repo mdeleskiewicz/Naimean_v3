@@ -76,11 +76,14 @@ function syncDiscordAuthBodyClass() {
 
 function handleDiscordJoinButtonAction() {
   if (state.discordAuthState?.authenticated) {
-    state._cb.activateBigTvPromptMode?.();
+    // Already authenticated - trigger the Logged In card
+    void state._cb.triggerLoggedInCard?.();
     return;
   }
-  state.shouldAutoStartDiscordLoginOnNextLoginActivation = true;
-  state._cb.setLeftMonitorState?.('login');
+  // Not authenticated - trigger Discord card to show login flow
+  void state._cb.triggerDiscordCard?.();
+  // Also activate the old prompt mode for the big TV
+  state._cb.activateBigTvPromptMode?.();
 }
 
 async function ensureDiscordAuthForQuadrantAction() {

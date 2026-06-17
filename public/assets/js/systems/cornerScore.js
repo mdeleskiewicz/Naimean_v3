@@ -341,6 +341,8 @@ function setCornerScore(nextScore) {
   state.cornerScoreValue = normalizedScore;
   renderCornerScore();
   syncCornerScoreInitialsPromptVisibility();
+  // Update the card data if the CornerScore card is active
+  state._cb.updateCornerScoreCardData?.();
 }
 
 function setCornerScoreHighScore(nextScore, initials = state.cornerScoreHighScoreInitials) {
@@ -351,6 +353,8 @@ function setCornerScoreHighScore(nextScore, initials = state.cornerScoreHighScor
   state.cornerScoreHighScoreInitials = sanitizeCornerScoreInitialsInput(initials);
   renderCornerScore();
   syncCornerScoreInitialsPromptVisibility();
+  // Update the card data if the CornerScore card is active
+  state._cb.updateCornerScoreCardData?.();
 }
 
 async function loadCornerScoreFromServer() {
