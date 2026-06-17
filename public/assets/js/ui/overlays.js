@@ -57,6 +57,16 @@ const isIOSDevice =
   /iPad|iPhone|iPod/.test(window.navigator.userAgent) ||
   (window.navigator.platform === 'MacIntel' && window.navigator.maxTouchPoints > 1);
 
+function addDepthOverlayResizeHandles(el) {
+  ['n', 'ne', 'e', 'se', 's', 'sw', 'w', 'nw'].forEach((dir) => {
+    const handle = document.createElement('div');
+    handle.className = `resize-handle resize-${dir}`;
+    handle.dataset.dir = dir;
+    handle.setAttribute('aria-hidden', 'true');
+    el.appendChild(handle);
+  });
+}
+
 function hasActiveBigTvContentOverlay() {
   return Boolean(
     state.aquariumStaticOverlayEl?.classList.contains('is-active') ||
@@ -617,6 +627,11 @@ function createOverlays() {
       aquariumDepthOverlayLeftEl.decoding = 'async';
       aquariumDepthOverlayLeftEl.loading = 'eager';
       aquariumDepthOverlayLeftEl.setAttribute('aria-hidden', 'true');
+      aquariumDepthOverlayLeftEl.style.left = '0px';
+      aquariumDepthOverlayLeftEl.style.top = '0px';
+      aquariumDepthOverlayLeftEl.style.width = `${rect.w}px`;
+      aquariumDepthOverlayLeftEl.style.height = `${rect.h}px`;
+      addDepthOverlayResizeHandles(aquariumDepthOverlayLeftEl);
       el.appendChild(aquariumDepthOverlayLeftEl);
       const aquariumDepthOverlayRightEl = document.createElement('img');
       aquariumDepthOverlayRightEl.className = 'aquarium-depth-overlay aquarium-depth-overlay-right';
@@ -625,6 +640,11 @@ function createOverlays() {
       aquariumDepthOverlayRightEl.decoding = 'async';
       aquariumDepthOverlayRightEl.loading = 'eager';
       aquariumDepthOverlayRightEl.setAttribute('aria-hidden', 'true');
+      aquariumDepthOverlayRightEl.style.left = '0px';
+      aquariumDepthOverlayRightEl.style.top = '0px';
+      aquariumDepthOverlayRightEl.style.width = `${rect.w}px`;
+      aquariumDepthOverlayRightEl.style.height = `${rect.h}px`;
+      addDepthOverlayResizeHandles(aquariumDepthOverlayRightEl);
       el.appendChild(aquariumDepthOverlayRightEl);
 
       state.bigTvPromptOverlayEl = document.createElement('div');
