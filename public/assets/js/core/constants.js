@@ -262,6 +262,20 @@ export const LEFT_MONITOR_IMAGE_URLS = Object.freeze({
   mail: 'assets/images/L_Monitor_Mail.png',
   none: 'assets/images/L_Monitor_None.png'
 });
+// Left Monitor Group Card System
+export const LEFT_MONITOR_CARD_CORNERSCORE = 'cornerscore';
+export const LEFT_MONITOR_CARD_DISCORD = 'discord';
+export const LEFT_MONITOR_CARD_GITHUB = 'github';
+export const LEFT_MONITOR_CARD_LOGGED_IN = 'logged-in';
+export const LEFT_MONITOR_CARD_NONE = 'none';
+export const LEFT_MONITOR_CARDS = Object.freeze([
+  LEFT_MONITOR_CARD_CORNERSCORE,
+  LEFT_MONITOR_CARD_DISCORD,
+  LEFT_MONITOR_CARD_GITHUB,
+  LEFT_MONITOR_CARD_LOGGED_IN,
+  LEFT_MONITOR_CARD_NONE
+]);
+export const DEFAULT_LEFT_MONITOR_CARD = LEFT_MONITOR_CARD_NONE;
 export const NOTES_URL = 'notes.html';
 export const PENCIL_SHARPENER_HOTSPOT_ID = 'pencil-sharpener';
 export const DISCORD_OVERLAY_ID = 'overlay-big-tv';

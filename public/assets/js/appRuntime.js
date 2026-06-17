@@ -5,6 +5,7 @@ import './systems/hotspots.js';
 import './systems/monitors.js';
 import './systems/dvd.js';
 import './systems/cornerScore.js';
+import './systems/leftMonitorCards.js';
 import './systems/aquarium.js';
 import './systems/login.js';
 import './systems/tools.js';

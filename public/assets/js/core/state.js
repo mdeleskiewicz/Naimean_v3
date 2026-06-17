@@ -1,4 +1,4 @@
-import { AQUARIUM_CLIP_SOURCE_LOCAL_FALLBACK, AQUARIUM_LOCAL_SHRIMP_CLIPS, BIG_TV_RIGHT_MONITOR_OVERLAY_BLUE_IMAGE_URL, CORNER_SCORE_SERVER_BASELINE, DEFAULT_LEFT_MONITOR_STATE } from './constants.js';
+import { AQUARIUM_CLIP_SOURCE_LOCAL_FALLBACK, AQUARIUM_LOCAL_SHRIMP_CLIPS, BIG_TV_RIGHT_MONITOR_OVERLAY_BLUE_IMAGE_URL, CORNER_SCORE_SERVER_BASELINE, DEFAULT_LEFT_MONITOR_STATE, DEFAULT_LEFT_MONITOR_CARD } from './constants.js';
 
 export const state = {
   scale: 1,
@@ -154,6 +154,12 @@ export const state = {
   leftMonitorSelectorEl: null,
   leftMonitorContentImageEl: null,
   leftMonitorSelectedState: DEFAULT_LEFT_MONITOR_STATE,
+  leftMonitorActiveCard: DEFAULT_LEFT_MONITOR_CARD,
+  leftMonitorCardTransitionToken: 0,
+  leftMonitorCornerScoreCardEl: null,
+  leftMonitorDiscordCardEl: null,
+  leftMonitorGithubCardEl: null,
+  leftMonitorLoggedInCardEl: null,
   discordJoinButtonEl: null,
   discordButtonImgEl: null,
   discordWidgetFrameEl: null,

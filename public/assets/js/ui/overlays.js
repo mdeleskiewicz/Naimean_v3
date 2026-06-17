@@ -844,6 +844,160 @@ function createOverlays() {
       });
       windowEl.appendChild(state.leftMonitorCornerScoreOverlayEl);
       renderPersonalBestStats();
+
+      // === LEFT MONITOR CARD SYSTEM ===
+      // Card 1: CornerScore (4 quadrants)
+      state.leftMonitorCornerScoreCardEl = document.createElement('div');
+      state.leftMonitorCornerScoreCardEl.className = 'left-monitor-card left-monitor-cornerscore-card';
+      state.leftMonitorCornerScoreCardEl.setAttribute('aria-hidden', 'true');
+      
+      const csCardGrid = document.createElement('div');
+      csCardGrid.className = 'left-monitor-card-grid';
+      
+      // Quadrant UL: Current Run
+      const csCurrentRunQuad = document.createElement('div');
+      csCurrentRunQuad.className = 'left-monitor-card-quadrant cs-card-quad-ul';
+      csCurrentRunQuad.innerHTML = `
+        <div class="cs-card-quadrant-title">Current Run</div>
+        <div class="cs-card-quadrant-content">
+          <div class="cs-card-metric">
+            <span class="cs-card-label">Score</span>
+            <span class="cs-card-value cs-card-current-run-score">0</span>
+          </div>
+          <div class="cs-card-metric">
+            <span class="cs-card-label">Time</span>
+            <span class="cs-card-value cs-card-current-run-time">0:00</span>
+          </div>
+        </div>
+      `;
+      
+      // Quadrant UR: Best Personal Run
+      const csPBQuad = document.createElement('div');
+      csPBQuad.className = 'left-monitor-card-quadrant cs-card-quad-ur';
+      csPBQuad.innerHTML = `
+        <div class="cs-card-quadrant-title">Personal Best</div>
+        <div class="cs-card-quadrant-content">
+          <div class="cs-card-metric">
+            <span class="cs-card-label">Score</span>
+            <span class="cs-card-value cs-card-pb-score">—</span>
+          </div>
+          <div class="cs-card-metric">
+            <span class="cs-card-label">Time</span>
+            <span class="cs-card-value cs-card-pb-time">—</span>
+          </div>
+        </div>
+      `;
+      
+      // Quadrant LL: High-Score Run
+      const csHighScoreQuad = document.createElement('div');
+      csHighScoreQuad.className = 'left-monitor-card-quadrant cs-card-quad-ll';
+      csHighScoreQuad.innerHTML = `
+        <div class="cs-card-quadrant-title">High Score</div>
+        <div class="cs-card-quadrant-content">
+          <div class="cs-card-metric">
+            <span class="cs-card-label">Score</span>
+            <span class="cs-card-value cs-card-high-score">—</span>
+          </div>
+          <div class="cs-card-metric">
+            <span class="cs-card-label">Initials</span>
+            <span class="cs-card-value cs-card-high-score-initials">—</span>
+          </div>
+        </div>
+      `;
+      
+      // Quadrant LR: Server Stats
+      const csServerStatsQuad = document.createElement('div');
+      csServerStatsQuad.className = 'left-monitor-card-quadrant cs-card-quad-lr';
+      csServerStatsQuad.innerHTML = `
+        <div class="cs-card-quadrant-title">Server Stats</div>
+        <div class="cs-card-quadrant-content">
+          <div class="cs-card-metric">
+            <span class="cs-card-label">Scores</span>
+            <span class="cs-card-value cs-card-server-scores">—</span>
+          </div>
+          <div class="cs-card-metric">
+            <span class="cs-card-label">Bounces</span>
+            <span class="cs-card-value cs-card-server-bounces">—</span>
+          </div>
+        </div>
+      `;
+      
+      csCardGrid.append(csCurrentRunQuad, csPBQuad, csHighScoreQuad, csServerStatsQuad);
+      state.leftMonitorCornerScoreCardEl.appendChild(csCardGrid);
+      windowEl.appendChild(state.leftMonitorCornerScoreCardEl);
+
+      // Card 2: Discord
+      state.leftMonitorDiscordCardEl = document.createElement('div');
+      state.leftMonitorDiscordCardEl.className = 'left-monitor-card left-monitor-discord-card';
+      state.leftMonitorDiscordCardEl.setAttribute('aria-hidden', 'true');
+      // Discord widget and join button will be handled separately
+      windowEl.appendChild(state.leftMonitorDiscordCardEl);
+
+      // Card 3: GitHub
+      state.leftMonitorGithubCardEl = document.createElement('div');
+      state.leftMonitorGithubCardEl.className = 'left-monitor-card left-monitor-github-card';
+      state.leftMonitorGithubCardEl.setAttribute('aria-hidden', 'true');
+      
+      const githubCardGrid = document.createElement('div');
+      githubCardGrid.className = 'left-monitor-card-grid github-card-grid';
+      
+      const githubQuadrants = [
+        { label: 'Code', url: GITHUB_V3_WIKI_URL, cls: 'github-card-quad-ul' },
+        { label: 'Agent', url: GITHUB_V3_AGENTS_URL, cls: 'github-card-quad-ur' },
+        { label: 'Issues', url: GITHUB_V3_ISSUES_URL, cls: 'github-card-quad-ll' },
+        { label: 'Actions', url: GITHUB_V3_ACTIONS_URL, cls: 'github-card-quad-lr' }
+      ];
+      
+      githubQuadrants.forEach(({ label, url, cls }) => {
+        const quadBtn = document.createElement('button');
+        quadBtn.type = 'button';
+        quadBtn.className = `left-monitor-card-quadrant github-card-btn ${cls}`;
+        quadBtn.textContent = label;
+        quadBtn.setAttribute('aria-label', `GitHub ${label}`);
+        quadBtn.addEventListener('click', async (e) => {
+          e.stopPropagation();
+          const isAuthenticated = await state._cb.ensureDiscordAuthForQuadrantAction?.();
+          if (isAuthenticated) {
+            window.open(url, '_blank', 'noopener,noreferrer');
+          }
+        });
+        githubCardGrid.appendChild(quadBtn);
+      });
+      
+      state.leftMonitorGithubCardEl.appendChild(githubCardGrid);
+      windowEl.appendChild(state.leftMonitorGithubCardEl);
+
+      // Card 4: Logged In
+      state.leftMonitorLoggedInCardEl = document.createElement('div');
+      state.leftMonitorLoggedInCardEl.className = 'left-monitor-card left-monitor-logged-in-card';
+      state.leftMonitorLoggedInCardEl.setAttribute('aria-hidden', 'true');
+      
+      const loggedInCardGrid = document.createElement('div');
+      loggedInCardGrid.className = 'left-monitor-card-grid logged-in-card-grid';
+      
+      const loggedInQuadrants = [
+        { label: 'Tools', action: () => state._cb.setLeftMonitorState?.('tools'), cls: 'logged-in-card-quad-ul' },
+        { label: 'Inventory', action: () => console.log('Inventory clicked'), cls: 'logged-in-card-quad-ur' },
+        { label: 'Cal.Dot', action: () => state._cb.setLeftMonitorState?.('calendar'), cls: 'logged-in-card-quad-ll' },
+        { label: 'Notes', action: () => window.open('/notes.html', '_blank'), cls: 'logged-in-card-quad-lr' }
+      ];
+      
+      loggedInQuadrants.forEach(({ label, action, cls }) => {
+        const quadBtn = document.createElement('button');
+        quadBtn.type = 'button';
+        quadBtn.className = `left-monitor-card-quadrant logged-in-card-btn ${cls}`;
+        quadBtn.textContent = label;
+        quadBtn.setAttribute('aria-label', label);
+        quadBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          action();
+        });
+        loggedInCardGrid.appendChild(quadBtn);
+      });
+      
+      state.leftMonitorLoggedInCardEl.appendChild(loggedInCardGrid);
+      windowEl.appendChild(state.leftMonitorLoggedInCardEl);
+
       state.leftMonitorStaticOverlayEl = document.createElement('div');
       state.leftMonitorStaticOverlayEl.className = 'overlay-static-layer';
       state.leftMonitorStaticVideoEl = document.createElement('video');

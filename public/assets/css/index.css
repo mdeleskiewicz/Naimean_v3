@@ -1023,6 +1023,162 @@
       visibility: visible;
     }
 
+    /* === LEFT MONITOR CARD SYSTEM === */
+    .left-monitor-card {
+      position: absolute;
+      top: calc(var(--left-monitor-inner-boundary-top) - var(--monitor-content-bleed));
+      right: calc(var(--left-monitor-inner-boundary-right) - var(--monitor-content-bleed));
+      bottom: calc(var(--left-monitor-inner-boundary-bottom) - var(--monitor-content-bleed));
+      left: calc(var(--left-monitor-inner-boundary-left) - var(--monitor-content-bleed));
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.3s ease, visibility 0.3s ease;
+      z-index: 5;
+      background: rgba(0, 0, 0, 0.8);
+      color: #fff;
+      overflow: hidden;
+    }
+
+    .left-monitor-card.is-active {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    .left-monitor-card-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      grid-template-rows: 1fr 1fr;
+      gap: 2px;
+      width: 100%;
+      height: 100%;
+      padding: 2px;
+    }
+
+    .left-monitor-card-quadrant {
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-start;
+      align-items: center;
+      padding: clamp(4px, 2%, 12px);
+      background: rgba(0, 20, 40, 0.8);
+      border: 1px solid rgba(57, 255, 20, 0.3);
+      border-radius: 4px;
+      overflow: auto;
+    }
+
+    /* CornerScore Card */
+    .left-monitor-cornerscore-card .cs-card-quadrant-title {
+      font-size: clamp(8px, 3.5cqw, 14px);
+      font-weight: 700;
+      color: rgba(57, 255, 20, 0.9);
+      text-transform: uppercase;
+      margin-bottom: clamp(4px, 1.5%, 8px);
+      text-align: center;
+    }
+
+    .left-monitor-cornerscore-card .cs-card-quadrant-content {
+      display: flex;
+      flex-direction: column;
+      gap: clamp(2px, 1%, 6px);
+      width: 100%;
+    }
+
+    .left-monitor-cornerscore-card .cs-card-metric {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: clamp(4px, 2%, 8px);
+    }
+
+    .left-monitor-cornerscore-card .cs-card-label {
+      font-size: clamp(6px, 2.8cqw, 11px);
+      color: rgba(255, 255, 255, 0.7);
+    }
+
+    .left-monitor-cornerscore-card .cs-card-value {
+      font-size: clamp(7px, 3.2cqw, 13px);
+      font-weight: 700;
+      color: #fff;
+    }
+
+    /* Discord Card */
+    .left-monitor-discord-card {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      gap: clamp(8px, 3%, 16px);
+      padding: clamp(8px, 3%, 16px);
+      background: rgba(88, 101, 242, 0.1);
+    }
+
+    /* GitHub Card */
+    .github-card-grid {
+      gap: clamp(2px, 1.5%, 6px);
+      padding: clamp(4px, 2%, 10px);
+    }
+
+    .github-card-btn {
+      background: linear-gradient(135deg, rgba(13, 17, 23, 0.95), rgba(22, 27, 34, 0.9));
+      border: 1px solid rgba(48, 54, 61, 0.7);
+      border-radius: 6px;
+      color: #fff;
+      font-size: clamp(9px, 4cqw, 16px);
+      font-weight: 700;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      padding: clamp(8px, 3%, 16px);
+    }
+
+    .github-card-btn:hover {
+      background: linear-gradient(135deg, rgba(33, 38, 45, 0.95), rgba(42, 48, 55, 0.9));
+      border-color: rgba(88, 96, 105, 0.9);
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    }
+
+    .github-card-btn:active {
+      transform: translateY(0);
+    }
+
+    /* Logged In Card */
+    .logged-in-card-grid {
+      gap: clamp(2px, 1.5%, 6px);
+      padding: clamp(4px, 2%, 10px);
+    }
+
+    .logged-in-card-btn {
+      background: linear-gradient(135deg, rgba(57, 255, 20, 0.1), rgba(30, 215, 96, 0.1));
+      border: 1px solid rgba(57, 255, 20, 0.4);
+      border-radius: 6px;
+      color: rgba(57, 255, 20, 0.95);
+      font-size: clamp(9px, 4cqw, 16px);
+      font-weight: 700;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      padding: clamp(8px, 3%, 16px);
+    }
+
+    .logged-in-card-btn:hover {
+      background: linear-gradient(135deg, rgba(57, 255, 20, 0.2), rgba(30, 215, 96, 0.2));
+      border-color: rgba(57, 255, 20, 0.6);
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(57, 255, 20, 0.3);
+    }
+
+    .logged-in-card-btn:active {
+      transform: translateY(0);
+    }
+
+    /* Card system - hide legacy overlays when cards are active */
+    .left-monitor-selector.is-hidden {
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+    }
+
     .left-monitor-cs-pb-title {
       margin: 0;
       font-size: clamp(9px, min(7cqw, 8cqh), 22px);
