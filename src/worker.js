@@ -1509,10 +1509,6 @@ export default {
     if (pathname === '/api/chapel-hotspots') return dispatchToHotspotStore(env, request, 'chapel-hotspots');
     if (pathname === '/api/arcade-url-overrides') return dispatchToHotspotStore(env, request, 'arcade-url-overrides');
     if (pathname === '/api/corner-score') {
-      if (request.method === 'DELETE') {
-        const session = await getRequestSession(request, env);
-        if (!session?.userId) return jsonResponse({ error: 'Unauthorized' }, 401);
-      }
       return dispatchToHotspotStore(env, request, 'corner-score');
     }
 

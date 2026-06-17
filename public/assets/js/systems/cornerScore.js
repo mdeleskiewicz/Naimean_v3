@@ -540,6 +540,36 @@ async function syncCornerScoreServerToLocalMad() {
   }
 }
 
+async function clearCornerScore() {
+  const controller = new AbortController();
+  const timeoutId = window.setTimeout(() => controller.abort(), API_TIMEOUT_MS);
+  try {
+    const response = await fetch(CORNER_SCORE_API_URL, {
+      method: 'DELETE',
+      signal: controller.signal
+    });
+    window.clearTimeout(timeoutId);
+    if (!response.ok) {
+      return { ok: false, error: `Clear failed (${response.status})` };
+    }
+    resetRunStats();
+    state.cornerScoreValue = 0;
+    state.cornerScoreHighScoreValue = 0;
+    state.cornerScoreHighScoreInitials = '';
+    state.cornerScorePersonalBest = null;
+    state.cornerScoreServerStats = null;
+    renderCornerScore();
+    syncCornerScoreInitialsPromptVisibility();
+    return { ok: true };
+  } catch (error) {
+    window.clearTimeout(timeoutId);
+    if (error?.name === 'AbortError') {
+      return { ok: false, error: 'Request timed out.' };
+    }
+    return { ok: false, error: 'CornerScore clear failed.' };
+  }
+}
+
 function unlockCornerScoreScoringAudioFromGesture() {
   const AudioContextClass = window.AudioContext || window.webkitAudioContext;
   if (!AudioContextClass) {
@@ -609,4 +639,4 @@ function activateRightMonitorCornerScoreMode() {
   state._cb.syncDvdScreensaverState?.();
 }
 
-export { sanitizeCornerScoreInitialsInput, playWrongAudio, hideCornerScoreStatus, showCornerScoreStatus, clearDvdMissIndicatorTimeout, hideDvdMissIndicator, hideAllDvdMissIndicators, showDvdMissIndicator, syncCornerScoreInitialsSubmitState, hideCornerScoreInitialsPrompt, showCornerScoreInitialsPrompt, syncCornerScoreInitialsPromptVisibility, renderCornerScore, setCornerScore, setCornerScoreHighScore, loadCornerScoreFromServer, queueCornerScoreUpdate, submitCornerScoreInitials, syncCornerScoreServerToLocalMad, unlockCornerScoreScoringAudioFromGesture, playRightMonitorScoringNoise, activateRightMonitorCornerScoreMode, toggleBigTvHighScoreStats, getMedalForScore, formatElapsedMs, renderRunStats, renderPersonalBestStats, renderServerStats, startRunStats, stopRunStats, resetRunStats, recordBounce, recordNearMiss, loadPersonalBestFromStorage, savePersonalBestIfImproved };
+export { sanitizeCornerScoreInitialsInput, playWrongAudio, hideCornerScoreStatus, showCornerScoreStatus, clearDvdMissIndicatorTimeout, hideDvdMissIndicator, hideAllDvdMissIndicators, showDvdMissIndicator, syncCornerScoreInitialsSubmitState, hideCornerScoreInitialsPrompt, showCornerScoreInitialsPrompt, syncCornerScoreInitialsPromptVisibility, renderCornerScore, setCornerScore, setCornerScoreHighScore, loadCornerScoreFromServer, queueCornerScoreUpdate, submitCornerScoreInitials, clearCornerScore, syncCornerScoreServerToLocalMad, unlockCornerScoreScoringAudioFromGesture, playRightMonitorScoringNoise, activateRightMonitorCornerScoreMode, toggleBigTvHighScoreStats, getMedalForScore, formatElapsedMs, renderRunStats, renderPersonalBestStats, renderServerStats, startRunStats, stopRunStats, resetRunStats, recordBounce, recordNearMiss, loadPersonalBestFromStorage, savePersonalBestIfImproved };
