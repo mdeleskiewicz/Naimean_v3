@@ -43,7 +43,7 @@ test('left monitor selector is not vertically shifted from center axis', () => {
   );
 });
 
-test('left monitor github quadrant overlay is centered and uses reduced label font size', () => {
+test('left monitor github quadrant overlay is centered and uses larger label font size', () => {
   const source = fs.readFileSync(indexCssPath, 'utf8');
 
   assert.match(
@@ -53,8 +53,8 @@ test('left monitor github quadrant overlay is centered and uses reduced label fo
   );
   assert.match(
     source,
-    /\.left-monitor-github-quadrant-overlay\s+\.github-quadrant-btn\s*\{[^}]*font:\s*700\s+clamp\(8px,\s*min\(5\.76cqw,\s*6\.72cqh\),\s*17\.6px\)\s*\/\s*1/,
-    'Expected left monitor GitHub quadrant labels to be reduced by 20%',
+    /\.left-monitor-github-quadrant-overlay\s+\.github-quadrant-btn\s*\{[^}]*font:\s*700\s+clamp\(9\.6px,\s*min\(6\.912cqw,\s*8\.064cqh\),\s*21\.12px\)\s*\/\s*1/,
+    'Expected left monitor GitHub quadrant labels to be increased by 20%',
   );
 });
 
