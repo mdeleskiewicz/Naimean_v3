@@ -30,18 +30,25 @@ jobs:
         if: always()
         continue-on-error: true
         env:
-          GDRIVE_CREDENTIALS: ${{ secrets.GDRIVE_CREDENTIALS }}
+          REFRESH_TOKEN: ${{ secrets.GDRIVE_REFRESH_TOKEN }}
+          CLIENT_ID: ${{ secrets.GDRIVE_CLIENT_ID }}
+          CLIENT_SECRET: ${{ secrets.GDRIVE_CLIENT_SECRET }}
         run: |
           pip install google-api-python-client google-auth
-          echo "$GDRIVE_CREDENTIALS" > credentials.json
           python3 - <<EOF
           import os
-          from google.oauth2 import service_account
+          from google.oauth2.credentials import Credentials
           from googleapiclient.discovery import build
           from googleapiclient.http import MediaFileUpload
 
-          # Authenticate using the service account JSON
-          creds = service_account.Credentials.from_service_account_file('credentials.json')
+          # Using personal account credentials to bypass Service Account quota
+          creds = Credentials(
+              None,
+              refresh_token=os.environ['REFRESH_TOKEN'],
+              token_uri='https://oauth2.googleapis.com/token',
+              client_id=os.environ['CLIENT_ID'],
+              client_secret=os.environ['CLIENT_SECRET']
+          )
           
           service = build('drive', 'v3', credentials=creds)
           
