@@ -52,5 +52,15 @@ export function initDomRefs() {
   dom.discordErrorToast = document.getElementById('discord-error-toast');
   dom.discordErrorToastMsg = document.getElementById('discord-error-toast-msg');
   dom.discordErrorToastClose = document.getElementById('discord-error-toast-close');
+  
+  // Verify critical DOM elements exist
+  if (!dom.viewport || !dom.sceneLayer || !dom.hotspotLayer) {
+    console.error('[Naimean] Critical DOM elements missing', {
+      viewport: !!dom.viewport,
+      sceneLayer: !!dom.sceneLayer,
+      hotspotLayer: !!dom.hotspotLayer
+    });
+  }
+  
   return dom;
 }

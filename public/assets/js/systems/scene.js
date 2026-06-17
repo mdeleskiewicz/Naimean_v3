@@ -1433,6 +1433,7 @@ function markSceneReady() {
   window.requestAnimationFrame(() => {
     document.body.classList.remove('scene-loading');
     document.body.classList.add('scene-ready');
+    window.dispatchEvent(new Event('naimean-scene-ready'));
   });
 }
 

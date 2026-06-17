@@ -15,8 +15,14 @@ import { observePerformanceMetrics } from './systems/performance.js';
 import { bootstrapScene } from './systems/scene.js';
 
 export function bootstrapApp() {
-  window.performance?.mark?.('naimean-js-boot-start');
-  initDomRefs();
-  observePerformanceMetrics();
-  bootstrapScene();
+  try {
+    window.performance?.mark?.('naimean-js-boot-start');
+    initDomRefs();
+    observePerformanceMetrics();
+    bootstrapScene();
+  } catch (error) {
+    console.error('[Naimean] App bootstrap failed:', error);
+    // Let the outer error handler in index.js handle scene visibility
+    throw error;
+  }
 }
