@@ -1105,7 +1105,7 @@ function bindSceneEvents() {
       const result = await syncCornerScoreServerToLocalMad();
       if (result.ok) {
         dom.debugCornerScoreSyncButton.textContent = 'Synced!';
-        if (dom.debugStatus) dom.debugStatus.textContent = `CornerScore server set to ${result.score} (${result.initials || 'MAD'}).`;
+        if (dom.debugStatus) dom.debugStatus.textContent = `CornerScore server set to ${result.score} (${result.initials}).`;
       } else {
         dom.debugCornerScoreSyncButton.textContent = 'Sync failed';
         if (dom.debugStatus) dom.debugStatus.textContent = result.error || 'CornerScore server sync failed.';
