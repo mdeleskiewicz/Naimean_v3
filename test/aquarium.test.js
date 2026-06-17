@@ -89,7 +89,7 @@ test('neon sign hotspot repopulates aquarium townsfolk and triggers the shrimp c
   );
 });
 
-test('aquarium wildlife gui supports auth-backed save state and factory reset controls', () => {
+test('aquarium wildlife gui includes required profile management constants and controls', () => {
   const source = fs.readFileSync(sceneJsPath, 'utf8');
 
   assert.match(source, /AQUARIUM_CREATURE_PROFILE_MANIFEST_URL = `\$\{AQUARIUM_GUI_ASSET_BASE_PATH\}\/manifest\.json`;/);

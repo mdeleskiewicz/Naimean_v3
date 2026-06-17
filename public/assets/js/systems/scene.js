@@ -104,6 +104,7 @@ let aquariumCreatureProfiles = [];
 let aquariumSavedCreatureProfilesById = new Map();
 const aquariumTouchedCreatureProfileIds = new Set();
 let aquariumSaveAuthProfileEnabled = false;
+let aquariumCreatureProfileIdCounter = 0;
 
 function getAquariumWildlifeOverrideBounds(value, min, max, fallback) {
   if (!Number.isFinite(value)) {
@@ -153,7 +154,7 @@ function writeAquariumSaveAuthProfilePreference(isEnabled) {
   }
 }
 
-function pickRandomDoeName() {
+function pickRandomDefaultCreatureName() {
   return AQUARIUM_DOE_NAMES[Math.floor(Math.random() * AQUARIUM_DOE_NAMES.length)];
 }
 
@@ -163,13 +164,17 @@ function createCreatureProfileId(sourceLabel) {
     .replace(/\.[a-z0-9]+$/i, '')
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/^-+|-+$/g, '');
-  return normalized ? `creature-${normalized}` : `creature-${Math.floor(Math.random() * 1e9)}`;
+  if (normalized) {
+    return `creature-${normalized}`;
+  }
+  aquariumCreatureProfileIdCounter += 1;
+  return `creature-generated-${Date.now()}-${aquariumCreatureProfileIdCounter}`;
 }
 
 function cloneAquariumCreatureProfileSpec(spec) {
   return {
     ...spec,
-    name: typeof spec?.name === 'string' ? spec.name : pickRandomDoeName(),
+    name: typeof spec?.name === 'string' ? spec.name : pickRandomDefaultCreatureName(),
     imageFilename: typeof spec?.imageFilename === 'string' ? spec.imageFilename : '',
     palette: { ...(spec?.palette || {}) },
     pixels: Array.isArray(spec?.pixels) ? [...spec.pixels] : []
@@ -177,13 +182,15 @@ function cloneAquariumCreatureProfileSpec(spec) {
 }
 
 function createDefaultAquariumCreatureProfileForFilename(imageFilename) {
-  const template = AQUARIUM_DISNEY_CHARACTER_SPECS[Math.floor(Math.random() * AQUARIUM_DISNEY_CHARACTER_SPECS.length)]
-    || AQUARIUM_DISNEY_CHARACTER_SPECS[0];
+  const templateSource = Array.isArray(AQUARIUM_DISNEY_CHARACTER_SPECS) && AQUARIUM_DISNEY_CHARACTER_SPECS.length > 0
+    ? AQUARIUM_DISNEY_CHARACTER_SPECS
+    : [{}];
+  const template = templateSource[Math.floor(Math.random() * templateSource.length)] || {};
   const clonedTemplate = cloneAquariumCreatureProfileSpec(template || {});
   return {
     ...clonedTemplate,
     id: createCreatureProfileId(imageFilename),
-    name: pickRandomDoeName(),
+    name: pickRandomDefaultCreatureName(),
     imageFilename,
   };
 }
@@ -197,7 +204,7 @@ function sanitizeAquariumCreatureProfile(rawProfile = {}, fallback = {}) {
     : fallback.pixels;
   const nextName = typeof rawProfile?.name === 'string' && rawProfile.name.trim()
     ? rawProfile.name.trim()
-    : (typeof fallback.name === 'string' && fallback.name.trim() ? fallback.name.trim() : pickRandomDoeName());
+    : (typeof fallback.name === 'string' && fallback.name.trim() ? fallback.name.trim() : pickRandomDefaultCreatureName());
   const imageFilename = typeof rawProfile?.imageFilename === 'string'
     ? rawProfile.imageFilename.trim()
     : (typeof fallback.imageFilename === 'string' ? fallback.imageFilename.trim() : '');
@@ -403,7 +410,7 @@ async function putAquariumCreatureProfilesToRoomState(profiles) {
     })
   });
   if (!response.ok) {
-    throw new Error('Unable to save aquarium state to your Discord profile.');
+    throw new Error(`Unable to save aquarium state to your Discord profile (${response.status} ${response.statusText || 'error'}).`);
   }
 }
 
