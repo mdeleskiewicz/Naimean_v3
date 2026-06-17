@@ -190,7 +190,7 @@ export const DISCORD_WIDGET_URL = DISCORD_GUILD_ID
   : null;
 export const DISCORD_BUTTON_IMAGE_URL = BIG_TV_RIGHT_MONITOR_OVERLAY_BLUE_IMAGE_URL;
 export const STARSHRIMP_LOGO_IMAGE_URL = 'assets/images/starshrimp_logo.png';
-export const KID_DANCING_GIF_URL = 'assets/images/Kid Dancing GIF.gif';
+export const KID_DANCING_GIF_URL = 'assets/images/Kid%20Dancing%20GIF.gif';
 export const AQUARIUM_DEPTH_OVERLAY_LEFT_IMAGE_URL = 'assets/images/aquarium_overlay_left.png';
 export const AQUARIUM_DEPTH_OVERLAY_RIGHT_IMAGE_URL = 'assets/images/aquarium_overlay_right.png';
 export const AQUARIUM_DEPTH_OVERLAY_LEFT_ID = 'aquarium-depth-overlay-left';

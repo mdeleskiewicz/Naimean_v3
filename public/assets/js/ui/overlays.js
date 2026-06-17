@@ -192,7 +192,7 @@ function syncLeftMonitorSelectionUi() {
 function getDiscordQuadrantDefinitions() {
   return [
     { label: 'Tools', action: () => state._cb.setLeftMonitorState?.('tools'), cls: 'discord-card-quad-ul' },
-    { label: 'Inventory', action: () => console.log('Inventory clicked'), cls: 'discord-card-quad-ur' },
+    { label: 'Inventory', action: () => {}, cls: 'discord-card-quad-ur' },
     { label: 'Cal.Dot', action: () => state._cb.setLeftMonitorState?.('calendar'), cls: 'discord-card-quad-ll' },
     { label: 'Notes', action: () => window.open('/notes.html', '_blank'), cls: 'discord-card-quad-lr' }
   ];

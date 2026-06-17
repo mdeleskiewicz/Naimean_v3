@@ -1,6 +1,8 @@
 import { BIG_TV_MONITOR_INTERACTIVE_WAIT_TIMEOUT_MS, MEDIA_ENDED_PAUSE_TOLERANCE_S, MONITOR_INTERACTIVE_POLL_INTERVAL_MS } from './constants.js';
 import { state } from './state.js';
 
+const STALLED_MEDIA_FRAME_THRESHOLD = 180;
+
 function waitForMediaPlaybackToEnd(mediaEl) {
   return new Promise((resolve) => {
     let hasObservedProgress = false;
@@ -48,7 +50,7 @@ function waitForMediaPlaybackToEnd(mediaEl) {
         stalledFrameCount = 0;
       } else if (hasObservedProgress && mediaEl.readyState < HTMLMediaElement.HAVE_FUTURE_DATA) {
         stalledFrameCount += 1;
-        if (stalledFrameCount >= 180) {
+        if (stalledFrameCount >= STALLED_MEDIA_FRAME_THRESHOLD) {
           cleanup();
           resolve(false);
           return;
