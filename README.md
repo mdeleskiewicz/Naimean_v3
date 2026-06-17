@@ -1,159 +1,251 @@
-# Naimean V3
+What this repo actually is
+This is a Cloudflare Worker + static-assets app for an interactive virtual “den” site.
 
-Naimean V3 is a Cloudflare edge application that serves a room-based interactive site (`public/*.html`) and API endpoints from a single Worker (`src/worker.js`).
+The core split is:
 
-## Repository Structure
+Backend/runtime: /home/runner/work/Naimean_v3/Naimean_v3/src/worker.js
+Frontend pages/assets: /home/runner/work/Naimean_v3/Naimean_v3/public
+Cloudflare config: /home/runner/work/Naimean_v3/Naimean_v3/wrangler.toml
+Tests: /home/runner/work/Naimean_v3/Naimean_v3/test
+The real architecture
+1. One Worker is the server
+/home/runner/work/Naimean_v3/Naimean_v3/src/worker.js is the single entrypoint.
 
-| Path | Purpose |
-|---|---|
-| `src/worker.js` | Main Cloudflare Worker router, Discord auth flow, API handlers, Durable Object class (`HotspotStore`) |
-| `public/` | Static site pages and media assets served through the `ASSETS` binding |
-| `test/` | Node test suite for Worker routing, auth, Durable Object behavior, and UI fixture integrity |
-| `docs/` | Project documentation and architecture notes |
-| `docs/wiki/` | Cloudflare-focused wiki pages (Workers, Assets, Durable Objects, Wrangler, CI) |
-| `.github/workflows/deploy.yml` | Automatic deployment workflow on pushes to `main` |
-| `wrangler.toml` | Cloudflare runtime/config bindings used by this codebase |
+It handles:
 
-## Key Technologies
+Discord auth routes:
+/api/discord/auth
+/api/discord/callback
+/api/discord/me
+/api/discord/logout
+app APIs:
+/api/hotspots
+/api/chapel-hotspots
+/api/arcade-url-overrides
+/api/corner-score
+/api/notes
+/api/calendar-events
+/api/user-preferences
+/api/room-state/:roomId
+/api/aquarium/shrimp-clips
+/api/aquarium/shrimp-clip/:id
+/api/health
+/api/db-test
+It also does path aliasing and protected-page redirects.
 
-- Cloudflare Workers (edge runtime)
-- Cloudflare Durable Objects with SQLite-backed storage (`HOTSPOT_STORE`)
-- Cloudflare Assets/Pages static hosting (`ASSETS`)
-- Cloudflare D1 binding (`DB` -> `naimean-v3-db`)
-- Vanilla HTML/CSS/JavaScript frontend (no framework)
-- Discord OAuth for authenticated routes
-- Node.js built-in test runner (`node --test`)
+2. Static files are first-class, but the Worker still runs first
+/home/runner/work/Naimean_v3/Naimean_v3/wrangler.toml has:
 
-## Code Organization
+main = "src/worker.js"
+[assets] directory = "public"
+binding = "ASSETS"
+run_worker_first = ["/*"]
+So the Worker sees every request first, then decides whether to:
 
-### Worker and API
+serve an asset,
+redirect,
+enforce auth,
+or forward to storage logic.
+3. Most app state lives in one Durable Object class
+The main state engine is HotspotStore in /home/runner/work/Naimean_v3/Naimean_v3/src/worker.js.
 
-`src/worker.js` handles:
+It stores two kinds of data:
 
-- static asset serving and path aliases (`/den`, `/mame-gui`, etc.)
-- security/cache headers
-- Discord OAuth endpoints (`/api/discord/*`)
-- Durable Object backed APIs (`/api/hotspots`, `/api/notes`, `/api/calendar-events`, `/api/room-state/:roomId`, etc.)
-- shrimp clip catalog/proxy routes
+KV/blob-style state
 
-### Stateful Data Model
+den hotspots
+chapel hotspot config
+arcade URL overrides
+corner score
+notes
+SQLite tables inside the Durable Object
 
-The `HotspotStore` Durable Object stores:
+calendar_events
+user_preferences
+room_state
+Important nuance: although there is also a D1 binding in wrangler.toml, the code shows that most real app state is not using D1 directly. D1 appears to be bound mainly for /api/db-test; the feature data is mostly in Durable Object storage.
 
-- KV-style object/blob state (hotspots, chapel config, arcade URL overrides, score, notes)
-- SQLite table data (calendar events, user preferences, room state)
+How the frontend is organized
+1. The main Den page is modular
+The main scene is /home/runner/work/Naimean_v3/Naimean_v3/public/index.html.
 
-### Frontend
+It loads:
 
-`public/` contains room pages and static assets:
+/home/runner/work/Naimean_v3/Naimean_v3/public/assets/css/index.css
+/home/runner/work/Naimean_v3/Naimean_v3/public/assets/js/index.js
+/home/runner/work/Naimean_v3/Naimean_v3/public/assets/js/index.js is just a safe bootstrap wrapper.
 
-- main den UI: `public/index.html`
-- room/app pages: `public/commodore.html`, `public/chapel.html`, `public/noahs-arcade.html`, `public/notes.html`, `public/calendar.html`, `public/mame-gui.html`, etc.
-- media: `public/assets/images`, `public/assets/video`, `public/assets/audio`, `public/assets/GIF`
+Actual app boot happens in:
 
-## Cloudflare Infrastructure Snapshot
+/home/runner/work/Naimean_v3/Naimean_v3/public/assets/js/appRuntime.js
+That bootstraps modules from:
 
-### Bound in this repository (`wrangler.toml`)
+core/
+systems/
+ui/
+2. JS is split by responsibility
+The module structure is meaningful:
 
-| Service | Binding | Resource |
-|---|---|---|
-| Assets | `ASSETS` | `public/` directory |
-| Durable Objects | `HOTSPOT_STORE` | `HotspotStore` class |
-| D1 | `DB` | `naimean-v3-db` (`0798d2f2-618b-4044-91f5-a2c762922184`) |
+Core
 
-### Account-level storage inventory provided
+/home/runner/work/Naimean_v3/Naimean_v3/public/assets/js/core/constants.js
+/home/runner/work/Naimean_v3/Naimean_v3/public/assets/js/core/state.js
+/home/runner/work/Naimean_v3/Naimean_v3/public/assets/js/core/domRefs.js
+/home/runner/work/Naimean_v3/Naimean_v3/public/assets/js/core/utils.js
+/home/runner/work/Naimean_v3/Naimean_v3/public/assets/js/core/media.js
+Systems
 
-| Type | Name | ID / Notes |
-|---|---|---|
-| Workers KV | `naimean-kv` | `dff7175059ce478eab8c910949ca330f` |
-| D1 | `naimean-v3-db` | `0798d2f2-618b-4044-91f5-a2c762922184` (bound as `DB`) |
-| D1 | `naimean-db` | `0871f90d-f7e3-467a-a1f9-4e74ac8aef42` |
-| D1 | `barrelroll-counter-db` | `22277fbe-031d-4ca2-8937-245309e981cd` |
-| R2 | `naimean-v3-assets` | account resource only; not bound in `wrangler.toml` |
+hotspots
+monitors
+dvd
+cornerScore
+aquarium
+login
+tools
+flipClock
+performance
+scene
+leftMonitorCards
+These live under: /home/runner/work/Naimean_v3/Naimean_v3/public/assets/js/systems
 
-## Development
+UI
 
-```bash
-npm install
-npm run build
-npm test
-```
+/home/runner/work/Naimean_v3/Naimean_v3/public/assets/js/ui/overlays.js
+That file is important: it creates/positions much of the interactive overlay DOM.
 
-Optional local worker runtime:
+3. Other pages are more self-contained
+Several pages are standalone HTML files with large inline scripts/styles, rather than using the full modular Den runtime:
 
-```bash
-npx wrangler dev
-```
+/home/runner/work/Naimean_v3/Naimean_v3/public/commodore.html
+/home/runner/work/Naimean_v3/Naimean_v3/public/noahs-arcade.html
+/home/runner/work/Naimean_v3/Naimean_v3/public/notes.html
+/home/runner/work/Naimean_v3/Naimean_v3/public/calendar.html
+So this repo is a hybrid:
 
-## Deployment
+main Den page = modular app
+room/app pages = mostly self-contained documents
+Feature organization that matches the docs
+The feature README points to four documented features, and the code supports that split:
 
-- Deploy automation is in `.github/workflows/deploy.yml`.
-- Repository secrets required in GitHub Actions: `CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ACCOUNT_ID`.
-- Runtime secrets should be set in Cloudflare (for example `DISCORD_CLIENT_SECRET`, `SESSION_SECRET`, `GOOGLE_DRIVE_API_KEY`).
+Big TV Tools
+Documented in the wiki, implemented mainly in:
 
-## Monitor Overlay Architecture
+/home/runner/work/Naimean_v3/Naimean_v3/public/assets/js/systems/tools.js
+Validated behaviors:
 
-The Den scene (`public/index.html`) features three physical monitors: **Left**, **Middle**, and **Right**. Each monitor is represented by a single unified DOM group element that contains all three visual layers as children. This "group" approach makes the overlay stack easy to position, resize, and reason about.
+menu/editor modes
+built-in Notes shortcut
+custom tools saved in localStorage
+URLs open in a new tab
+Hotspot debug/persistence
+Implemented mainly in:
 
-### Layer Hierarchy (per monitor)
+/home/runner/work/Naimean_v3/Naimean_v3/public/assets/js/systems/hotspots.js
+/home/runner/work/Naimean_v3/Naimean_v3/src/worker.js
+Validated behaviors:
 
-```
-.screen-overlay.monitor-group          ← positioned at full frame bounds
-  ├── .monitor-frame-layer   (z-index 3)  ← frame PNG (L_Frame.png or R_Frame.png)
-  ├── .monitor-shadow-layer  (z-index 2)  ← TV-off black curtain; animated on power on/off
-  └── .monitor-overlay-layer (z-index 1)  ← interactive screen content
-        ├── .monitor-screen-window        ← inset to the screen hole inside the frame
-        └── (all interactive UI)
-```
+hotspots can be edited
+saved to /api/hotspots
+fallback modal exists if server save fails
+some per-hotspot URL overrides are localStorage-based
+Discord auth + protected pages
+Implemented in:
 
-### Element IDs
+/home/runner/work/Naimean_v3/Naimean_v3/src/worker.js
+/home/runner/work/Naimean_v3/Naimean_v3/public/assets/js/systems/login.js
+Validated behaviors:
 
-| Monitor | Group ID | Control Hotspot ID |
-|---|---|---|
-| Left | `monitor-group-left` | `monitor-group-left-control` |
-| Middle (CornerScore) | `monitor-group-middle` | `monitor-group-middle-control` |
-| Right | `monitor-group-right` | `monitor-group-right-control` |
+/notes, /mame-gui, and /calendar are protected
+unauthenticated users get redirected to /api/discord/auth
+frontend polls /api/discord/me
+there is a Discord session chip in /home/runner/work/Naimean_v3/Naimean_v3/public/index.html
+Commodore power behavior
+Implemented across:
 
-Constants for these IDs live in `public/assets/js/core/constants.js`:
-- `MONITOR_GROUP_LEFT_ID`, `MONITOR_GROUP_MIDDLE_ID`, `MONITOR_GROUP_RIGHT_ID`
-- `MONITOR_GROUP_LEFT_CONTROL_ID`, `MONITOR_GROUP_MIDDLE_CONTROL_ID`, `MONITOR_GROUP_RIGHT_CONTROL_ID`
-- `MIDDLE_MONITOR_FRAME_BOUNDS` — design-space pixel bounds for the middle monitor group
+/home/runner/work/Naimean_v3/Naimean_v3/public/assets/js/systems/monitors.js
+/home/runner/work/Naimean_v3/Naimean_v3/public/assets/js/ui/overlays.js
+/home/runner/work/Naimean_v3/Naimean_v3/public/assets/css/index.css
+Validated behaviors:
 
-### CSS Conventions
+on/off sequence
+shadow-layer animation
+delayed side monitor activation
+persisted power state
+Storage model in plain English
+A good mental model is:
 
-All layer classes are defined in `public/assets/css/index.css`:
+Worker = router/auth/gateway
+Assets = HTML/CSS/JS/media hosting
+Durable Object = app state store
+D1 = present, but currently secondary
+Named Durable Object instances are used for different concerns, including:
 
-| Class | Role |
-|---|---|
-| `.monitor-group` | Top-level container; `overflow: visible`; `pointer-events: none` |
-| `.monitor-frame-layer` | Hosts the frame PNG image; `z-index: 3` within group |
-| `.monitor-shadow-layer` | Black curtain for TV-off state; `z-index: 2` within group |
-| `.monitor-overlay-layer` | Screen content container; `z-index: 1` within group |
-| `.left-monitor-screen-window` | Percentage insets aligning to L_Frame.png screen hole |
-| `.right-monitor-screen-window` | Percentage insets aligning to R_Frame.png screen hole |
+den-hotspots
+chapel-hotspots
+arcade-url-overrides
+corner-score
+notes-${userId}
+calendar-events
+user-preferences
+room-state
+So the codebase uses a single Durable Object class but multiple named instances to isolate different kinds of state.
 
-TV power-on/off animations use the `.tv-turning-on`, `.tv-turning-off`, and `.is-monitor-on` classes on `.monitor-shadow-layer`.
+Tests and operational setup
+Tests
+/home/runner/work/Naimean_v3/Naimean_v3/package.json shows:
 
-### Frame Images
+npm run build = placeholder only (No build step)
+npm test = node --test
+The test folder is broader than the root README summary suggests. It includes targeted suites like:
 
-- Left monitor: `public/assets/images/L_Frame.png`
-- Right monitor: `public/assets/images/R_Frame.png` (displayed with `transform: scaleY(-1)`)
-- Middle monitor: no separate frame PNG; the Commodore desk image (`overlay-commodore-screen`) provides the visual bezel
+aquarium
+big TV
+chapel
+Discord auth/session UI
+left/right monitor overlays
+flip clock
+browser modules
+worker routing
+under /home/runner/work/Naimean_v3/Naimean_v3/test.
 
-### Adding a New Monitor
+Deployment
+Deployment is defined in:
 
-1. Add `MONITOR_GROUP_<NAME>_ID` and `MONITOR_GROUP_<NAME>_CONTROL_ID` constants in `constants.js`
-2. Add a `MONITOR_GROUP_<NAME>_FRAME_BOUNDS` bounds constant (design-space pixels)
-3. Add the group to `overlayDefaults` and `defaultHotspots` in `constants.js`
-4. Add the binding to `OVERLAY_CONTROL_BINDINGS` and `HOTSPOT_READABLE_LABELS`
-5. Add a matching entry in `src/worker.js` `DEFAULT_HOTSPOTS` and `test/fixtures/hotspots.js`
-6. Implement the `if (overlay.id === MONITOR_GROUP_<NAME>_ID)` block in `public/assets/js/ui/overlays.js`
-7. Add inset CSS rules for `.your-monitor-screen-window` if the frame has a transparent screen hole
-8. Wire up any click handler in `public/assets/js/systems/hotspots.js`
+/home/runner/work/Naimean_v3/Naimean_v3/.github/workflows/deploy.yml
+Validated behavior:
 
+deploys on push to main
+runs npx wrangler deploy --config wrangler.toml
+strips ANSI from logs
+uploads deploy logs to Google Drive afterward
+A couple of doc/code nuances I found
+These are worth knowing:
 
-## Docs
+/home/runner/work/Naimean_v3/Naimean_v3/public/api-client.js is not really a generic API client.
+It mainly contains the calendar sync engine plus notes API helpers.
 
-- [System Overview](docs/System_Overview.md)
-- [Configuration and Build](docs/Configuration_and_Build.md)
-- [Cloudflare Wiki Index](docs/wiki/README.md)
+D1 is not the main app datastore today.
+Most meaningful state is in Durable Object storage.
+
+One wiki doc appears slightly stale:
+/home/runner/work/Naimean_v3/Naimean_v3/docs/wiki/Durable-Object-Storage.md says the SQL tables live in the room-state named instance, but the current Worker routes dispatch them to separate instances:
+
+calendar-events
+user-preferences
+room-state
+Short version
+If you want the fastest way to understand the repo, read it in this order:
+
+/home/runner/work/Naimean_v3/Naimean_v3/wrangler.toml
+/home/runner/work/Naimean_v3/Naimean_v3/src/worker.js
+/home/runner/work/Naimean_v3/Naimean_v3/public/index.html
+/home/runner/work/Naimean_v3/Naimean_v3/public/assets/js/appRuntime.js
+/home/runner/work/Naimean_v3/Naimean_v3/public/assets/js/core/constants.js
+/home/runner/work/Naimean_v3/Naimean_v3/public/assets/js/systems/hotspots.js
+/home/runner/work/Naimean_v3/Naimean_v3/public/assets/js/systems/login.js
+/home/runner/work/Naimean_v3/Naimean_v3/public/assets/js/systems/tools.js
+If you want, I can next turn this into either:
+
+a page-by-page tour, or
+a backend/API map, or
+a frontend module map.
