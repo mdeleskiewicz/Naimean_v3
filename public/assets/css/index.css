@@ -390,6 +390,24 @@
       z-index: 3;
     }
 
+    .aquarium-creature-layer {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+    }
+
+    .aquarium-creature-layer-back {
+      z-index: 2;
+    }
+
+    .aquarium-creature-layer-front {
+      z-index: 4;
+    }
+
+    .aquarium-fish-depth-overlay {
+      object-position: center bottom;
+    }
+
     .big-tv-fullscreen-exit-button {
       position: absolute;
       top: calc(env(safe-area-inset-top, 0px) + 12px);

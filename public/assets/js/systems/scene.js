@@ -1,4 +1,5 @@
 import {
+  AQUARIUM_DEPTH_OVERLAY_IMAGE_URL,
   AQUARIUM_FISH_EFFECT_ID,
   AQUARIUM_WALL_GLOW_CLASS,
   ASHTRAY_CIGARETTE_CONTROL_ID,
@@ -307,6 +308,10 @@ function appendAquariumDisneyFish(el, specPool, overrides = {}) {
   return fish;
 }
 
+function getRandomAquariumCreatureLayer(backLayerEl, frontLayerEl) {
+  return Math.random() < 0.5 ? backLayerEl : frontLayerEl;
+}
+
 function appendAquariumBubblerStream(el, { leftPct, bottomPct, bubbleCount = 5, riseMin = 230, riseMax = 370 }) {
   for (let index = 0; index < bubbleCount; index += 1) {
     const bubble = document.createElement('span');
@@ -456,6 +461,21 @@ function createAquariumFishEffect() {
   el.style.top = `${Math.round(spot.y)}px`;
   el.style.width = `${Math.round(spot.w)}px`;
   el.style.height = `${Math.round(spot.h)}px`;
+  const backCreatureLayerEl = document.createElement('div');
+  backCreatureLayerEl.className = 'aquarium-creature-layer aquarium-creature-layer-back';
+  const depthOverlayEl = document.createElement('img');
+  depthOverlayEl.className = 'aquarium-depth-overlay aquarium-fish-depth-overlay';
+  depthOverlayEl.src = AQUARIUM_DEPTH_OVERLAY_IMAGE_URL;
+  depthOverlayEl.alt = '';
+  depthOverlayEl.decoding = 'async';
+  depthOverlayEl.loading = 'eager';
+  depthOverlayEl.setAttribute('aria-hidden', 'true');
+  const frontCreatureLayerEl = document.createElement('div');
+  frontCreatureLayerEl.className = 'aquarium-creature-layer aquarium-creature-layer-front';
+  const appendAquariumCreature = (creatureEl) => {
+    getRandomAquariumCreatureLayer(backCreatureLayerEl, frontCreatureLayerEl).appendChild(creatureEl);
+    return creatureEl;
+  };
 
   // ── Animated water line (subtle surface movement at the top of the tank) ──
   const waterLine = document.createElement('div');
@@ -601,7 +621,7 @@ function createAquariumFishEffect() {
     shrimp.style.setProperty('--shrimp-swim-dist', `${swimDist}px`);
     shrimp.style.setProperty('--shrimp-duration', `${duration.toFixed(2)}s`);
     shrimp.style.setProperty('--shrimp-delay', `${delay.toFixed(2)}s`);
-    el.appendChild(shrimp);
+    appendAquariumCreature(shrimp);
   }
 
   const disneyFishPool = createShuffledCopy(AQUARIUM_DISNEY_CHARACTER_SPECS);
@@ -650,7 +670,7 @@ function createAquariumFishEffect() {
     snail.style.setProperty('--snail-crawl-dist', `${crawlDist}px`);
     snail.style.setProperty('--snail-duration', `${duration.toFixed(2)}s`);
     snail.style.setProperty('--snail-delay', `${delay.toFixed(2)}s`);
-    el.appendChild(snail);
+    appendAquariumCreature(snail);
   } else if (guestType === 'starfish' || guestType === 'anchor') {
     const size = 22 + Math.floor(Math.random() * 12);
     const left = 20 + Math.floor(Math.random() * 55);
@@ -664,7 +684,7 @@ function createAquariumFishEffect() {
     star.style.left = `${left}%`;
     star.style.setProperty('--starfish-duration', `${duration.toFixed(2)}s`);
     star.style.setProperty('--starfish-delay', `${delay.toFixed(2)}s`);
-    el.appendChild(star);
+    appendAquariumCreature(star);
   } else if (guestType === 'turtle' || guestType === 'snapping-turtle' || guestType === 'little-crocodile') {
     const size = 30 + Math.floor(Math.random() * 12);
     const top = 30 + Math.floor(Math.random() * 35);
@@ -680,7 +700,7 @@ function createAquariumFishEffect() {
     turtle.style.setProperty('--turtle-swim-dist', `${swimDist}px`);
     turtle.style.setProperty('--turtle-duration', `${duration.toFixed(2)}s`);
     turtle.style.setProperty('--turtle-delay', `${delay.toFixed(2)}s`);
-    el.appendChild(turtle);
+    appendAquariumCreature(turtle);
   } else if (guestType === 'jellyfish' || guestType === 'mario-jellyfish') {
     const size = 24 + Math.floor(Math.random() * 14);
     const left = 15 + Math.floor(Math.random() * 65);
@@ -696,7 +716,7 @@ function createAquariumFishEffect() {
     jelly.style.setProperty('--jelly-drift', `${driftAmt}px`);
     jelly.style.setProperty('--jelly-duration', `${duration.toFixed(2)}s`);
     jelly.style.setProperty('--jelly-delay', `${delay.toFixed(2)}s`);
-    el.appendChild(jelly);
+    appendAquariumCreature(jelly);
   } else if (guestType === 'nautilus') {
     const size = 26 + Math.floor(Math.random() * 12);
     const top = 25 + Math.floor(Math.random() * 40);
@@ -712,7 +732,7 @@ function createAquariumFishEffect() {
     nautilus.style.setProperty('--nautilus-swim-dist', `${swimDist}px`);
     nautilus.style.setProperty('--nautilus-duration', `${duration.toFixed(2)}s`);
     nautilus.style.setProperty('--nautilus-delay', `${delay.toFixed(2)}s`);
-    el.appendChild(nautilus);
+    appendAquariumCreature(nautilus);
   } else if (guestType === 'octopus' || guestType === 'vampire-octopus') {
     const size = 28 + Math.floor(Math.random() * 14);
     const top = 20 + Math.floor(Math.random() * 50);
@@ -728,7 +748,7 @@ function createAquariumFishEffect() {
     octopus.style.setProperty('--octopus-swim-dist', `${swimDist}px`);
     octopus.style.setProperty('--octopus-duration', `${duration.toFixed(2)}s`);
     octopus.style.setProperty('--octopus-delay', `${delay.toFixed(2)}s`);
-    el.appendChild(octopus);
+    appendAquariumCreature(octopus);
   } else if (guestType === 'frog') {
     const size = 18 + Math.floor(Math.random() * 8);
     const left = 10 + Math.floor(Math.random() * 60);
@@ -744,7 +764,7 @@ function createAquariumFishEffect() {
     frog.style.setProperty('--frog-hop-dist', `${hopDist}px`);
     frog.style.setProperty('--frog-duration', `${duration.toFixed(2)}s`);
     frog.style.setProperty('--frog-delay', `${delay.toFixed(2)}s`);
-    el.appendChild(frog);
+    appendAquariumCreature(frog);
   } else if (guestType === 'manta-ray') {
     const size = 22 + Math.floor(Math.random() * 10);
     const top = 20 + Math.floor(Math.random() * 45);
@@ -760,7 +780,7 @@ function createAquariumFishEffect() {
     manta.style.setProperty('--manta-swim-dist', `${swimDist}px`);
     manta.style.setProperty('--manta-duration', `${duration.toFixed(2)}s`);
     manta.style.setProperty('--manta-delay', `${delay.toFixed(2)}s`);
-    el.appendChild(manta);
+    appendAquariumCreature(manta);
   } else if (guestType === 'shark' || guestType === 'anglerfish' || guestType === 'baby-barracuda') {
     const size = 20 + Math.floor(Math.random() * 8);
     const top = 15 + Math.floor(Math.random() * 50);
@@ -782,7 +802,7 @@ function createAquariumFishEffect() {
     shark.style.setProperty('--shark-swim-dist', `${swimDist}px`);
     shark.style.setProperty('--shark-duration', `${duration.toFixed(2)}s`);
     shark.style.setProperty('--shark-delay', `${delay.toFixed(2)}s`);
-    el.appendChild(shark);
+    appendAquariumCreature(shark);
   } else if (guestType === 'electric-eel') {
     const size = 22 + Math.floor(Math.random() * 10);
     const top = 30 + Math.floor(Math.random() * 40);
@@ -798,7 +818,7 @@ function createAquariumFishEffect() {
     eel.style.setProperty('--electric-eel-swim-dist', `${swimDist}px`);
     eel.style.setProperty('--electric-eel-duration', `${duration.toFixed(2)}s`);
     eel.style.setProperty('--electric-eel-delay', `${delay.toFixed(2)}s`);
-    el.appendChild(eel);
+    appendAquariumCreature(eel);
   } else if (guestType === 'moray-eel') {
     const size = 24 + Math.floor(Math.random() * 10);
     const top = 35 + Math.floor(Math.random() * 35);
@@ -814,7 +834,7 @@ function createAquariumFishEffect() {
     moray.style.setProperty('--moray-swim-dist', `${swimDist}px`);
     moray.style.setProperty('--moray-duration', `${duration.toFixed(2)}s`);
     moray.style.setProperty('--moray-delay', `${delay.toFixed(2)}s`);
-    el.appendChild(moray);
+    appendAquariumCreature(moray);
   } else if (guestType === 'bubble-chest') {
     const chest = document.createElement('span');
     chest.className = 'aquarium-bubble-chest';
@@ -859,7 +879,7 @@ function createAquariumFishEffect() {
     diver.style.setProperty('--toy-diver-swim-dist', `${swimDist}px`);
     diver.style.setProperty('--toy-diver-duration', `${duration.toFixed(2)}s`);
     diver.style.setProperty('--toy-diver-delay', `${delay.toFixed(2)}s`);
-    el.appendChild(diver);
+    appendAquariumCreature(diver);
   } else if (guestType === 'cthulhu-bubbler') {
     const cthulhu = document.createElement('span');
     cthulhu.className = 'aquarium-cthulhu-bubbler';
@@ -906,7 +926,7 @@ function createAquariumFishEffect() {
   const leadingFishConfigs = allFishConfigs.slice(0, 1);
   for (const fishConfig of leadingFishConfigs) {
     fishConfig.delaySec = -(Math.random() * fishConfig.durationSec);
-    appendAquariumDisneyFish(el, disneyFishPool, fishConfig);
+    appendAquariumDisneyFish(getRandomAquariumCreatureLayer(backCreatureLayerEl, frontCreatureLayerEl), disneyFishPool, fishConfig);
   }
 
   // ── Left-side filter (hang-on-back style, upper-left of tank) ────────────
@@ -979,6 +999,8 @@ function createAquariumFishEffect() {
     bubble.style.setProperty('--bubble-delay', `${delay}s`);
     el.appendChild(bubble);
   }
+
+  el.append(backCreatureLayerEl, depthOverlayEl, frontCreatureLayerEl);
 
   dom.effectsLayer.appendChild(el);
 

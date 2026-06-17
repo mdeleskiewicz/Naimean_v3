@@ -161,7 +161,21 @@ test('aquarium keeps shrimp/random creature flow while generic fish use Disney s
     const escapedGuest = guest.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
     assert.match(aquariumBlock, new RegExp(`'${escapedGuest}'`), `Expected random guest roster to include ${guest}`);
   });
-  assert.match(aquariumBlock, /appendAquariumDisneyFish\(el, disneyFishPool, /, 'Expected generic fish slots to render Disney sprites');
+  assert.match(
+    aquariumBlock,
+    /appendAquariumDisneyFish\(getRandomAquariumCreatureLayer\(backCreatureLayerEl, frontCreatureLayerEl\), disneyFishPool, /,
+    'Expected generic fish slots to render Disney sprites through the randomized front/back depth layers',
+  );
+  assert.match(
+    aquariumBlock,
+    /depthOverlayEl\.className = 'aquarium-depth-overlay aquarium-fish-depth-overlay';/,
+    'Expected the aquarium depth image to be inserted between the back and front creature layers',
+  );
+  assert.match(
+    aquariumBlock,
+    /appendAquariumCreature\(shrimp\);/,
+    'Expected shrimp to be assigned to randomized depth layers',
+  );
   assert.doesNotMatch(aquariumBlock, /for \(const spec of AQUARIUM_DISNEY_CHARACTER_SPECS\)/, 'Expected aquarium not to render the entire Disney roster at once');
   assert.match(source, /aquarium-disney-fish/, 'Expected aquarium fish to render as Disney pixel sprites');
   assert.match(source, /createPixelSpriteDataUrl/, 'Expected aquarium fish sprites to be generated from pixel art data');
