@@ -260,15 +260,15 @@ test('lite rendering keeps aquarium bubbles and animals animating', () => {
       `Expected ${selector} to keep animating on lite rendering (mobile)`,
     );
   });
+});
 
-  test('aquarium depth overlays are vertically flipped in CSS', () => {
-    const cssSource = fs.readFileSync(indexCssPath, 'utf8');
-    assert.match(
-      cssSource,
-      /\.aquarium-depth-overlay\s*\{[\s\S]*transform:\s*rotate\(90deg\)\s*scaleY\(-1\);/,
-      'Expected aquarium depth overlays to be rotated and vertically flipped',
-    );
-  });
+test('aquarium depth overlays are vertically flipped in CSS', () => {
+  const cssSource = fs.readFileSync(indexCssPath, 'utf8');
+  assert.match(
+    cssSource,
+    /\.aquarium-depth-overlay\s*\{[\s\S]*transform:\s*rotate\(90deg\)\s*scaleY\(-1\);/,
+    'Expected aquarium depth overlays to be rotated and vertically flipped',
+  );
 });
 
 test('aquarium restored creature swim loops return to their starting orientation', () => {
