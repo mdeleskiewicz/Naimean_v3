@@ -14,6 +14,7 @@ export const dom = {
   debugUrlRow: null,
   debugUrlInput: null,
   debugUrlSaveButton: null,
+  debugCornerScoreSyncButton: null,
   saveBtn: null,
   saveModal: null,
   saveModalTitle: null,
@@ -41,6 +42,7 @@ export function initDomRefs() {
   dom.debugUrlRow = document.getElementById('debug-url-row');
   dom.debugUrlInput = document.getElementById('debug-url-input');
   dom.debugUrlSaveButton = document.getElementById('debug-url-save-btn');
+  dom.debugCornerScoreSyncButton = document.getElementById('debug-corner-score-sync-btn');
   dom.saveBtn = document.getElementById('save-hotspots-btn');
   dom.saveModal = document.getElementById('save-modal');
   dom.saveModalTitle = document.getElementById('save-modal-title');
