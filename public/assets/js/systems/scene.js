@@ -565,8 +565,8 @@ function createAquariumFishEffect() {
     const slotStart = 67 + i * slotHeight;
     const top = Math.floor(slotStart + Math.random() * (slotHeight * 0.7));
     const size = shrimpSizeTiers[Math.floor(Math.random() * shrimpSizeTiers.length)] + Math.floor(Math.random() * 3);
-    const swimDist = 170 + Math.floor(Math.random() * 130);
-    const duration = 10 + Math.random() * 8;
+    const swimDist = 85 + Math.floor(Math.random() * 65);
+    const duration = 30 + Math.random() * 24;
     const delay = -(Math.random() * duration);
     const hue = shrimpHuePool[i % shrimpHuePool.length];
     const shrimp = document.createElement('span');
