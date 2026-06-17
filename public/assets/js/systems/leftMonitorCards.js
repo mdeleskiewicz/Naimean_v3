@@ -194,45 +194,10 @@ function showCornerScoreCard() {
 
 /**
  * Update CornerScore card quadrant data
+ * The card now shows only nav buttons; no live data to update.
  */
 function updateCornerScoreCardData() {
-  if (!state.leftMonitorCornerScoreCardEl) return;
-
-  // Quadrant UL: Current Run
-  const currentRunScoreEl = state.leftMonitorCornerScoreCardEl.querySelector('.cs-card-current-run-score');
-  const currentRunTimeEl = state.leftMonitorCornerScoreCardEl.querySelector('.cs-card-current-run-time');
-  if (currentRunScoreEl) currentRunScoreEl.textContent = state.cornerScoreValue ?? '0';
-  if (currentRunTimeEl) currentRunTimeEl.textContent = formatCornerScoreTime(state.cornerScoreElapsed ?? 0);
-
-  // Quadrant UR: Best Personal Run
-  const pbScoreEl = state.leftMonitorCornerScoreCardEl.querySelector('.cs-card-pb-score');
-  const pbTimeEl = state.leftMonitorCornerScoreCardEl.querySelector('.cs-card-pb-time');
-  if (pbScoreEl) pbScoreEl.textContent = state.cornerScorePersonalBest ?? '—';
-  if (pbTimeEl) pbTimeEl.textContent = state.cornerScorePersonalBestTime ? formatCornerScoreTime(state.cornerScorePersonalBestTime) : '—';
-
-  // Quadrant LL: High-Score Run
-  const highScoreEl = state.leftMonitorCornerScoreCardEl.querySelector('.cs-card-high-score');
-  const highScoreInitialsEl = state.leftMonitorCornerScoreCardEl.querySelector('.cs-card-high-score-initials');
-  if (highScoreEl) highScoreEl.textContent = state.cornerScoreHighScore ?? '—';
-  if (highScoreInitialsEl) highScoreInitialsEl.textContent = state.cornerScoreHighScoreInitials ?? '—';
-
-  // Quadrant LR: Server Stats
-  const serverScoresEl = state.leftMonitorCornerScoreCardEl.querySelector('.cs-card-server-scores');
-  const serverBouncesEl = state.leftMonitorCornerScoreCardEl.querySelector('.cs-card-server-bounces');
-  if (serverScoresEl) serverScoresEl.textContent = state.cornerScoreServerTotalScores ?? '—';
-  if (serverBouncesEl) serverBouncesEl.textContent = state.cornerScoreServerTotalBounces ?? '—';
-}
-
-/**
- * Format corner score time in MM:SS format
- * @param {number} ms - Time in milliseconds
- * @returns {string} - Formatted time string
- */
-function formatCornerScoreTime(ms) {
-  const totalSeconds = Math.floor(ms / 1000);
-  const minutes = Math.floor(totalSeconds / 60);
-  const seconds = totalSeconds % 60;
-  return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+  // Nav-only card — data lives in the bigscreen bottom panel, not the card itself.
 }
 
 /**

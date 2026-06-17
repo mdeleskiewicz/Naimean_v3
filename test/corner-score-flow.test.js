@@ -28,10 +28,11 @@ test('dvd scoring flow does not preemptively overwrite high score before initial
     /else if \(nextCornerScore > previousHighScore\) \{\s*setCornerScoreHighScore\(nextCornerScore, ''\);/s,
     'Expected new high-score path to avoid mutating server high-score state before submit',
   );
+  // New behaviour: show server-high-score banner + add table row, then prompt for initials
   assert.match(
     source,
-    /else if \(nextCornerScore > previousHighScore\) \{\s*showCornerScoreStatus\('New High-Score', nextCornerScore\);\s*showCornerScoreInitialsPrompt\(nextCornerScore\);/s,
-    'Expected new high-score path to show initials prompt',
+    /else if \(nextCornerScore > previousHighScore\) \{\s*showServerHighScoreBanner\(\);\s*addServerHighScoreTableRow\(/s,
+    'Expected new high-score path to show server banner and initials prompt',
   );
 });
 
@@ -43,10 +44,11 @@ test('dvd scoring flow does not auto-persist new high score before initials subm
     /else if \(nextCornerScore > previousHighScore\) \{[^}]*void queueCornerScoreUpdate\(nextCornerScore\)/s,
     'Expected new high-score path to NOT automatically queue a server persist — server score only updates on initials submit',
   );
+  // New behaviour: banner + table row + initials prompt, no server update yet
   assert.match(
     source,
-    /else if \(nextCornerScore > previousHighScore\) \{\s*showCornerScoreStatus\('New High-Score', nextCornerScore\);\s*showCornerScoreInitialsPrompt\(nextCornerScore\);\s*\}/s,
-    'Expected new high-score path to show status and prompt only, without queuing a server update',
+    /else if \(nextCornerScore > previousHighScore\) \{\s*showServerHighScoreBanner\(\);\s*addServerHighScoreTableRow\(/s,
+    'Expected new high-score path to show banner and prompt only, without queuing a server update',
   );
 });
 
