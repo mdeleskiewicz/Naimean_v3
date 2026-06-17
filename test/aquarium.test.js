@@ -5,7 +5,7 @@ import path from 'node:path';
 
 import { state } from '../public/assets/js/core/state.js';
 import { getRandomShrimpClipUrl } from '../public/assets/js/systems/aquarium.js';
-import { getAquariumShrimpCount } from '../public/assets/js/systems/aquariumEffect.js';
+import { getAquariumShrimpCount, resolveAquariumHorizontalMotion } from '../public/assets/js/systems/aquariumEffect.js';
 
 const repoRoot = path.resolve(import.meta.dirname, '..');
 const sceneJsPath = path.join(repoRoot, 'public', 'assets', 'js', 'systems', 'scene.js');
@@ -106,6 +106,40 @@ test('aquarium shrimp count favors 3 and 4, with 5 uncommon and 6 rare', () => {
   }
 });
 
+
+test('resolveAquariumHorizontalMotion keeps aquarium creatures inside the tank bounds', () => {
+  assert.deepEqual(
+    resolveAquariumHorizontalMotion({
+      tankWidthPx: 400,
+      startLeftPct: 90,
+      creatureWidthPx: 42,
+      swimDistPx: 120,
+      allowDirectionFlip: false,
+    }),
+    {
+      startLeftPct: 87.5,
+      swimDistPx: 0,
+      swimsRight: true,
+    },
+  );
+
+  assert.deepEqual(
+    resolveAquariumHorizontalMotion({
+      tankWidthPx: 400,
+      startLeftPct: 5,
+      creatureWidthPx: 36,
+      swimDistPx: 150,
+      swimsRight: false,
+    }),
+    {
+      startLeftPct: 5,
+      swimDistPx: 150,
+      swimsRight: true,
+    },
+  );
+});
+
+
 test('aquarium keeps shrimp/random creature flow while generic fish use Disney sprites', () => {
   const source = fs.readFileSync(sceneJsPath, 'utf8');
   const disneySpecBlock = getBlock(
@@ -130,7 +164,9 @@ test('aquarium keeps shrimp/random creature flow while generic fish use Disney s
   ].forEach((name) => {
     assert.match(disneySpecBlock, new RegExp(name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));
   });
-  assert.match(source, /import { getAquariumShrimpCount } from '\.\/aquariumEffect\.js';/);
+  assert.match(source, /import \{ getAquariumShrimpCount, resolveAquariumHorizontalMotion \} from '\.\/aquariumEffect\.js';/);
+  assert.match(aquariumBlock, /applyAquariumHorizontalMotion\(\{/, 'Expected aquarium swimmers to use bounded horizontal motion');
+  assert.match(aquariumBlock, /resolveAquariumHorizontalMotion\(\{\s*tankWidthPx: spot\.w,/, 'Expected generic fish to clamp travel inside the aquarium width');
   assert.match(aquariumBlock, /const shrimpCount = getAquariumShrimpCount\(\);/, 'Expected aquarium to keep the shrimp population flow');
   [
     'snail',
