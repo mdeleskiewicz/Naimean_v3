@@ -765,7 +765,7 @@ function createOverlays() {
     if (overlay.id === MONITOR_GROUP_LEFT_ID) {
       el.classList.add('monitor-group', 'monitor-group-left');
 
-      // Layer 3 (topmost): L_Frame.png bezel — drawn above shadow and content
+      // Layer 3 (topmost): L_Frame.png bezel — created here, appended last below
       const frameLayer = document.createElement('div');
       frameLayer.className = 'monitor-frame-layer';
       const frameImg = document.createElement('img');
@@ -773,7 +773,6 @@ function createOverlays() {
       frameImg.src = LEFT_MONITOR_SIDE_FRAME_IMAGE_URL;
       frameImg.alt = '';
       frameLayer.appendChild(frameImg);
-      el.appendChild(frameLayer);
 
       // Layer 2: power-on/off black overlay
       const shadowLayer = document.createElement('div');
@@ -1038,6 +1037,7 @@ function createOverlays() {
       state.leftMonitorStaticOverlayEl.appendChild(state.leftMonitorStaticVideoEl);
       windowEl.append(state.leftMonitorStaticOverlayEl);
       el.appendChild(windowEl);
+      el.appendChild(frameLayer); // topmost: appended after shadow/content so DOM order ↔ z-index order
       setLeftMonitorState(state.leftMonitorSelectedState);
     }
 
@@ -1080,7 +1080,7 @@ function createOverlays() {
     if (overlay.id === MONITOR_GROUP_RIGHT_ID) {
       el.classList.add('monitor-group', 'monitor-group-right');
 
-      // Layer 3 (topmost): R_Frame.png bezel
+      // Layer 3 (topmost): R_Frame.png bezel — created here, appended last below
       const frameLayer = document.createElement('div');
       frameLayer.className = 'monitor-frame-layer';
       const frameImg = document.createElement('img');
@@ -1088,7 +1088,6 @@ function createOverlays() {
       frameImg.src = RIGHT_MONITOR_SIDE_FRAME_IMAGE_URL;
       frameImg.alt = '';
       frameLayer.appendChild(frameImg);
-      el.appendChild(frameLayer);
 
       // Layer 2: power-on/off black overlay
       const shadowLayer = document.createElement('div');
@@ -1173,6 +1172,7 @@ function createOverlays() {
       state.rightMonitorShrimpLogoOverlayEl.appendChild(shrimpLogoImg);
       windowEl.appendChild(state.rightMonitorShrimpLogoOverlayEl);
       el.appendChild(windowEl);
+      el.appendChild(frameLayer); // topmost: appended after shadow/content so DOM order ↔ z-index order
       applyDvdColorStep();
     }
 
