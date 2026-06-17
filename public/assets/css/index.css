@@ -384,10 +384,17 @@
       width: 100%;
       height: 100%;
       object-fit: contain;
-      object-position: center;
       pointer-events: none;
       user-select: none;
       z-index: 3;
+    }
+
+    .aquarium-depth-overlay-left {
+      object-position: left bottom;
+    }
+
+    .aquarium-depth-overlay-right {
+      object-position: right bottom;
     }
 
     .aquarium-creature-layer {
@@ -402,10 +409,6 @@
 
     .aquarium-creature-layer-front {
       z-index: 4;
-    }
-
-    .aquarium-fish-depth-overlay {
-      object-position: center bottom;
     }
 
     .big-tv-fullscreen-exit-button {
