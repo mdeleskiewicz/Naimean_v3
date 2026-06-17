@@ -3117,21 +3117,34 @@
       line-height: 1;
       user-select: none;
       will-change: transform;
-      animation: aquarium-shrimp-swim var(--shrimp-duration, 13s) ease-in-out infinite;
+      animation: aquarium-shrimp-swim var(--shrimp-duration, 13s) linear infinite;
       animation-delay: var(--shrimp-delay, 0s);
     }
 
     @keyframes aquarium-shrimp-swim {
+      /* —— outbound: 3 quick darts with pauses between —— */
       0%   { transform: translate3d(0, 0, 0) scaleX(1); }
-      12%  { transform: translate3d(calc(var(--shrimp-swim-dist, 240px) * 0.12), -5px, 0) scaleX(1); }
-      26%  { transform: translate3d(calc(var(--shrimp-swim-dist, 240px) * 0.26),  4px, 0) scaleX(1); }
-      39%  { transform: translate3d(calc(var(--shrimp-swim-dist, 240px) * 0.39), -4px, 0) scaleX(1); }
-      48%  { transform: translate3d(var(--shrimp-swim-dist, 240px), 0, 0) scaleX(1); }
-      50%  { transform: translate3d(var(--shrimp-swim-dist, 240px), 0, 0) scaleX(-1); }
-      62%  { transform: translate3d(calc(var(--shrimp-swim-dist, 240px) * 0.88), -5px, 0) scaleX(-1); }
-      75%  { transform: translate3d(calc(var(--shrimp-swim-dist, 240px) * 0.74),  4px, 0) scaleX(-1); }
-      88%  { transform: translate3d(calc(var(--shrimp-swim-dist, 240px) * 0.61), -4px, 0) scaleX(-1); }
-      98%  { transform: translate3d(0, 0, 0) scaleX(-1); }
+      1%   { transform: translate3d(calc(var(--shrimp-swim-dist, 200px) * 0.25), -3px, 0) scaleX(1); }
+      3%   { transform: translate3d(calc(var(--shrimp-swim-dist, 200px) * 0.25), 0px, 0) scaleX(1); }
+      16%  { transform: translate3d(calc(var(--shrimp-swim-dist, 200px) * 0.25), 0px, 0) scaleX(1); }
+      17%  { transform: translate3d(calc(var(--shrimp-swim-dist, 200px) * 0.60), -4px, 0) scaleX(1); }
+      19%  { transform: translate3d(calc(var(--shrimp-swim-dist, 200px) * 0.60), 0px, 0) scaleX(1); }
+      33%  { transform: translate3d(calc(var(--shrimp-swim-dist, 200px) * 0.60), 0px, 0) scaleX(1); }
+      34%  { transform: translate3d(var(--shrimp-swim-dist, 200px), -3px, 0) scaleX(1); }
+      36%  { transform: translate3d(var(--shrimp-swim-dist, 200px), 0px, 0) scaleX(1); }
+      /* —— pause at far end, then flip —— */
+      49%  { transform: translate3d(var(--shrimp-swim-dist, 200px), 0px, 0) scaleX(1); }
+      50%  { transform: translate3d(var(--shrimp-swim-dist, 200px), 0px, 0) scaleX(-1); }
+      /* —— return: 3 quick darts back with pauses —— */
+      51%  { transform: translate3d(calc(var(--shrimp-swim-dist, 200px) * 0.73), -3px, 0) scaleX(-1); }
+      53%  { transform: translate3d(calc(var(--shrimp-swim-dist, 200px) * 0.73), 0px, 0) scaleX(-1); }
+      66%  { transform: translate3d(calc(var(--shrimp-swim-dist, 200px) * 0.73), 0px, 0) scaleX(-1); }
+      67%  { transform: translate3d(calc(var(--shrimp-swim-dist, 200px) * 0.38), -4px, 0) scaleX(-1); }
+      69%  { transform: translate3d(calc(var(--shrimp-swim-dist, 200px) * 0.38), 0px, 0) scaleX(-1); }
+      83%  { transform: translate3d(calc(var(--shrimp-swim-dist, 200px) * 0.38), 0px, 0) scaleX(-1); }
+      84%  { transform: translate3d(0px, -3px, 0) scaleX(-1); }
+      86%  { transform: translate3d(0px, 0px, 0) scaleX(-1); }
+      99%  { transform: translate3d(0px, 0px, 0) scaleX(-1); }
       100% { transform: translate3d(0, 0, 0) scaleX(1); }
     }
 
