@@ -703,7 +703,7 @@ function createAquariumFishEffect() {
       delaySec: 0
     }
   ];
-  const leadingFishConfigs = Math.random() < 0.5 ? allFishConfigs.slice(0, 1) : allFishConfigs;
+  const leadingFishConfigs = allFishConfigs.slice(0, 1);
   for (const fishConfig of leadingFishConfigs) {
     fishConfig.delaySec = -(Math.random() * fishConfig.durationSec);
     appendAquariumDisneyFish(el, disneyFishPool, fishConfig);
