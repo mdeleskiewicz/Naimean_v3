@@ -107,6 +107,10 @@ function repopulateAquariumShrimp() {
   // Repopulate with a fresh shuffled queue
   state.aquariumShrimpClipQueue = [...state.aquariumShrimpClips];
   shuffleArrayInPlace(state.aquariumShrimpClipQueue);
+  if (state._cb.rerenderAquariumFishEffectPreservingDepthOverlays) {
+    state._cb.rerenderAquariumFishEffectPreservingDepthOverlays();
+    return;
+  }
   state._cb.renderAquariumFishEffect?.();
 }
 

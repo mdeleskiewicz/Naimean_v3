@@ -51,24 +51,31 @@ test('repopulateAquariumShrimp refreshes clip queue and rerenders aquarium towns
   const originalClips = state.aquariumShrimpClips;
   const originalQueue = state.aquariumShrimpClipQueue;
   const originalRenderAquariumFishEffect = state._cb.renderAquariumFishEffect;
-  let renderCalls = 0;
+  const originalRerenderAquariumFishEffectPreservingDepthOverlays = state._cb.rerenderAquariumFishEffectPreservingDepthOverlays;
+  let preservedRerenderCalls = 0;
+  let fullRenderCalls = 0;
 
   try {
     state.aquariumShrimpClips = ['clip-a.mp4', 'clip-b.mp4', 'clip-c.mp4'];
     state.aquariumShrimpClipQueue = ['stale-clip.mp4'];
     state._cb.renderAquariumFishEffect = () => {
-      renderCalls += 1;
+      fullRenderCalls += 1;
+    };
+    state._cb.rerenderAquariumFishEffectPreservingDepthOverlays = () => {
+      preservedRerenderCalls += 1;
     };
 
     repopulateAquariumShrimp();
 
     assert.equal(state.aquariumShrimpClipQueue.length, state.aquariumShrimpClips.length);
     assert.deepEqual(new Set(state.aquariumShrimpClipQueue), new Set(state.aquariumShrimpClips));
-    assert.equal(renderCalls, 1);
+    assert.equal(preservedRerenderCalls, 1);
+    assert.equal(fullRenderCalls, 0);
   } finally {
     state.aquariumShrimpClips = originalClips;
     state.aquariumShrimpClipQueue = originalQueue;
     state._cb.renderAquariumFishEffect = originalRenderAquariumFishEffect;
+    state._cb.rerenderAquariumFishEffectPreservingDepthOverlays = originalRerenderAquariumFishEffectPreservingDepthOverlays;
   }
 });
 

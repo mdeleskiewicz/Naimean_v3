@@ -1190,6 +1190,28 @@ function createAquariumFishEffect() {
   state.overlayElementsById.set(AQUARIUM_FISH_EFFECT_ID, el);
 }
 
+function rerenderAquariumFishEffectPreservingDepthOverlays() {
+  const existingAquariumEffectEl = state.overlayElementsById.get(AQUARIUM_FISH_EFFECT_ID);
+  const preservedDepthOverlaysById = new Map(
+    Array.from(existingAquariumEffectEl?.querySelectorAll('.aquarium-depth-overlay[data-debug-object-id]') || [])
+      .map((overlayEl) => [overlayEl.dataset.debugObjectId, overlayEl])
+      .filter(([debugObjectId]) => typeof debugObjectId === 'string' && debugObjectId.length > 0)
+  );
+  createAquariumFishEffect();
+  if (preservedDepthOverlaysById.size === 0) {
+    return;
+  }
+  const aquariumEffectEl = state.overlayElementsById.get(AQUARIUM_FISH_EFFECT_ID);
+  if (!aquariumEffectEl) {
+    return;
+  }
+  preservedDepthOverlaysById.forEach((overlayEl, debugObjectId) => {
+    aquariumEffectEl
+      .querySelector(`.aquarium-depth-overlay[data-debug-object-id="${debugObjectId}"]`)
+      ?.replaceWith(overlayEl);
+  });
+}
+
 function renderHotspotLayers() {
   createAshtraySmokeEffect();
   createAshtrayCigaretteEffect();
@@ -1632,6 +1654,7 @@ function bootstrapScene() {
 
 state._cb.renderHotspotLayers = renderHotspotLayers;
 state._cb.renderAquariumFishEffect = createAquariumFishEffect;
+state._cb.rerenderAquariumFishEffectPreservingDepthOverlays = rerenderAquariumFishEffectPreservingDepthOverlays;
 state._cb.resize = resize;
 
 export {
@@ -1655,6 +1678,7 @@ export {
   toggleDebugMode,
   onDebugButtonClick,
   renderHotspotLayers,
+  rerenderAquariumFishEffectPreservingDepthOverlays,
   initializeScene,
   cleanup,
   initScene,
