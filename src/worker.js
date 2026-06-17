@@ -175,9 +175,7 @@ export default {
   async fetch(request, env) {
     const url = new URL(request.url);
     const { pathname } = url;
-    if (shouldBypassStaticAsset(pathname)) {
-      return env.ASSETS.fetch(request);
-    }
+   
 
     // ... [Rest of your router logic remains as is] ...
     if (pathname === '/api/health') return jsonResponse({ status: 'healthy', timestamp: Date.now() });
