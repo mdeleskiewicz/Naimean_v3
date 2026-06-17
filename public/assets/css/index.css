@@ -1911,7 +1911,7 @@
     }
 
     .big-tv-dvd-logo.is-github-mode-logo {
-      width: clamp(101px, 20.15%, 218px);
+      width: clamp(78px, 15.5%, 168px);
     }
 
     .big-tv-dvd-miss-indicator {
@@ -2200,6 +2200,10 @@
         hue-rotate(var(--dvd-hue-deg, 0deg))
         drop-shadow(0 0 8px color-mix(in srgb, var(--dvd-accent-color, #ff4d4d) 72%, white 28%));
       opacity: 0.92;
+    }
+
+    .github-shelf-image.is-dvd-logo {
+      transform: scale(1.3);
     }
 
     /* GitHub screensaver quadrant overlay */
