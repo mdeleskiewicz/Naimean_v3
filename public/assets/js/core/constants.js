@@ -239,6 +239,16 @@ export const BIG_TV_INTERACTIVE_UI_SELECTORS = '.big-tv-prompt-content, .big-tv-
 // Keep values comfortably within localStorage and the on-screen form layout.
 export const BIG_TV_TOOLS_MAX_NAME_LENGTH = 120;
 export const BIG_TV_TOOLS_MAX_URL_LENGTH = 2000;
+export const DEN_ORCH_CARDS_STORAGE_KEY = 'naimean.denOrchCards.entries';
+export const DEN_ORCH_CARD_MAX_FIELD_LENGTH = 200;
+export const DEN_ORCH_CARD_DEFAULTS = Object.freeze([
+  { id: 'cornerscore', name: 'CornerScore', trigger: 'DVD bounce hits corner', leftMonitor: 'cornerscore', rightMonitor: 'corner-score' },
+  { id: 'discord', name: 'Discord', trigger: 'Discord hotspot activated', leftMonitor: 'discord', rightMonitor: 'join-discord' },
+  { id: 'github', name: 'GitHub', trigger: 'GitHub hotspot activated', leftMonitor: 'github', rightMonitor: '—' },
+  { id: 'cloudflare', name: 'Cloudflare', trigger: 'Cloudflare hotspot activated', leftMonitor: 'cloudflare', rightMonitor: '—' },
+  { id: 'shrimp', name: 'Shrimp', trigger: 'Shrimp hotspot activated', leftMonitor: 'shrimp', rightMonitor: '—' },
+  { id: 'logged-in', name: 'Logged In', trigger: 'Authenticated Discord session', leftMonitor: 'logged-in', rightMonitor: 'join-discord' }
+]);
 export const DISCORD_CDN_BASE_URL = 'https://cdn.discordapp.com';
 export const DISCORD_USER_ID_RE = /^\d+$/;
 export const DISCORD_AVATAR_HASH_RE = /^(a_)?[a-f0-9]{32}$/i;

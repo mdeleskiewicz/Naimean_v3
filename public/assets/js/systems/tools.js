@@ -1,4 +1,4 @@
-import { AQUARIUM_STATIC_VIDEO_URL, BIG_TV_PROMPT_ACCEPTED_VALUE, BIG_TV_PROMPT_MIN_LOCAL_SCORE, BIG_TV_PROMPT_PREFIX, BIG_TV_PROMPT_SECRET_TEXT, BIG_TV_RICKROLL_VIDEO_URL, BIG_TV_TOOLS_LOGO_URL, BIG_TV_TOOLS_MAX_NAME_LENGTH, BIG_TV_TOOLS_MAX_URL_LENGTH, BIG_TV_TOOLS_STORAGE_KEY, DISCORD_GUEST_INVITE_URL, MONITOR_CONTENT_MAX_DURATION_MS, MONITOR_CONTENT_MIN_DURATION_MS, MONITOR_STATIC_MAX_DURATION_MS, MONITOR_STATIC_MIN_DURATION_MS, NEDRY_GATE_VIDEO_URL, NOTES_URL, ZELDA_SECRET_AUDIO_URL } from '../core/constants.js';
+import { AQUARIUM_STATIC_VIDEO_URL, BIG_TV_PROMPT_ACCEPTED_VALUE, BIG_TV_PROMPT_MIN_LOCAL_SCORE, BIG_TV_PROMPT_PREFIX, BIG_TV_PROMPT_SECRET_TEXT, BIG_TV_RICKROLL_VIDEO_URL, BIG_TV_TOOLS_LOGO_URL, BIG_TV_TOOLS_MAX_NAME_LENGTH, BIG_TV_TOOLS_MAX_URL_LENGTH, BIG_TV_TOOLS_STORAGE_KEY, DEN_ORCH_CARDS_STORAGE_KEY, DEN_ORCH_CARD_DEFAULTS, DEN_ORCH_CARD_MAX_FIELD_LENGTH, DISCORD_GUEST_INVITE_URL, MONITOR_CONTENT_MAX_DURATION_MS, MONITOR_CONTENT_MIN_DURATION_MS, MONITOR_STATIC_MAX_DURATION_MS, MONITOR_STATIC_MIN_DURATION_MS, NEDRY_GATE_VIDEO_URL, NOTES_URL, ZELDA_SECRET_AUDIO_URL } from '../core/constants.js';
 import { state } from '../core/state.js';
 import { wait } from '../core/utils.js';
 import { waitForMediaPlaybackToEnd } from '../core/media.js';
@@ -51,6 +51,146 @@ function updateBigTvToolEntry(index, field, value) {
   saveBigTvToolsEntries();
 }
 
+function normalizeDenOrchCardEntry(defaultEntry, storedEntry) {
+  const clampStr = (v, max) => typeof v === 'string' ? v.slice(0, max) : '';
+  return {
+    id: defaultEntry.id,
+    name: clampStr(storedEntry?.name ?? defaultEntry.name, DEN_ORCH_CARD_MAX_FIELD_LENGTH) || defaultEntry.name,
+    trigger: clampStr(storedEntry?.trigger ?? defaultEntry.trigger, DEN_ORCH_CARD_MAX_FIELD_LENGTH) || defaultEntry.trigger,
+    leftMonitor: clampStr(storedEntry?.leftMonitor ?? defaultEntry.leftMonitor, DEN_ORCH_CARD_MAX_FIELD_LENGTH) || defaultEntry.leftMonitor,
+    rightMonitor: clampStr(storedEntry?.rightMonitor ?? defaultEntry.rightMonitor, DEN_ORCH_CARD_MAX_FIELD_LENGTH) || defaultEntry.rightMonitor
+  };
+}
+
+function loadDenOrchCards() {
+  let stored = {};
+  try {
+    const raw = window.localStorage.getItem(DEN_ORCH_CARDS_STORAGE_KEY);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
+        stored = parsed;
+      }
+    }
+  } catch (error) {
+    console.warn('Unable to load den orchestration cards.', error);
+  }
+  return DEN_ORCH_CARD_DEFAULTS.map((def) => normalizeDenOrchCardEntry(def, stored[def.id]));
+}
+
+function saveDenOrchCards() {
+  if (!ensureDebugSaveAccess()) {
+    return;
+  }
+  try {
+    const defaultsById = new Map(DEN_ORCH_CARD_DEFAULTS.map((d) => [d.id, d]));
+    const overrides = {};
+    state.bigTvOrchCardsEntries.forEach((entry) => {
+      const def = defaultsById.get(entry.id);
+      if (!def) return;
+      const normalized = normalizeDenOrchCardEntry(def, entry);
+      const hasChange = normalized.name !== def.name ||
+        normalized.trigger !== def.trigger ||
+        normalized.leftMonitor !== def.leftMonitor ||
+        normalized.rightMonitor !== def.rightMonitor;
+      if (hasChange) {
+        overrides[def.id] = {
+          name: normalized.name,
+          trigger: normalized.trigger,
+          leftMonitor: normalized.leftMonitor,
+          rightMonitor: normalized.rightMonitor
+        };
+      }
+    });
+    window.localStorage.setItem(DEN_ORCH_CARDS_STORAGE_KEY, JSON.stringify(overrides));
+  } catch (error) {
+    console.warn('Unable to save den orchestration cards.', error);
+  }
+}
+
+function updateDenOrchCardEntry(index, field, value) {
+  const EDITABLE_FIELDS = ['name', 'trigger', 'leftMonitor', 'rightMonitor'];
+  if (!state.bigTvOrchCardsEntries[index] || !EDITABLE_FIELDS.includes(field)) {
+    return;
+  }
+  state.bigTvOrchCardsEntries[index][field] = value;
+  saveDenOrchCards();
+}
+
+function renderDenOrchCardsList() {
+  if (!state.bigTvToolsListEl) {
+    return;
+  }
+  state.bigTvToolsListEl.replaceChildren();
+  state.bigTvOrchCardsEntries.forEach((entry, index) => {
+    const row = document.createElement('div');
+    row.className = 'big-tv-tools-menu-item orch-card-list-item';
+    row.addEventListener('pointerdown', (event) => event.stopPropagation());
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'big-tv-tools-menu-item-launch';
+    btn.setAttribute('aria-label', `${entry.name} — view card settings`);
+    btn.addEventListener('click', (event) => {
+      event.stopPropagation();
+      showDenOrchCardDetail(index);
+    });
+    const nameEl = document.createElement('span');
+    nameEl.className = 'big-tv-tools-menu-item-name';
+    nameEl.textContent = entry.name;
+    const triggerEl = document.createElement('span');
+    triggerEl.className = 'big-tv-tools-menu-item-url';
+    triggerEl.textContent = entry.trigger;
+    btn.append(nameEl, triggerEl);
+    row.appendChild(btn);
+    state.bigTvToolsListEl.appendChild(row);
+  });
+}
+
+function renderDenOrchCardDetail(index) {
+  if (!state.bigTvToolsListEl) {
+    return;
+  }
+  const entry = state.bigTvOrchCardsEntries[index];
+  if (!entry) {
+    return;
+  }
+  state.bigTvToolsListEl.replaceChildren();
+  const isOwner = !!(state.discordAuthState?.hasRole);
+
+  const FIELDS = [
+    { key: 'trigger', label: 'Trigger' },
+    { key: 'leftMonitor', label: 'Left Monitor State' },
+    { key: 'rightMonitor', label: 'Right Monitor State' }
+  ];
+
+  FIELDS.forEach(({ key, label }) => {
+    const fieldRow = document.createElement('div');
+    fieldRow.className = 'orch-card-detail-field';
+    const labelEl = document.createElement('span');
+    labelEl.className = 'big-tv-tools-label orch-card-detail-label';
+    labelEl.textContent = label;
+
+    if (isOwner) {
+      const input = document.createElement('input');
+      input.className = 'big-tv-tools-input orch-card-detail-input';
+      input.type = 'text';
+      input.value = entry[key];
+      input.setAttribute('autocomplete', 'off');
+      input.addEventListener('pointerdown', (event) => event.stopPropagation());
+      input.addEventListener('click', (event) => event.stopPropagation());
+      input.addEventListener('input', (event) => updateDenOrchCardEntry(index, key, event.target.value));
+      fieldRow.append(labelEl, input);
+    } else {
+      const valueEl = document.createElement('span');
+      valueEl.className = 'orch-card-detail-value';
+      valueEl.textContent = entry[key];
+      fieldRow.append(labelEl, valueEl);
+    }
+
+    state.bigTvToolsListEl.appendChild(fieldRow);
+  });
+}
+
 function renderBigTvToolsMenuEntries() {
   if (!state.bigTvToolsListEl) {
     return;
@@ -84,6 +224,29 @@ function renderBigTvToolsMenuEntries() {
   notesLaunchBtn.append(notesName, notesUrl);
   notesRow.appendChild(notesLaunchBtn);
   state.bigTvToolsListEl.appendChild(notesRow);
+  // ────────────────────────────────────────────────────────────────
+
+  // ── Built-in: Den Orchestration Cards ───────────────────────────
+  const orchRow = document.createElement('div');
+  orchRow.className = 'big-tv-tools-menu-item';
+  orchRow.addEventListener('pointerdown', (event) => event.stopPropagation());
+  const orchLaunchBtn = document.createElement('button');
+  orchLaunchBtn.type = 'button';
+  orchLaunchBtn.className = 'big-tv-tools-menu-item-launch';
+  orchLaunchBtn.setAttribute('aria-label', 'Den Orchestration Cards — view card settings');
+  orchLaunchBtn.addEventListener('click', (event) => {
+    event.stopPropagation();
+    showDenOrchCardsList();
+  });
+  const orchName = document.createElement('span');
+  orchName.className = 'big-tv-tools-menu-item-name';
+  orchName.textContent = 'Den Orchestration Cards';
+  const orchDesc = document.createElement('span');
+  orchDesc.className = 'big-tv-tools-menu-item-url';
+  orchDesc.textContent = `${state.bigTvOrchCardsEntries.length} cards`;
+  orchLaunchBtn.append(orchName, orchDesc);
+  orchRow.appendChild(orchLaunchBtn);
+  state.bigTvToolsListEl.appendChild(orchRow);
   // ────────────────────────────────────────────────────────────────
 
   state.bigTvToolsEntries.forEach((entry, index) => {
@@ -133,6 +296,14 @@ function renderBigTvToolsMenuEntries() {
 
 function renderBigTvToolsEntries({ focusRowIndex = null, focusField = 'name' } = {}) {
   if (!state.bigTvToolsListEl) {
+    return;
+  }
+  if (state.bigTvToolsViewMode === 'orchestration-list') {
+    renderDenOrchCardsList();
+    return;
+  }
+  if (state.bigTvToolsViewMode === 'orchestration-detail') {
+    renderDenOrchCardDetail(state.bigTvOrchCardDetailIndex);
     return;
   }
   if (state.bigTvToolsViewMode !== 'editor') {
@@ -201,10 +372,25 @@ function syncBigTvToolsUiMode({ focusRowIndex = null, focusField = 'name' } = {}
     if (state.bigTvToolsViewMode === 'editor') {
       state.bigTvToolsHeaderActionButtonEl.textContent = '←';
       state.bigTvToolsHeaderActionButtonEl.setAttribute('aria-label', 'Back to tools menu');
+    } else if (state.bigTvToolsViewMode === 'orchestration-list') {
+      state.bigTvToolsHeaderActionButtonEl.textContent = '←';
+      state.bigTvToolsHeaderActionButtonEl.setAttribute('aria-label', 'Back to tools menu');
+    } else if (state.bigTvToolsViewMode === 'orchestration-detail') {
+      state.bigTvToolsHeaderActionButtonEl.textContent = '←';
+      state.bigTvToolsHeaderActionButtonEl.setAttribute('aria-label', 'Back to orchestration cards');
     } else {
       state.bigTvToolsHeaderActionButtonEl.textContent = '+';
       state.bigTvToolsHeaderActionButtonEl.setAttribute('aria-label', 'Add tool');
     }
+  }
+  const isOrchDetail = state.bigTvToolsViewMode === 'orchestration-detail';
+  if (state.bigTvToolsHeaderTitleEl) {
+    const entry = isOrchDetail ? state.bigTvOrchCardsEntries[state.bigTvOrchCardDetailIndex] : null;
+    state.bigTvToolsHeaderTitleEl.textContent = entry ? entry.name : '';
+    state.bigTvToolsHeaderTitleEl.hidden = !isOrchDetail;
+  }
+  if (state.bigTvToolsHintEl && state.bigTvToolsViewMode !== 'menu') {
+    state.bigTvToolsHintEl.hidden = true;
   }
   if (state.bigTvToolsFooterEl) {
     state.bigTvToolsFooterEl.classList.toggle('is-hidden', state.bigTvToolsViewMode !== 'editor');
@@ -220,6 +406,18 @@ function showBigTvToolsMenu() {
 function showBigTvToolsEditor({ focusRowIndex = null, focusField = 'name' } = {}) {
   state.bigTvToolsViewMode = 'editor';
   syncBigTvToolsUiMode({ focusRowIndex, focusField });
+}
+
+function showDenOrchCardsList() {
+  state.bigTvToolsViewMode = 'orchestration-list';
+  state.bigTvOrchCardDetailIndex = null;
+  syncBigTvToolsUiMode();
+}
+
+function showDenOrchCardDetail(index) {
+  state.bigTvOrchCardDetailIndex = index;
+  state.bigTvToolsViewMode = 'orchestration-detail';
+  syncBigTvToolsUiMode();
 }
 
 function addBigTvToolEntry() {
@@ -625,6 +823,7 @@ function handleBigTvPromptTyping(event) {
 }
 
 state.bigTvToolsEntries = loadBigTvToolsEntries();
+state.bigTvOrchCardsEntries = loadDenOrchCards();
 state._cb.hideBigTvToolsOverlay = hideBigTvToolsOverlay;
 state._cb.showBigTvToolsOverlay = showBigTvToolsOverlay;
 state._cb.activateBigTvToolsMode = activateBigTvToolsMode;
@@ -637,5 +836,7 @@ state._cb.stopMonitorFlickerLoops = stopMonitorFlickerLoops;
 state._cb.handleBigTvPromptTyping = handleBigTvPromptTyping;
 state._cb.updateBigTvPromptInput = updateBigTvPromptInput;
 state._cb.submitBigTvPrompt = submitBigTvPrompt;
+state._cb.showDenOrchCardsList = showDenOrchCardsList;
+state._cb.showDenOrchCardDetail = showDenOrchCardDetail;
 
-export { loadBigTvToolsEntries, normalizeBigTvToolEntry, saveBigTvToolsEntries, updateBigTvToolEntry, renderBigTvToolsMenuEntries, renderBigTvToolsEntries, syncBigTvToolsUiMode, showBigTvToolsMenu, showBigTvToolsEditor, addBigTvToolEntry, showBigTvToolsOverlay, hideBigTvToolsOverlay, activateBigTvToolsMode, showBigTvPromptOverlay, hideBigTvPromptOverlay, setBigTvPromptSecretRevealed, updateBigTvPromptInput, activateBigTvPromptMode, playBigTvStaticPass, playBigTvVideoPass, getZeldaSecretAudioElement, stopZeldaSecretAudioPlayback, playBigTvPromptIntroSequence, playBigTvPromptSuccessSequence, submitBigTvPrompt, handleBigTvPromptTyping, getRandomMonitorStaticDurationMs, getRandomMonitorContentDurationMs, clearMonitorFlickerTimeouts, setMonitorStaticVisibility, scheduleRightMonitorFlicker, scheduleLeftMonitorFlicker, startMonitorFlickerLoops, stopMonitorFlickerLoops };
+export { loadBigTvToolsEntries, normalizeBigTvToolEntry, saveBigTvToolsEntries, updateBigTvToolEntry, normalizeDenOrchCardEntry, loadDenOrchCards, saveDenOrchCards, updateDenOrchCardEntry, renderDenOrchCardsList, renderDenOrchCardDetail, showDenOrchCardsList, showDenOrchCardDetail, renderBigTvToolsMenuEntries, renderBigTvToolsEntries, syncBigTvToolsUiMode, showBigTvToolsMenu, showBigTvToolsEditor, addBigTvToolEntry, showBigTvToolsOverlay, hideBigTvToolsOverlay, activateBigTvToolsMode, showBigTvPromptOverlay, hideBigTvPromptOverlay, setBigTvPromptSecretRevealed, updateBigTvPromptInput, activateBigTvPromptMode, playBigTvStaticPass, playBigTvVideoPass, getZeldaSecretAudioElement, stopZeldaSecretAudioPlayback, playBigTvPromptIntroSequence, playBigTvPromptSuccessSequence, submitBigTvPrompt, handleBigTvPromptTyping, getRandomMonitorStaticDurationMs, getRandomMonitorContentDurationMs, clearMonitorFlickerTimeouts, setMonitorStaticVisibility, scheduleRightMonitorFlicker, scheduleLeftMonitorFlicker, startMonitorFlickerLoops, stopMonitorFlickerLoops };

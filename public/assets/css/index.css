@@ -2865,6 +2865,49 @@
       }
     }
 
+    /* Den Orchestration Cards — header title & detail view */
+    .big-tv-tools-header-title {
+      font-size: clamp(28px, 4vw, 44px);
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: #062033;
+      text-align: center;
+      padding: 0 clamp(80px, 10vw, 120px);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .orch-card-detail-field {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      padding: 18px 20px;
+      border: 1px solid rgba(6, 32, 51, 0.14);
+      border-radius: 18px;
+      background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.92), rgba(230, 247, 255, 0.86));
+      box-shadow:
+        0 0 24px rgba(88, 235, 255, 0.14),
+        inset 0 0 0 1px rgba(255, 255, 255, 0.85);
+    }
+
+    .orch-card-detail-label {
+      font-size: clamp(20px, 2.8vw, 28px);
+    }
+
+    .orch-card-detail-value {
+      font-size: clamp(24px, 3.4vw, 38px);
+      font-weight: 600;
+      color: #062033;
+      word-break: break-word;
+    }
+
+    .orch-card-detail-input {
+      font-size: clamp(24px, 3.4vw, 38px);
+    }
+
     /* Login overlay — same color scheme as Tools header */
     .login-overlay {
       position: absolute;
