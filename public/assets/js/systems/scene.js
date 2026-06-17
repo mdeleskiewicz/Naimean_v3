@@ -1453,7 +1453,7 @@ function markSceneReady() {
   // Wait for the initially-visible tile to finish loading before revealing the
   // scene. DESK_CENTER_X falls in tile index 1 (den_computer) on all devices.
   const initialTileIndex = Math.floor(DESK_CENTER_X / TILE_WIDTH);
-  const tileImgs = dom.sceneLayer?.querySelectorAll?.('.scene-tile img');
+  const tileImgs = dom.sceneLayer?.querySelectorAll('.scene-tile img');
   const initialTileImg = tileImgs?.[initialTileIndex];
 
   if (!initialTileImg || initialTileImg.complete) {
