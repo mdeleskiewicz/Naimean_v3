@@ -941,14 +941,14 @@ function createOverlays() {
       const githubCardGrid = document.createElement('div');
       githubCardGrid.className = 'left-monitor-card-grid github-card-grid';
       
-      const githubQuadrants = [
+      const githubCardQuadrants = [
         { label: 'Issues', url: GITHUB_V3_ISSUES_URL, cls: 'github-card-quad-ul' },
         { label: 'Agent', url: GITHUB_V3_AGENTS_URL, cls: 'github-card-quad-ur' },
         { label: 'Wiki', url: GITHUB_V3_WIKI_URL, cls: 'github-card-quad-ll' },
         { label: 'Actions', url: GITHUB_V3_ACTIONS_URL, cls: 'github-card-quad-lr' }
       ];
       
-      githubQuadrants.forEach(({ label, url, cls }) => {
+      githubCardQuadrants.forEach(({ label, url, cls }) => {
         const quadBtn = document.createElement('button');
         quadBtn.type = 'button';
         quadBtn.className = `left-monitor-card-quadrant github-card-btn ${cls}`;
