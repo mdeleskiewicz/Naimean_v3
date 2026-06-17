@@ -594,7 +594,7 @@
 
     /* These insets map every screen-window edge to the corrected right screen-hole edge after vertically flipping R_Frame.png in CSS. */
     .right-monitor-screen-window {
-      inset: 17.09% 25.26% 29.297% 24.414%;
+      inset: 29.297% 25.26% 17.09% 24.414%;
       transform: none;
     }
 
@@ -605,16 +605,12 @@
     }
 
     .monitor-group-right > .monitor-shadow-layer {
-      inset: 17.09% 25.26% 29.297% 24.414%;
+      inset: 29.297% 25.26% 17.09% 24.414%;
     }
 
-    /* Insets the middle (Commodore) shadow to the actual screen hole within
-       commodore-desk-overlay.png, so the power-on/off animation stays inside
-       the screen and does not bleed over the monitor bezel. Values derived
-       from pixel-accurate detection of the blue screen region in the 1536×1024
-       source image mapped through the element's object-fit:fill scaling. */
+    /* Middle overlay bounds already match the Commodore screen hole. */
     .monitor-group-middle > .monitor-shadow-layer {
-      inset: 10.97% 24.64% 48.41% 26.92%;
+      inset: 0;
     }
 
     .monitor-group-right .monitor-frame-image {

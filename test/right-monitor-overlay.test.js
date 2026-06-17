@@ -47,17 +47,32 @@ test('right monitor content bleeds 1px past the frame transparency', () => {
   );
 });
 
-test('right monitor frame is vertically corrected and uses mirrored screen bounds', () => {
+test('right monitor frame is vertically corrected and uses flipped screen bounds', () => {
   const source = fs.readFileSync(indexCssPath, 'utf8');
 
   assert.match(
     source,
-    /\.right-monitor-screen-window\s*\{[^}]*inset:\s*17\.09%\s+25\.26%\s+29\.297%\s+24\.414%;/s,
-    'Expected right monitor screen bounds to mirror the left monitor without the upside-down vertical offsets',
+    /\.right-monitor-screen-window\s*\{[^}]*inset:\s*29\.297%\s+25\.26%\s+17\.09%\s+24\.414%;/s,
+    'Expected right monitor screen bounds to align with the vertically flipped right frame hole',
+  );
+  assert.match(
+    source,
+    /\.monitor-group-right\s*>\s*\.monitor-shadow-layer\s*\{[^}]*inset:\s*29\.297%\s+25\.26%\s+17\.09%\s+24\.414%;/s,
+    'Expected right monitor shadow bounds to align with the vertically flipped right frame hole',
   );
   assert.match(
     source,
     /\.monitor-group-right\s+\.monitor-frame-image\s*\{[^}]*transform:\s*scaleY\(-1\);[^}]*transform-origin:\s*center;/s,
     'Expected the right monitor frame art to be vertically flipped into the correct orientation',
+  );
+});
+
+test('middle monitor shadow uses full Commodore screen bounds', () => {
+  const source = fs.readFileSync(indexCssPath, 'utf8');
+
+  assert.match(
+    source,
+    /\.monitor-group-middle\s*>\s*\.monitor-shadow-layer\s*\{[^}]*inset:\s*0;/s,
+    'Expected middle monitor shadow bounds to cover the full Commodore screen overlay',
   );
 });
