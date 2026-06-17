@@ -180,6 +180,7 @@ export const state = {
   aquariumShrimpClipSource: AQUARIUM_CLIP_SOURCE_LOCAL_FALLBACK,
   aquariumClipHistory: [],
   aquariumHistoryPointer: 0,
+  aquariumDepthOverlayLayoutsById: new Map(),
   commodorePowerButtonEl: null,
   isCommodorePoweringOn: false,
   commodoreShadowOverlayEl: null,
