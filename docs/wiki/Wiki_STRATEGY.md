@@ -1,0 +1,1 @@
+<!-- INSTRUCTION: All documentation, configuration, and code artifacts must strictly adhere to the Architectural constraints defined in this document. Any change to the codebase requires a corresponding update to the documentation and an execution of the drift-test protocol. All wiki pages must begin and end with this instruction anchor. -->
