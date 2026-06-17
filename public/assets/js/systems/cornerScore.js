@@ -96,28 +96,28 @@ function makeScoreTableRow(rowNum, score, elapsedMs, bounces, nearMisses) {
   return tr;
 }
 
-function addPersonalBestTableRow() {
+function addPersonalBestTableRow(score, elapsedMs, bounces, nearMisses) {
   if (!state.bigTvPbTableBodyEl) return;
   state.bigTvPbTableRowCount += 1;
   const tr = makeScoreTableRow(
     state.bigTvPbTableRowCount,
-    state.cornerScoreValue,
-    state.cornerScoreRunElapsedMs,
-    state.cornerScoreRunBounces,
-    state.cornerScoreRunNearMisses
+    score,
+    elapsedMs,
+    bounces,
+    nearMisses
   );
   state.bigTvPbTableBodyEl.appendChild(tr);
 }
 
-function addServerHighScoreTableRow() {
+function addServerHighScoreTableRow(score, elapsedMs, bounces, nearMisses) {
   if (!state.bigTvServerHsTableBodyEl) return;
   state.bigTvServerHsTableRowCount += 1;
   const tr = makeScoreTableRow(
     state.bigTvServerHsTableRowCount,
-    state.cornerScoreValue,
-    state.cornerScoreRunElapsedMs,
-    state.cornerScoreRunBounces,
-    state.cornerScoreRunNearMisses
+    score,
+    elapsedMs,
+    bounces,
+    nearMisses
   );
   state.bigTvServerHsTableBodyEl.appendChild(tr);
 }

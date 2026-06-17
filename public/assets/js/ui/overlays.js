@@ -62,6 +62,24 @@ const isIOSDevice =
   /iPad|iPhone|iPod/.test(window.navigator.userAgent) ||
   (window.navigator.platform === 'MacIntel' && window.navigator.maxTouchPoints > 1);
 
+// Shared column structure for CornerScore run-history tables
+const CS_TABLE_COLUMNS = ['#', 'Score', 'Time', 'Bounces', 'Near Misses'];
+function makeRunHistoryTable() {
+  const table = document.createElement('table');
+  table.className = 'big-tv-cs-panel-table';
+  const thead = document.createElement('thead');
+  const headerRow = document.createElement('tr');
+  CS_TABLE_COLUMNS.forEach((col) => {
+    const th = document.createElement('th');
+    th.textContent = col;
+    headerRow.appendChild(th);
+  });
+  thead.appendChild(headerRow);
+  const tbody = document.createElement('tbody');
+  table.append(thead, tbody);
+  return { table, tbody };
+}
+
 function hasActiveBigTvContentOverlay() {
   return Boolean(
     state.aquariumStaticOverlayEl?.classList.contains('is-active') ||
@@ -630,24 +648,6 @@ function createOverlays() {
         crGrid.append(lEl, vEl);
       });
       crViewEl.appendChild(crGrid);
-
-      // Helper to build a run-history table with a shared column structure
-      const CS_TABLE_COLUMNS = ['#', 'Score', 'Time', 'Bounces', 'Near Misses'];
-      function makeRunHistoryTable() {
-        const table = document.createElement('table');
-        table.className = 'big-tv-cs-panel-table';
-        const thead = document.createElement('thead');
-        const headerRow = document.createElement('tr');
-        CS_TABLE_COLUMNS.forEach((col) => {
-          const th = document.createElement('th');
-          th.textContent = col;
-          headerRow.appendChild(th);
-        });
-        thead.appendChild(headerRow);
-        const tbody = document.createElement('tbody');
-        table.append(thead, tbody);
-        return { table, tbody };
-      }
 
       // View: Personal Best (run history table)
       const pbViewEl2 = document.createElement('div');

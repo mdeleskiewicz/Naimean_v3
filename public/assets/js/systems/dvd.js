@@ -243,14 +243,24 @@ function tickBigTvDvdAnimation(timestamp) {
       const personalBestScore = state.cornerScorePersonalBest?.score ?? 0;
       if (nextCornerScore > personalBestScore) {
         showPersonalBestBanner();
-        addPersonalBestTableRow();
+        addPersonalBestTableRow(
+          nextCornerScore,
+          state.cornerScoreRunElapsedMs,
+          state.cornerScoreRunBounces,
+          state.cornerScoreRunNearMisses
+        );
       }
       if (nextCornerScore === previousHighScore) {
         showCornerScoreStatus('Tied for high-score!', nextCornerScore);
         void queueCornerScoreUpdate(nextCornerScore, { force: true });
       } else if (nextCornerScore > previousHighScore) {
         showServerHighScoreBanner();
-        addServerHighScoreTableRow();
+        addServerHighScoreTableRow(
+          nextCornerScore,
+          state.cornerScoreRunElapsedMs,
+          state.cornerScoreRunBounces,
+          state.cornerScoreRunNearMisses
+        );
         showCornerScoreInitialsPrompt(nextCornerScore);
       }
     }
