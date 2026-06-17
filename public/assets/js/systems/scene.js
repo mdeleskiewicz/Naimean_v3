@@ -47,7 +47,7 @@ import { clamp, isTextEntryTarget, measureSyncSection, scheduleNonCriticalTask, 
 import { createOverlays } from '../ui/overlays.js';
 import { consumeDiscordLoginFlowState, syncDiscordAuthBodyClass, syncDiscordButtonUi, syncLoginOverlayUi } from './login.js';
 import { loadCommodorePowerState, syncStoredCommodorePowerState, handlePageShow, cancelMonitorPowerTimeouts } from './monitors.js';
-import { playWrongAudio, syncCornerScoreServerToLocalMad, unlockCornerScoreScoringAudioFromGesture } from './cornerScore.js';
+import { playWrongAudio, clearCornerScore, syncCornerScoreServerToLocalMad, unlockCornerScoreScoringAudioFromGesture } from './cornerScore.js';
 import { adjustDvdSpeed, stopBigTvDvdAnimation } from './dvd.js';
 import { stopRadioTuningLoopPlayback } from './flipClock.js';
 import { createHotspots, getRuntimeHotspotById, syncControlledOverlaysFromHotspots, consumeSaveResultFlash, hydrateHotspotsFromServer, hydrateNonCriticalSceneData, refreshDebugObjectActions, refreshDebugObjectSelectOptions, setHotspotDebugLockState, getSelectedDebugHotspotElement, saveDenUrlOverride, saveHotspots, hideSaveModal, encodeDebugSavePassword, hasMatchingDebugSaveCipher, ensureDebugSaveAccess, addResizeHandles, setAquariumDepthOverlayLayout } from './hotspots.js';
@@ -1565,6 +1565,31 @@ function bindSceneEvents() {
     };
     dom.debugCornerScoreSyncButton.addEventListener('click', () => {
       void syncDebugCornerScore();
+    });
+  }
+  if (dom.debugCornerScoreClearButton) {
+    const clearDebugCornerScore = async () => {
+      if (!ensureDebugSaveAccess()) return;
+      const buttonLabel = 'Clear CornerScore (server + local)';
+      dom.debugCornerScoreClearButton.disabled = true;
+      dom.debugCornerScoreClearButton.textContent = 'Clearing...';
+      const result = await clearCornerScore();
+      if (result.ok) {
+        dom.debugCornerScoreClearButton.textContent = 'Cleared!';
+        if (dom.debugStatus) dom.debugStatus.textContent = 'CornerScore server and local state cleared.';
+      } else {
+        dom.debugCornerScoreClearButton.textContent = 'Clear failed';
+        if (dom.debugStatus) dom.debugStatus.textContent = result.error || 'CornerScore clear failed.';
+      }
+      window.setTimeout(() => {
+        if (dom.debugCornerScoreClearButton) {
+          dom.debugCornerScoreClearButton.textContent = buttonLabel;
+          dom.debugCornerScoreClearButton.disabled = false;
+        }
+      }, 2000);
+    };
+    dom.debugCornerScoreClearButton.addEventListener('click', () => {
+      void clearDebugCornerScore();
     });
   }
   dom.saveBtn?.addEventListener('click', saveHotspots);

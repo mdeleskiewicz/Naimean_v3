@@ -378,6 +378,20 @@ test('HotspotStore GET returns corner score when storage is empty', async () => 
 
 const ZERO_AGGREGATES = { totalBounces: 0, totalNearMisses: 0, totalScores: 0, totalTimeMs: 0, totalRuns: 0, pbScore: 0, pbTimeMs: 0, pbBounces: 0, pbNearMisses: 0 };
 
+test('HotspotStore DELETE resets corner score to zero without requiring auth', async () => {
+  const { state, calls, getStored } = makeKeyedState({ 'corner-score': { score: 15, initials: 'MAD', totalBounces: 10, totalNearMisses: 3, totalScores: 15, totalTimeMs: 60000, totalRuns: 2, pbScore: 15, pbTimeMs: 30000, pbBounces: 8, pbNearMisses: 2 } });
+  const store = new HotspotStore(state);
+
+  const response = await store.fetch(new Request('https://example.com/api/corner-score', { method: 'DELETE' }));
+  const body = await response.json();
+
+  assert.equal(response.status, 200);
+  assert.deepEqual(body, { ok: true, score: 0, initials: '', ...ZERO_AGGREGATES });
+  assert.equal(calls.put.length, 1);
+  assert.deepEqual(calls.put[0], { key: 'corner-score', value: { score: 0, initials: '', ...ZERO_AGGREGATES } });
+  assert.deepEqual(getStored('corner-score'), { score: 0, initials: '', ...ZERO_AGGREGATES });
+});
+
 test('HotspotStore POST increments and stores corner score', async () => {
   const { state, calls, getStored } = makeKeyedState({ 'corner-score': 7 });
   const store = new HotspotStore(state);
