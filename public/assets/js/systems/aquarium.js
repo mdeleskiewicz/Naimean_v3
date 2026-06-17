@@ -86,6 +86,10 @@ function skipAquariumToPreviousClip() {
   return skipToAquariumClip(targetUrl, { recordInHistory: false });
 }
 
+/**
+ * Get random shrimp clip URL from the shuffled queue
+ * @returns {string} - Random shrimp clip URL
+ */
 function getRandomShrimpClipUrl() {
   if (state.aquariumShrimpClipQueue.length === 0) {
     state.aquariumShrimpClipQueue = [...state.aquariumShrimpClips];
@@ -94,6 +98,11 @@ function getRandomShrimpClipUrl() {
   return state.aquariumShrimpClipQueue.pop();
 }
 
+/**
+ * Repopulate the aquarium with a fresh shuffled queue of shrimp clips.
+ * Safe to call during active playback - the next clip will come from the refreshed queue.
+ * This creates a new random selection without interrupting the current video.
+ */
 function repopulateAquariumShrimp() {
   // Repopulate with a fresh shuffled queue
   state.aquariumShrimpClipQueue = [...state.aquariumShrimpClips];

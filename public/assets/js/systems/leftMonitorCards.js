@@ -305,8 +305,6 @@ async function triggerLoggedInCard() {
  */
 function triggerShrimpCard() {
   void activateLeftMonitorCard(LEFT_MONITOR_CARD_SHRIMP);
-  // Also trigger aquarium playback sequence
-  state._cb.playAquariumHotspotSequence?.();
 }
 
 /**
