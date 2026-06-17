@@ -188,6 +188,7 @@ export const DISCORD_WIDGET_URL = DISCORD_GUILD_ID
   : null;
 export const DISCORD_BUTTON_IMAGE_URL = BIG_TV_RIGHT_MONITOR_OVERLAY_BLUE_IMAGE_URL;
 export const STARSHRIMP_LOGO_IMAGE_URL = 'assets/images/starshrimp_logo.png';
+export const AQUARIUM_DEPTH_OVERLAY_IMAGE_URL = 'https://github.com/user-attachments/assets/20d12830-116a-4b9d-be94-4bc5991c331e';
 export const COMMODORE_DESK_IMAGE_URL = 'assets/images/commodore-desk-overlay.png';
 export const LEFT_MONITOR_SIDE_FRAME_IMAGE_URL = 'assets/images/L_Frame.png';
 export const RIGHT_MONITOR_SIDE_FRAME_IMAGE_URL = 'assets/images/R_Frame.png';

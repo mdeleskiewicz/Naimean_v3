@@ -378,6 +378,18 @@
       object-fit: cover;
     }
 
+    .aquarium-depth-overlay {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      object-position: center;
+      pointer-events: none;
+      user-select: none;
+      z-index: 3;
+    }
+
     .big-tv-fullscreen-exit-button {
       position: absolute;
       top: calc(env(safe-area-inset-top, 0px) + 12px);
