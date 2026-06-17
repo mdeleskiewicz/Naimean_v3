@@ -164,6 +164,13 @@ function hideAllLeftMonitorCardOverlays() {
     state.leftMonitorShrimpCardEl.setAttribute('aria-hidden', 'true');
   }
 
+  // Hide CornerScore bottom panel and free its data
+  if (state.bigTvCornerScoreBottomPanelEl) {
+    state.bigTvCornerScoreBottomPanelEl.classList.remove('is-active');
+    state.bigTvCornerScoreBottomPanelEl.setAttribute('aria-hidden', 'true');
+  }
+  state.bigTvCornerScoreBottomPanelView = null;
+
   // Also hide the legacy left monitor selector and overlays
   if (state.leftMonitorSelectorEl) {
     state.leftMonitorSelectorEl.classList.add('is-hidden');

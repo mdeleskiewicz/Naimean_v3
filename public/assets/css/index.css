@@ -1057,7 +1057,7 @@
     .right-monitor-discord-quadrant-overlay {
       position: absolute;
       inset: 0;
-      z-index: 2;
+      z-index: 1;
       opacity: 0;
       visibility: hidden;
       pointer-events: none;
@@ -1069,6 +1069,7 @@
       background: #070d15;
       transition: opacity 120ms ease;
       overflow: hidden;
+      container-type: size;
     }
 
     .right-monitor-discord-quadrant-overlay.is-active {
@@ -1184,10 +1185,7 @@
     /* === LEFT MONITOR CARD SYSTEM === */
     .left-monitor-card {
       position: absolute;
-      top: calc(var(--left-monitor-inner-boundary-top) - var(--monitor-content-bleed));
-      right: calc(var(--left-monitor-inner-boundary-right) - var(--monitor-content-bleed));
-      bottom: calc(var(--left-monitor-inner-boundary-bottom) - var(--monitor-content-bleed));
-      left: calc(var(--left-monitor-inner-boundary-left) - var(--monitor-content-bleed));
+      inset: 0;
       opacity: 0;
       visibility: hidden;
       transition: opacity 0.3s ease, visibility 0.3s ease;
@@ -1274,12 +1272,7 @@
     }
 
     /* GitHub Card */
-    .left-monitor-github-card {
-      top: 0;
-      right: 0;
-      bottom: 0;
-      left: 0;
-    }
+
 
     .left-monitor-github-card .github-card-grid {
       gap: 0;
@@ -1494,7 +1487,6 @@
       pointer-events: auto;
     }
 
-    .right-monitor-screen-window > .right-monitor-discord-quadrant-overlay,
     .right-monitor-screen-window > .overlay-static-layer,
     .right-monitor-screen-window > .right-monitor-shrimp-logo-overlay,
     .right-monitor-screen-window > .right-monitor-corner-score-overlay {
