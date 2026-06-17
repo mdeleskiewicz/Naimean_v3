@@ -383,7 +383,7 @@
       inset: 0;
       width: 100%;
       height: 100%;
-      object-fit: contain;
+      object-fit: fill;
       pointer-events: none;
       user-select: none;
       z-index: 3;
@@ -3181,6 +3181,36 @@
       100% { transform: translate3d(0, 0, 0) scaleX(1); }
     }
 
+    /* --- reverse swimming variants for bidirectional movement --- */
+    .aquarium-shrimp-reverse {
+      animation: aquarium-shrimp-swim-reverse var(--shrimp-duration, 13s) linear infinite;
+    }
+
+    @keyframes aquarium-shrimp-swim-reverse {
+      /* Mirror of shrimp-swim: starts at right, swims left, then returns */
+      0%   { transform: translate3d(0, 0, 0) scaleX(-1); }
+      1%   { transform: translate3d(calc(var(--shrimp-swim-dist, 200px) * -0.25), -1.5px, 0) scaleX(-1); }
+      3%   { transform: translate3d(calc(var(--shrimp-swim-dist, 200px) * -0.25), 0px, 0) scaleX(-1); }
+      16%  { transform: translate3d(calc(var(--shrimp-swim-dist, 200px) * -0.25), 0px, 0) scaleX(-1); }
+      17%  { transform: translate3d(calc(var(--shrimp-swim-dist, 200px) * -0.60), -2px, 0) scaleX(-1); }
+      19%  { transform: translate3d(calc(var(--shrimp-swim-dist, 200px) * -0.60), 0px, 0) scaleX(-1); }
+      33%  { transform: translate3d(calc(var(--shrimp-swim-dist, 200px) * -0.60), 0px, 0) scaleX(-1); }
+      34%  { transform: translate3d(calc(var(--shrimp-swim-dist, 200px) * -1), -1.5px, 0) scaleX(-1); }
+      36%  { transform: translate3d(calc(var(--shrimp-swim-dist, 200px) * -1), 0px, 0) scaleX(-1); }
+      49%  { transform: translate3d(calc(var(--shrimp-swim-dist, 200px) * -1), 0px, 0) scaleX(-1); }
+      50%  { transform: translate3d(calc(var(--shrimp-swim-dist, 200px) * -1), 0px, 0) scaleX(1); }
+      51%  { transform: translate3d(calc(var(--shrimp-swim-dist, 200px) * -0.73), -1.5px, 0) scaleX(1); }
+      53%  { transform: translate3d(calc(var(--shrimp-swim-dist, 200px) * -0.73), 0px, 0) scaleX(1); }
+      66%  { transform: translate3d(calc(var(--shrimp-swim-dist, 200px) * -0.73), 0px, 0) scaleX(1); }
+      67%  { transform: translate3d(calc(var(--shrimp-swim-dist, 200px) * -0.38), -2px, 0) scaleX(1); }
+      69%  { transform: translate3d(calc(var(--shrimp-swim-dist, 200px) * -0.38), 0px, 0) scaleX(1); }
+      83%  { transform: translate3d(calc(var(--shrimp-swim-dist, 200px) * -0.38), 0px, 0) scaleX(1); }
+      84%  { transform: translate3d(0px, -1.5px, 0) scaleX(1); }
+      86%  { transform: translate3d(0, 0, 0) scaleX(1); }
+      99%  { transform: translate3d(0px, 0px, 0) scaleX(1); }
+      100% { transform: translate3d(0, 0, 0) scaleX(-1); }
+    }
+
     /* --- snail — slow crawl along the bottom --- */
     .aquarium-snail {
       position: absolute;
@@ -3239,6 +3269,22 @@
       100% { transform: translate3d(0, 0, 0) scaleX(1); }
     }
 
+    .aquarium-turtle-reverse {
+      animation: aquarium-turtle-swim-reverse var(--turtle-duration, 24s) ease-in-out infinite;
+    }
+
+    @keyframes aquarium-turtle-swim-reverse {
+      0%   { transform: translate3d(0, 0, 0) scaleX(-1); }
+      20%  { transform: translate3d(calc(var(--turtle-swim-dist, 170px) * -0.20), -4px, 0) scaleX(-1); }
+      40%  { transform: translate3d(calc(var(--turtle-swim-dist, 170px) * -0.40),  3px, 0) scaleX(-1); }
+      48%  { transform: translate3d(calc(var(--turtle-swim-dist, 170px) * -1), 0, 0) scaleX(-1); }
+      50%  { transform: translate3d(calc(var(--turtle-swim-dist, 170px) * -1), 0, 0) scaleX(1); }
+      70%  { transform: translate3d(calc(var(--turtle-swim-dist, 170px) * -0.70), -4px, 0) scaleX(1); }
+      90%  { transform: translate3d(calc(var(--turtle-swim-dist, 170px) * -0.20),  3px, 0) scaleX(1); }
+      98%  { transform: translate3d(0, 0, 0) scaleX(1); }
+      100% { transform: translate3d(0, 0, 0) scaleX(-1); }
+    }
+
     /* --- jellyfish — gentle vertical pulse and drift --- */
     .aquarium-jellyfish {
       position: absolute;
@@ -3279,6 +3325,22 @@
       100% { transform: translate3d(0, 0, 0) scaleX(1); }
     }
 
+    .aquarium-nautilus-reverse {
+      animation: aquarium-nautilus-glide-reverse var(--nautilus-duration, 22s) ease-in-out infinite;
+    }
+
+    @keyframes aquarium-nautilus-glide-reverse {
+      0%   { transform: translate3d(0, 0, 0) scaleX(-1); }
+      15%  { transform: translate3d(calc(var(--nautilus-swim-dist, 200px) * -0.15), -6px, 0) scaleX(-1); }
+      35%  { transform: translate3d(calc(var(--nautilus-swim-dist, 200px) * -0.35),  5px, 0) scaleX(-1); }
+      48%  { transform: translate3d(calc(var(--nautilus-swim-dist, 200px) * -1), 0, 0) scaleX(-1); }
+      50%  { transform: translate3d(calc(var(--nautilus-swim-dist, 200px) * -1), 0, 0) scaleX(1); }
+      65%  { transform: translate3d(calc(var(--nautilus-swim-dist, 200px) * -0.65), -6px, 0) scaleX(1); }
+      82%  { transform: translate3d(calc(var(--nautilus-swim-dist, 200px) * -0.40),  5px, 0) scaleX(1); }
+      98%  { transform: translate3d(0, 0, 0) scaleX(1); }
+      100% { transform: translate3d(0, 0, 0) scaleX(-1); }
+    }
+
     /* --- octopus — drifts side to side with a subtle pulse --- */
     .aquarium-octopus {
       position: absolute;
@@ -3299,6 +3361,22 @@
       80%  { transform: translate3d(calc(var(--octopus-swim-dist, 210px) * 0.50),  6px, 0) scaleX(-1) scale(0.97); }
       98%  { transform: translate3d(0, 0, 0) scaleX(-1) scale(1); }
       100% { transform: translate3d(0, 0, 0) scaleX(1) scale(1); }
+    }
+
+    .aquarium-octopus-reverse {
+      animation: aquarium-octopus-swim-reverse var(--octopus-duration, 16s) ease-in-out infinite;
+    }
+
+    @keyframes aquarium-octopus-swim-reverse {
+      0%   { transform: translate3d(0, 0, 0) scaleX(-1) scale(1); }
+      12%  { transform: translate3d(calc(var(--octopus-swim-dist, 210px) * -0.12), -8px, 0) scaleX(-1) scale(1.05); }
+      28%  { transform: translate3d(calc(var(--octopus-swim-dist, 210px) * -0.28),  6px, 0) scaleX(-1) scale(0.97); }
+      48%  { transform: translate3d(calc(var(--octopus-swim-dist, 210px) * -1), 0, 0) scaleX(-1) scale(1); }
+      50%  { transform: translate3d(calc(var(--octopus-swim-dist, 210px) * -1), 0, 0) scaleX(1) scale(1); }
+      65%  { transform: translate3d(calc(var(--octopus-swim-dist, 210px) * -0.80), -8px, 0) scaleX(1) scale(1.05); }
+      80%  { transform: translate3d(calc(var(--octopus-swim-dist, 210px) * -0.50),  6px, 0) scaleX(1) scale(0.97); }
+      98%  { transform: translate3d(0, 0, 0) scaleX(1) scale(1); }
+      100% { transform: translate3d(0, 0, 0) scaleX(-1) scale(1); }
     }
 
     /* --- frog — hops along the tank floor --- */
@@ -3346,6 +3424,22 @@
       100% { transform: translate3d(0, 0, 0) scaleX(1) rotate(0deg); }
     }
 
+    .aquarium-manta-ray-reverse {
+      animation: aquarium-manta-ray-glide-reverse var(--manta-duration, 26s) ease-in-out infinite;
+    }
+
+    @keyframes aquarium-manta-ray-glide-reverse {
+      0%   { transform: translate3d(0, 0, 0) scaleX(-1) rotate(0deg); }
+      20%  { transform: translate3d(calc(var(--manta-swim-dist, 240px) * -0.20), -8px, 0) scaleX(-1) rotate(3deg); }
+      40%  { transform: translate3d(calc(var(--manta-swim-dist, 240px) * -0.40),  6px, 0) scaleX(-1) rotate(-2deg); }
+      48%  { transform: translate3d(calc(var(--manta-swim-dist, 240px) * -1), 0, 0) scaleX(-1) rotate(0deg); }
+      50%  { transform: translate3d(calc(var(--manta-swim-dist, 240px) * -1), 0, 0) scaleX(1) rotate(0deg); }
+      68%  { transform: translate3d(calc(var(--manta-swim-dist, 240px) * -0.68), -8px, 0) scaleX(1) rotate(-3deg); }
+      86%  { transform: translate3d(calc(var(--manta-swim-dist, 240px) * -0.20),  6px, 0) scaleX(1) rotate(2deg); }
+      98%  { transform: translate3d(0, 0, 0) scaleX(1) rotate(0deg); }
+      100% { transform: translate3d(0, 0, 0) scaleX(-1) rotate(0deg); }
+    }
+
     /* --- shark — quick, purposeful cruise across the tank --- */
     .aquarium-shark {
       position: absolute;
@@ -3366,6 +3460,22 @@
       82%  { transform: translate3d(calc(var(--shark-swim-dist, 260px) * 0.35),  4px, 0) scaleX(-1); }
       98%  { transform: translate3d(0, 0, 0) scaleX(-1); }
       100% { transform: translate3d(0, 0, 0) scaleX(1); }
+    }
+
+    .aquarium-shark-reverse {
+      animation: aquarium-shark-cruise-reverse var(--shark-duration, 14s) linear infinite;
+    }
+
+    @keyframes aquarium-shark-cruise-reverse {
+      0%   { transform: translate3d(0, 0, 0) scaleX(-1); }
+      15%  { transform: translate3d(calc(var(--shark-swim-dist, 260px) * -0.15), -5px, 0) scaleX(-1); }
+      35%  { transform: translate3d(calc(var(--shark-swim-dist, 260px) * -0.35),  4px, 0) scaleX(-1); }
+      48%  { transform: translate3d(calc(var(--shark-swim-dist, 260px) * -1), 0, 0) scaleX(-1); }
+      50%  { transform: translate3d(calc(var(--shark-swim-dist, 260px) * -1), 0, 0) scaleX(1); }
+      65%  { transform: translate3d(calc(var(--shark-swim-dist, 260px) * -0.65), -5px, 0) scaleX(1); }
+      82%  { transform: translate3d(calc(var(--shark-swim-dist, 260px) * -0.35),  4px, 0) scaleX(1); }
+      98%  { transform: translate3d(0, 0, 0) scaleX(1); }
+      100% { transform: translate3d(0, 0, 0) scaleX(-1); }
     }
 
     /* --- electric eel — sinuous swim with flickering glow --- */
@@ -3391,6 +3501,24 @@
       80%  { transform: translate3d(calc(var(--electric-eel-swim-dist, 220px) * 0.40),  8px, 0) scaleX(-1); }
       98%  { transform: translate3d(0, 0, 0) scaleX(-1); }
       100% { transform: translate3d(0, 0, 0) scaleX(1); }
+    }
+
+    .aquarium-electric-eel-reverse {
+      animation: aquarium-electric-eel-swim-reverse var(--electric-eel-duration, 18s) ease-in-out infinite,
+                 aquarium-electric-eel-zap 0.9s ease-in-out infinite alternate;
+    }
+
+    @keyframes aquarium-electric-eel-swim-reverse {
+      0%   { transform: translate3d(0, 0, 0) scaleX(-1); }
+      12%  { transform: translate3d(calc(var(--electric-eel-swim-dist, 220px) * -0.12), -6px, 0) scaleX(-1); }
+      30%  { transform: translate3d(calc(var(--electric-eel-swim-dist, 220px) * -0.30),  8px, 0) scaleX(-1); }
+      45%  { transform: translate3d(calc(var(--electric-eel-swim-dist, 220px) * -0.45), -4px, 0) scaleX(-1); }
+      48%  { transform: translate3d(calc(var(--electric-eel-swim-dist, 220px) * -1), 0, 0) scaleX(-1); }
+      50%  { transform: translate3d(calc(var(--electric-eel-swim-dist, 220px) * -1), 0, 0) scaleX(1); }
+      65%  { transform: translate3d(calc(var(--electric-eel-swim-dist, 220px) * -0.70), -6px, 0) scaleX(1); }
+      80%  { transform: translate3d(calc(var(--electric-eel-swim-dist, 220px) * -0.40),  8px, 0) scaleX(1); }
+      98%  { transform: translate3d(0, 0, 0) scaleX(1); }
+      100% { transform: translate3d(0, 0, 0) scaleX(-1); }
     }
 
     @keyframes aquarium-electric-eel-zap {
@@ -3423,6 +3551,24 @@
       90%  { transform: translate3d(calc(var(--moray-swim-dist, 200px) * 0.15),  5px, 0) scaleX(-1); }
       98%  { transform: translate3d(0, 0, 0) scaleX(-1); }
       100% { transform: translate3d(0, 0, 0) scaleX(1); }
+    }
+
+    .aquarium-moray-eel-reverse {
+      animation: aquarium-moray-eel-prowl-reverse var(--moray-duration, 20s) ease-in-out infinite;
+    }
+
+    @keyframes aquarium-moray-eel-prowl-reverse {
+      0%   { transform: translate3d(0, 0, 0) scaleX(-1); }
+      10%  { transform: translate3d(calc(var(--moray-swim-dist, 200px) * -0.10),  9px, 0) scaleX(-1); }
+      25%  { transform: translate3d(calc(var(--moray-swim-dist, 200px) * -0.25), -7px, 0) scaleX(-1); }
+      40%  { transform: translate3d(calc(var(--moray-swim-dist, 200px) * -0.40),  8px, 0) scaleX(-1); }
+      48%  { transform: translate3d(calc(var(--moray-swim-dist, 200px) * -1), 0, 0) scaleX(-1); }
+      50%  { transform: translate3d(calc(var(--moray-swim-dist, 200px) * -1), 0, 0) scaleX(1); }
+      65%  { transform: translate3d(calc(var(--moray-swim-dist, 200px) * -0.65),  9px, 0) scaleX(1); }
+      78%  { transform: translate3d(calc(var(--moray-swim-dist, 200px) * -0.45), -7px, 0) scaleX(1); }
+      90%  { transform: translate3d(calc(var(--moray-swim-dist, 200px) * -0.15),  5px, 0) scaleX(1); }
+      98%  { transform: translate3d(0, 0, 0) scaleX(1); }
+      100% { transform: translate3d(0, 0, 0) scaleX(-1); }
     }
 
     /* --- bubble chest --- */
@@ -3502,6 +3648,22 @@
       86%  { transform: translate3d(calc(var(--toy-diver-swim-dist, 180px) * 0.25),  7px, 0) scaleX(-1) rotate(-2deg); }
       98%  { transform: translate3d(0, 0, 0) scaleX(-1) rotate(6deg); }
       100% { transform: translate3d(0, 0, 0) scaleX(1) rotate(-6deg); }
+    }
+
+    .aquarium-toy-diver-reverse {
+      animation: aquarium-toy-diver-swim-reverse var(--toy-diver-duration, 18s) ease-in-out infinite;
+    }
+
+    @keyframes aquarium-toy-diver-swim-reverse {
+      0%   { transform: translate3d(0, 0, 0) scaleX(-1) rotate(6deg); }
+      20%  { transform: translate3d(calc(var(--toy-diver-swim-dist, 180px) * -0.20), -8px, 0) scaleX(-1) rotate(-2deg); }
+      40%  { transform: translate3d(calc(var(--toy-diver-swim-dist, 180px) * -0.45),  7px, 0) scaleX(-1) rotate(3deg); }
+      48%  { transform: translate3d(calc(var(--toy-diver-swim-dist, 180px) * -1), 0, 0) scaleX(-1) rotate(0deg); }
+      50%  { transform: translate3d(calc(var(--toy-diver-swim-dist, 180px) * -1), 0, 0) scaleX(1) rotate(0deg); }
+      68%  { transform: translate3d(calc(var(--toy-diver-swim-dist, 180px) * -0.70), -8px, 0) scaleX(1) rotate(-3deg); }
+      86%  { transform: translate3d(calc(var(--toy-diver-swim-dist, 180px) * -0.25),  7px, 0) scaleX(1) rotate(2deg); }
+      98%  { transform: translate3d(0, 0, 0) scaleX(1) rotate(-6deg); }
+      100% { transform: translate3d(0, 0, 0) scaleX(-1) rotate(6deg); }
     }
 
     /* --- cthulhu bubbler --- */

@@ -606,6 +606,7 @@ function createAquariumFishEffect() {
 
   // Shrimp: weighted random count favoring 3–4 (3–6 possible), distributed evenly across the bottom third of the tank with jitter.
   // Color palette blends warm and cool shrimp morph-inspired hues for variety.
+  // Now spawns across full tank width with bidirectional movement for diversity.
   const shrimpHues = [0, 22, 55, 115, 200, 260, 330];
   const shrimpHuePool = createShuffledCopy(shrimpHues);
   const shrimpCount = getAquariumShrimpCount();
@@ -619,12 +620,17 @@ function createAquariumFishEffect() {
     const duration = 30 + Math.random() * 24;
     const delay = -(Math.random() * duration);
     const hue = shrimpHuePool[i % shrimpHuePool.length];
+    const startLeft = 5 + Math.floor(Math.random() * 85); // Randomize across tank width
+    const swimsRight = Math.random() < 0.5; // 50% chance to swim in each direction
     const shrimp = document.createElement('span');
     shrimp.className = 'aquarium-shrimp';
+    if (!swimsRight) {
+      shrimp.classList.add('aquarium-shrimp-reverse');
+    }
     shrimp.textContent = '🦐';
     shrimp.style.fontSize = `${size}px`;
     shrimp.style.top = `${top}%`;
-    shrimp.style.left = '4%';
+    shrimp.style.left = `${startLeft}%`;
     shrimp.style.filter = `hue-rotate(${hue}deg)`;
     shrimp.style.setProperty('--shrimp-swim-dist', `${swimDist}px`);
     shrimp.style.setProperty('--shrimp-duration', `${duration.toFixed(2)}s`);
@@ -696,15 +702,20 @@ function createAquariumFishEffect() {
   } else if (guestType === 'turtle' || guestType === 'snapping-turtle' || guestType === 'little-crocodile') {
     const size = 30 + Math.floor(Math.random() * 12);
     const top = 30 + Math.floor(Math.random() * 35);
+    const startLeft = 5 + Math.floor(Math.random() * 85); // Randomize starting position
     const swimDist = 150 + Math.floor(Math.random() * 100);
     const duration = 20 + Math.random() * 14;
     const delay = -(Math.random() * duration);
+    const swimsRight = Math.random() < 0.5; // 50% chance to swim in each direction
     const turtle = document.createElement('span');
     turtle.className = 'aquarium-turtle';
+    if (!swimsRight) {
+      turtle.classList.add('aquarium-turtle-reverse');
+    }
     turtle.textContent = guestType === 'little-crocodile' ? '🐊' : '🐢';
     turtle.style.fontSize = `${size}px`;
     turtle.style.top = `${top}%`;
-    turtle.style.left = '5%';
+    turtle.style.left = `${startLeft}%`;
     turtle.style.setProperty('--turtle-swim-dist', `${swimDist}px`);
     turtle.style.setProperty('--turtle-duration', `${duration.toFixed(2)}s`);
     turtle.style.setProperty('--turtle-delay', `${delay.toFixed(2)}s`);
@@ -728,15 +739,20 @@ function createAquariumFishEffect() {
   } else if (guestType === 'nautilus') {
     const size = 26 + Math.floor(Math.random() * 12);
     const top = 25 + Math.floor(Math.random() * 40);
+    const startLeft = 5 + Math.floor(Math.random() * 85); // Randomize starting position
     const swimDist = 160 + Math.floor(Math.random() * 100);
     const duration = 18 + Math.random() * 12;
     const delay = -(Math.random() * duration);
+    const swimsRight = Math.random() < 0.5; // 50% chance to swim in each direction
     const nautilus = document.createElement('span');
     nautilus.className = 'aquarium-nautilus';
+    if (!swimsRight) {
+      nautilus.classList.add('aquarium-nautilus-reverse');
+    }
     nautilus.textContent = '🐚';
     nautilus.style.fontSize = `${size}px`;
     nautilus.style.top = `${top}%`;
-    nautilus.style.left = '8%';
+    nautilus.style.left = `${startLeft}%`;
     nautilus.style.setProperty('--nautilus-swim-dist', `${swimDist}px`);
     nautilus.style.setProperty('--nautilus-duration', `${duration.toFixed(2)}s`);
     nautilus.style.setProperty('--nautilus-delay', `${delay.toFixed(2)}s`);
@@ -744,15 +760,20 @@ function createAquariumFishEffect() {
   } else if (guestType === 'octopus' || guestType === 'vampire-octopus') {
     const size = 28 + Math.floor(Math.random() * 14);
     const top = 20 + Math.floor(Math.random() * 50);
+    const startLeft = 5 + Math.floor(Math.random() * 85); // Randomize starting position
     const swimDist = 180 + Math.floor(Math.random() * 110);
     const duration = 14 + Math.random() * 10;
     const delay = -(Math.random() * duration);
+    const swimsRight = Math.random() < 0.5; // 50% chance to swim in each direction
     const octopus = document.createElement('span');
     octopus.className = 'aquarium-octopus';
+    if (!swimsRight) {
+      octopus.classList.add('aquarium-octopus-reverse');
+    }
     octopus.textContent = guestType === 'vampire-octopus' ? '🐙🧛' : '🐙';
     octopus.style.fontSize = `${size}px`;
     octopus.style.top = `${top}%`;
-    octopus.style.left = '5%';
+    octopus.style.left = `${startLeft}%`;
     octopus.style.setProperty('--octopus-swim-dist', `${swimDist}px`);
     octopus.style.setProperty('--octopus-duration', `${duration.toFixed(2)}s`);
     octopus.style.setProperty('--octopus-delay', `${delay.toFixed(2)}s`);
@@ -776,15 +797,20 @@ function createAquariumFishEffect() {
   } else if (guestType === 'manta-ray') {
     const size = 22 + Math.floor(Math.random() * 10);
     const top = 20 + Math.floor(Math.random() * 45);
+    const startLeft = 5 + Math.floor(Math.random() * 85); // Randomize starting position
     const swimDist = 200 + Math.floor(Math.random() * 120);
     const duration = 22 + Math.random() * 14;
     const delay = -(Math.random() * duration);
+    const swimsRight = Math.random() < 0.5; // 50% chance to swim in each direction
     const manta = document.createElement('span');
     manta.className = 'aquarium-manta-ray';
+    if (!swimsRight) {
+      manta.classList.add('aquarium-manta-ray-reverse');
+    }
     manta.textContent = '🐡';
     manta.style.fontSize = `${size}px`;
     manta.style.top = `${top}%`;
-    manta.style.left = '3%';
+    manta.style.left = `${startLeft}%`;
     manta.style.setProperty('--manta-swim-dist', `${swimDist}px`);
     manta.style.setProperty('--manta-duration', `${duration.toFixed(2)}s`);
     manta.style.setProperty('--manta-delay', `${delay.toFixed(2)}s`);
@@ -792,11 +818,16 @@ function createAquariumFishEffect() {
   } else if (guestType === 'shark' || guestType === 'anglerfish' || guestType === 'baby-barracuda') {
     const size = 20 + Math.floor(Math.random() * 8);
     const top = 15 + Math.floor(Math.random() * 50);
+    const startLeft = 5 + Math.floor(Math.random() * 85); // Randomize starting position
     const swimDist = 220 + Math.floor(Math.random() * 130);
     const duration = 12 + Math.random() * 8;
     const delay = -(Math.random() * duration);
+    const swimsRight = Math.random() < 0.5; // 50% chance to swim in each direction
     const shark = document.createElement('span');
     shark.className = 'aquarium-shark';
+    if (!swimsRight) {
+      shark.classList.add('aquarium-shark-reverse');
+    }
     if (guestType === 'anglerfish') {
       shark.textContent = '🐟💡';
     } else if (guestType === 'baby-barracuda') {
@@ -806,7 +837,7 @@ function createAquariumFishEffect() {
     }
     shark.style.fontSize = `${size}px`;
     shark.style.top = `${top}%`;
-    shark.style.left = '2%';
+    shark.style.left = `${startLeft}%`;
     shark.style.setProperty('--shark-swim-dist', `${swimDist}px`);
     shark.style.setProperty('--shark-duration', `${duration.toFixed(2)}s`);
     shark.style.setProperty('--shark-delay', `${delay.toFixed(2)}s`);
@@ -814,15 +845,20 @@ function createAquariumFishEffect() {
   } else if (guestType === 'electric-eel') {
     const size = 22 + Math.floor(Math.random() * 10);
     const top = 30 + Math.floor(Math.random() * 40);
+    const startLeft = 5 + Math.floor(Math.random() * 85); // Randomize starting position
     const swimDist = 190 + Math.floor(Math.random() * 100);
     const duration = 16 + Math.random() * 10;
     const delay = -(Math.random() * duration);
+    const swimsRight = Math.random() < 0.5; // 50% chance to swim in each direction
     const eel = document.createElement('span');
     eel.className = 'aquarium-electric-eel';
+    if (!swimsRight) {
+      eel.classList.add('aquarium-electric-eel-reverse');
+    }
     eel.textContent = '🐍';
     eel.style.fontSize = `${size}px`;
     eel.style.top = `${top}%`;
-    eel.style.left = '4%';
+    eel.style.left = `${startLeft}%`;
     eel.style.setProperty('--electric-eel-swim-dist', `${swimDist}px`);
     eel.style.setProperty('--electric-eel-duration', `${duration.toFixed(2)}s`);
     eel.style.setProperty('--electric-eel-delay', `${delay.toFixed(2)}s`);
@@ -830,15 +866,20 @@ function createAquariumFishEffect() {
   } else if (guestType === 'moray-eel') {
     const size = 24 + Math.floor(Math.random() * 10);
     const top = 35 + Math.floor(Math.random() * 35);
+    const startLeft = 5 + Math.floor(Math.random() * 85); // Randomize starting position
     const swimDist = 170 + Math.floor(Math.random() * 90);
     const duration = 18 + Math.random() * 10;
     const delay = -(Math.random() * duration);
+    const swimsRight = Math.random() < 0.5; // 50% chance to swim in each direction
     const moray = document.createElement('span');
     moray.className = 'aquarium-moray-eel';
+    if (!swimsRight) {
+      moray.classList.add('aquarium-moray-eel-reverse');
+    }
     moray.textContent = '🐍';
     moray.style.fontSize = `${size}px`;
     moray.style.top = `${top}%`;
-    moray.style.left = '6%';
+    moray.style.left = `${startLeft}%`;
     moray.style.setProperty('--moray-swim-dist', `${swimDist}px`);
     moray.style.setProperty('--moray-duration', `${duration.toFixed(2)}s`);
     moray.style.setProperty('--moray-delay', `${delay.toFixed(2)}s`);
@@ -875,15 +916,20 @@ function createAquariumFishEffect() {
   } else if (guestType === 'toy-diver') {
     const size = 26 + Math.floor(Math.random() * 10);
     const top = 28 + Math.floor(Math.random() * 40);
+    const startLeft = 5 + Math.floor(Math.random() * 85); // Randomize starting position
     const swimDist = 150 + Math.floor(Math.random() * 90);
     const duration = 15 + Math.random() * 10;
     const delay = -(Math.random() * duration);
+    const swimsRight = Math.random() < 0.5; // 50% chance to swim in each direction
     const diver = document.createElement('span');
     diver.className = 'aquarium-toy-diver';
+    if (!swimsRight) {
+      diver.classList.add('aquarium-toy-diver-reverse');
+    }
     diver.textContent = '🤿';
     diver.style.fontSize = `${size}px`;
     diver.style.top = `${top}%`;
-    diver.style.left = '6%';
+    diver.style.left = `${startLeft}%`;
     diver.style.setProperty('--toy-diver-swim-dist', `${swimDist}px`);
     diver.style.setProperty('--toy-diver-duration', `${duration.toFixed(2)}s`);
     diver.style.setProperty('--toy-diver-delay', `${delay.toFixed(2)}s`);
@@ -913,11 +959,12 @@ function createAquariumFishEffect() {
   }
 
   // Generic fish slots: 1 or 2 fish drawn from the Disney sprite roster.
+  // Now spawns with randomized positions across tank width for diversity.
   const allFishConfigs = [
     {
       widthPx: 40 + Math.floor(Math.random() * 8),
       topPct: 22 + Math.floor(Math.random() * 28),
-      leftPct: 5,
+      leftPct: 5 + Math.floor(Math.random() * 85),
       swimDistPx: 180 + Math.floor(Math.random() * 100),
       durationSec: 9 + Math.random() * 6,
       delaySec: 0
@@ -925,7 +972,7 @@ function createAquariumFishEffect() {
     {
       widthPx: 38 + Math.floor(Math.random() * 8),
       topPct: 30 + Math.floor(Math.random() * 30),
-      leftPct: 7,
+      leftPct: 5 + Math.floor(Math.random() * 85),
       swimDistPx: 170 + Math.floor(Math.random() * 110),
       durationSec: 10 + Math.random() * 7,
       delaySec: 0
