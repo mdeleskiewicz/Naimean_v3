@@ -742,7 +742,8 @@ function createOverlays() {
       frameImg.src = LEFT_MONITOR_SIDE_FRAME_IMAGE_URL;
       frameImg.alt = '';
       frameLayer.appendChild(frameImg);
-      el.appendChild(frameLayer);
+      // frameLayer is appended last (after shadow and content) so DOM order
+      // matches z-index order, ensuring correct GPU compositor layer ordering.
 
       // Layer 2: power-on/off black overlay
       const shadowLayer = document.createElement('div');
@@ -1007,6 +1008,7 @@ function createOverlays() {
       state.leftMonitorStaticOverlayEl.appendChild(state.leftMonitorStaticVideoEl);
       windowEl.append(state.leftMonitorStaticOverlayEl);
       el.appendChild(windowEl);
+      el.appendChild(frameLayer); // topmost: appended after shadow/content so DOM order ↔ z-index order
       setLeftMonitorState(state.leftMonitorSelectedState);
     }
 
@@ -1057,7 +1059,8 @@ function createOverlays() {
       frameImg.src = RIGHT_MONITOR_SIDE_FRAME_IMAGE_URL;
       frameImg.alt = '';
       frameLayer.appendChild(frameImg);
-      el.appendChild(frameLayer);
+      // frameLayer is appended last (after shadow and content) so DOM order
+      // matches z-index order, ensuring correct GPU compositor layer ordering.
 
       // Layer 2: power-on/off black overlay
       const shadowLayer = document.createElement('div');
@@ -1142,6 +1145,7 @@ function createOverlays() {
       state.rightMonitorShrimpLogoOverlayEl.appendChild(shrimpLogoImg);
       windowEl.appendChild(state.rightMonitorShrimpLogoOverlayEl);
       el.appendChild(windowEl);
+      el.appendChild(frameLayer); // topmost: appended after shadow/content so DOM order ↔ z-index order
       applyDvdColorStep();
     }
 
