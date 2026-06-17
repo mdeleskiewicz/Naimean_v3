@@ -308,7 +308,7 @@ function appendAquariumDisneyFish(el, specPool, overrides = {}) {
   return fish;
 }
 
-function takeAquariumCreatureLayer(backLayerEl, frontLayerEl) {
+function getRandomAquariumCreatureLayer(backLayerEl, frontLayerEl) {
   return Math.random() < 0.5 ? backLayerEl : frontLayerEl;
 }
 
@@ -473,7 +473,7 @@ function createAquariumFishEffect() {
   const frontCreatureLayerEl = document.createElement('div');
   frontCreatureLayerEl.className = 'aquarium-creature-layer aquarium-creature-layer-front';
   const appendAquariumCreature = (creatureEl) => {
-    takeAquariumCreatureLayer(backCreatureLayerEl, frontCreatureLayerEl).appendChild(creatureEl);
+    getRandomAquariumCreatureLayer(backCreatureLayerEl, frontCreatureLayerEl).appendChild(creatureEl);
     return creatureEl;
   };
 
@@ -926,7 +926,7 @@ function createAquariumFishEffect() {
   const leadingFishConfigs = allFishConfigs.slice(0, 1);
   for (const fishConfig of leadingFishConfigs) {
     fishConfig.delaySec = -(Math.random() * fishConfig.durationSec);
-    appendAquariumDisneyFish(takeAquariumCreatureLayer(backCreatureLayerEl, frontCreatureLayerEl), disneyFishPool, fishConfig);
+    appendAquariumDisneyFish(getRandomAquariumCreatureLayer(backCreatureLayerEl, frontCreatureLayerEl), disneyFishPool, fishConfig);
   }
 
   // ── Left-side filter (hang-on-back style, upper-left of tank) ────────────

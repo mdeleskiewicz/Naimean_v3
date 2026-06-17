@@ -163,7 +163,7 @@ test('aquarium keeps shrimp/random creature flow while generic fish use Disney s
   });
   assert.match(
     aquariumBlock,
-    /appendAquariumDisneyFish\(takeAquariumCreatureLayer\(backCreatureLayerEl, frontCreatureLayerEl\), disneyFishPool, /,
+    /appendAquariumDisneyFish\(getRandomAquariumCreatureLayer\(backCreatureLayerEl, frontCreatureLayerEl\), disneyFishPool, /,
     'Expected generic fish slots to render Disney sprites through the randomized front/back depth layers',
   );
   assert.match(
