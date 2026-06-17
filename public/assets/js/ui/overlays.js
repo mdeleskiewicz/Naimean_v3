@@ -1,4 +1,5 @@
 import {
+  AQUARIUM_DEPTH_OVERLAY_IMAGE_URL,
   AQUARIUM_OVERLAY_ID,
   AQUARIUM_STATIC_VIDEO_URL,
   BIG_TV_FULLSCREEN_OVERLAY_IDS,
@@ -611,6 +612,15 @@ function createOverlays() {
       state.bigTvDebugWatermarkEl.className = 'big-tv-debug-watermark';
       state.nedryGateOverlayEl.appendChild(state.bigTvDebugWatermarkEl);
       el.appendChild(state.nedryGateOverlayEl);
+
+      const aquariumDepthOverlayEl = document.createElement('img');
+      aquariumDepthOverlayEl.className = 'aquarium-depth-overlay';
+      aquariumDepthOverlayEl.src = AQUARIUM_DEPTH_OVERLAY_IMAGE_URL;
+      aquariumDepthOverlayEl.alt = '';
+      aquariumDepthOverlayEl.decoding = 'async';
+      aquariumDepthOverlayEl.loading = 'eager';
+      aquariumDepthOverlayEl.setAttribute('aria-hidden', 'true');
+      el.appendChild(aquariumDepthOverlayEl);
 
       state.bigTvPromptOverlayEl = document.createElement('div');
       state.bigTvPromptOverlayEl.className = 'big-tv-prompt-overlay';
