@@ -220,12 +220,12 @@ test('aquarium keeps shrimp/random creature flow while generic fish use Disney s
   );
   assert.match(
     aquariumBlock,
-    /applyAquariumDepthOverlayLayout\(depthOverlayLeftEl, 'left', spot\.w, spot\.h\);/,
+    /applyAquariumDepthOverlayLayout\(depthOverlayLeftEl, createDefaultAquariumDepthOverlayLayout\('left', spot\.w, spot\.h\)\);/,
     'Expected the left aquarium depth image to use the shared separated layout helper',
   );
   assert.match(
     aquariumBlock,
-    /applyAquariumDepthOverlayLayout\(depthOverlayRightEl, 'right', spot\.w, spot\.h\);/,
+    /applyAquariumDepthOverlayLayout\(depthOverlayRightEl, createDefaultAquariumDepthOverlayLayout\('right', spot\.w, spot\.h\)\);/,
     'Expected the right aquarium depth image to use the shared separated layout helper',
   );
   assert.match(

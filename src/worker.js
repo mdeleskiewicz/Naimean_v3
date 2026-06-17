@@ -318,6 +318,7 @@ const LEGACY_HOTSPOT_ID_ALIASES = new Map([
   ['overlay-ashtray-smoke-control', 'ashtray-smoke-effect-control'],
   ['overlay-ashtray-cigarette-control', 'ashtray-cigarette-effect-control']
 ]);
+const AQUARIUM_DEPTH_OVERLAY_IDS = ['aquarium-depth-overlay-left', 'aquarium-depth-overlay-right'];
 
 const HOTSPOT_LIMITS = {
   minX: 0, maxX: 3840,
@@ -607,6 +608,40 @@ function sanitizeHotspots(input) {
       ...(entry.locked === true ? { locked: true } : {})
     };
   });
+}
+
+function sanitizeAquariumDepthOverlays(input) {
+  if (!Array.isArray(input)) return [];
+  const entriesById = new Map();
+  input.forEach((entry) => {
+    if (!entry || typeof entry !== 'object' || typeof entry.id !== 'string' || !AQUARIUM_DEPTH_OVERLAY_IDS.includes(entry.id)) return;
+    if (!isFiniteNumber(entry.x) || !isFiniteNumber(entry.y) || !isFiniteNumber(entry.w) || !isFiniteNumber(entry.h)) return;
+    entriesById.set(entry.id, {
+      id: entry.id,
+      x: Math.round(entry.x),
+      y: Math.round(entry.y),
+      w: clamp(Math.round(entry.w), HOTSPOT_LIMITS.minW, HOTSPOT_LIMITS.maxW),
+      h: clamp(Math.round(entry.h), HOTSPOT_LIMITS.minH, HOTSPOT_LIMITS.maxH)
+    });
+  });
+  return AQUARIUM_DEPTH_OVERLAY_IDS.flatMap((id) => {
+    const entry = entriesById.get(id);
+    return entry ? [entry] : [];
+  });
+}
+
+function sanitizeStoredHotspotPayload(input) {
+  if (Array.isArray(input)) {
+    return {
+      hotspots: sanitizeHotspots(input),
+      aquariumDepthOverlays: []
+    };
+  }
+  const source = input && typeof input === 'object' ? input : {};
+  return {
+    hotspots: sanitizeHotspots(source.hotspots),
+    aquariumDepthOverlays: sanitizeAquariumDepthOverlays(source.aquariumDepthOverlays)
+  };
 }
 
 function sanitizeChapelAnchorPoints(input) {
@@ -1214,7 +1249,7 @@ export class HotspotStore {
       if (isNotes) {
         return hotspotJson(saved ?? { notes: [], viewMode: 'list', version: 2 });
       }
-      return hotspotJson({ hotspots: sanitizeHotspots(saved) });
+      return hotspotJson(sanitizeStoredHotspotPayload(saved));
     }
     if (request.method === 'POST') {
       let body;
@@ -1242,7 +1277,7 @@ export class HotspotStore {
           ? { overrides: sanitizeArcadeUrlOverrides(body?.overrides) }
           : isCornerScore
             ? null
-          : { hotspots: sanitizeHotspots(body?.hotspots) };
+        : sanitizeStoredHotspotPayload(body);
       if (isCornerScore) {
         let storedRecord;
         try {
@@ -1336,7 +1371,7 @@ export class HotspotStore {
       try {
         await this.state.storage.put(
           storageKey,
-          isChapelConfig ? payload : isArcadeUrlOverrides ? payload.overrides : payload.hotspots
+          isChapelConfig ? payload : isArcadeUrlOverrides ? payload.overrides : payload
         );
       } catch (err) {
         return hotspotJson({ error: `Failed to save hotspots: ${err?.message || 'Unknown error'}` }, 500);

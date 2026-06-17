@@ -1,5 +1,7 @@
 import {
+  AQUARIUM_DEPTH_OVERLAY_LEFT_ID,
   AQUARIUM_DEPTH_OVERLAY_LEFT_IMAGE_URL,
+  AQUARIUM_DEPTH_OVERLAY_RIGHT_ID,
   AQUARIUM_DEPTH_OVERLAY_RIGHT_IMAGE_URL,
   AQUARIUM_OVERLAY_ID,
   AQUARIUM_STATIC_VIDEO_URL,
@@ -45,7 +47,7 @@ import {
   FLIP_CLOCK_OVERLAY_ID,
   overlayDefaults
 } from '../core/constants.js';
-import { applyAquariumDepthOverlayLayout } from '../core/aquariumDepthOverlayLayout.js';
+import { applyAquariumDepthOverlayLayout, createDefaultAquariumDepthOverlayLayout } from '../core/aquariumDepthOverlayLayout.js';
 import { state } from '../core/state.js';
 import { clamp } from '../core/utils.js';
 import { applyDvdColorStep } from '../systems/dvd.js';
@@ -627,8 +629,15 @@ function createOverlays() {
       aquariumDepthOverlayLeftEl.alt = '';
       aquariumDepthOverlayLeftEl.decoding = 'async';
       aquariumDepthOverlayLeftEl.loading = 'eager';
+      aquariumDepthOverlayLeftEl.dataset.debugObjectId = AQUARIUM_DEPTH_OVERLAY_LEFT_ID;
+      aquariumDepthOverlayLeftEl.dataset.label = 'Aquarium Left Depth Overlay';
       aquariumDepthOverlayLeftEl.setAttribute('aria-hidden', 'true');
-      applyAquariumDepthOverlayLayout(aquariumDepthOverlayLeftEl, 'left', rect.w, rect.h);
+      aquariumDepthOverlayLeftEl.title = aquariumDepthOverlayLeftEl.dataset.label;
+      applyAquariumDepthOverlayLayout(aquariumDepthOverlayLeftEl, createDefaultAquariumDepthOverlayLayout('left', rect.w, rect.h));
+      const aquariumDepthOverlayLeftLabel = document.createElement('span');
+      aquariumDepthOverlayLeftLabel.className = 'hotspot-label';
+      aquariumDepthOverlayLeftLabel.textContent = `${aquariumDepthOverlayLeftEl.dataset.label} (${Math.round(parseFloat(aquariumDepthOverlayLeftEl.style.left))}, ${Math.round(parseFloat(aquariumDepthOverlayLeftEl.style.top))}) ${Math.round(parseFloat(aquariumDepthOverlayLeftEl.style.width))}×${Math.round(parseFloat(aquariumDepthOverlayLeftEl.style.height))}`;
+      aquariumDepthOverlayLeftEl.appendChild(aquariumDepthOverlayLeftLabel);
       addDepthOverlayResizeHandles(aquariumDepthOverlayLeftEl);
       el.appendChild(aquariumDepthOverlayLeftEl);
       const aquariumDepthOverlayRightEl = document.createElement('img');
@@ -637,8 +646,15 @@ function createOverlays() {
       aquariumDepthOverlayRightEl.alt = '';
       aquariumDepthOverlayRightEl.decoding = 'async';
       aquariumDepthOverlayRightEl.loading = 'eager';
+      aquariumDepthOverlayRightEl.dataset.debugObjectId = AQUARIUM_DEPTH_OVERLAY_RIGHT_ID;
+      aquariumDepthOverlayRightEl.dataset.label = 'Aquarium Right Depth Overlay';
       aquariumDepthOverlayRightEl.setAttribute('aria-hidden', 'true');
-      applyAquariumDepthOverlayLayout(aquariumDepthOverlayRightEl, 'right', rect.w, rect.h);
+      aquariumDepthOverlayRightEl.title = aquariumDepthOverlayRightEl.dataset.label;
+      applyAquariumDepthOverlayLayout(aquariumDepthOverlayRightEl, createDefaultAquariumDepthOverlayLayout('right', rect.w, rect.h));
+      const aquariumDepthOverlayRightLabel = document.createElement('span');
+      aquariumDepthOverlayRightLabel.className = 'hotspot-label';
+      aquariumDepthOverlayRightLabel.textContent = `${aquariumDepthOverlayRightEl.dataset.label} (${Math.round(parseFloat(aquariumDepthOverlayRightEl.style.left))}, ${Math.round(parseFloat(aquariumDepthOverlayRightEl.style.top))}) ${Math.round(parseFloat(aquariumDepthOverlayRightEl.style.width))}×${Math.round(parseFloat(aquariumDepthOverlayRightEl.style.height))}`;
+      aquariumDepthOverlayRightEl.appendChild(aquariumDepthOverlayRightLabel);
       addDepthOverlayResizeHandles(aquariumDepthOverlayRightEl);
       el.appendChild(aquariumDepthOverlayRightEl);
 

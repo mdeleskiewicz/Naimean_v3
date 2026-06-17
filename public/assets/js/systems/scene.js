@@ -1,5 +1,7 @@
 import {
+  AQUARIUM_DEPTH_OVERLAY_LEFT_ID,
   AQUARIUM_DEPTH_OVERLAY_LEFT_IMAGE_URL,
+  AQUARIUM_DEPTH_OVERLAY_RIGHT_ID,
   AQUARIUM_DEPTH_OVERLAY_RIGHT_IMAGE_URL,
   AQUARIUM_FISH_EFFECT_ID,
   AQUARIUM_WALL_GLOW_CLASS,
@@ -40,7 +42,7 @@ import {
 } from '../core/constants.js';
 import { state } from '../core/state.js';
 import { dom } from '../core/domRefs.js';
-import { applyAquariumDepthOverlayLayout } from '../core/aquariumDepthOverlayLayout.js';
+import { applyAquariumDepthOverlayLayout, createDefaultAquariumDepthOverlayLayout } from '../core/aquariumDepthOverlayLayout.js';
 import { clamp, isTextEntryTarget, measureSyncSection, scheduleNonCriticalTask, sourceHotspotsToRuntime } from '../core/utils.js';
 import { createOverlays } from '../ui/overlays.js';
 import { consumeDiscordLoginFlowState, syncDiscordAuthBodyClass, syncDiscordButtonUi, syncLoginOverlayUi } from './login.js';
@@ -48,7 +50,7 @@ import { loadCommodorePowerState, syncStoredCommodorePowerState, handlePageShow,
 import { playWrongAudio, syncCornerScoreServerToLocalMad, unlockCornerScoreScoringAudioFromGesture } from './cornerScore.js';
 import { adjustDvdSpeed, stopBigTvDvdAnimation } from './dvd.js';
 import { stopRadioTuningLoopPlayback } from './flipClock.js';
-import { createHotspots, getRuntimeHotspotById, syncControlledOverlaysFromHotspots, consumeSaveResultFlash, hydrateHotspotsFromServer, hydrateNonCriticalSceneData, refreshDebugObjectActions, refreshDebugObjectSelectOptions, setHotspotDebugLockState, getSelectedDebugHotspotElement, saveDenUrlOverride, saveHotspots, hideSaveModal, encodeDebugSavePassword, hasMatchingDebugSaveCipher, ensureDebugSaveAccess, addResizeHandles } from './hotspots.js';
+import { createHotspots, getRuntimeHotspotById, syncControlledOverlaysFromHotspots, consumeSaveResultFlash, hydrateHotspotsFromServer, hydrateNonCriticalSceneData, refreshDebugObjectActions, refreshDebugObjectSelectOptions, setHotspotDebugLockState, getSelectedDebugHotspotElement, saveDenUrlOverride, saveHotspots, hideSaveModal, encodeDebugSavePassword, hasMatchingDebugSaveCipher, ensureDebugSaveAccess, addResizeHandles, setAquariumDepthOverlayLayout } from './hotspots.js';
 import { getAquariumShrimpCount, resolveAquariumHorizontalMotion } from './aquariumEffect.js';
 
 const hasCoarsePointer = window.matchMedia('(pointer: coarse)').matches;
@@ -479,8 +481,15 @@ function createAquariumFishEffect() {
   depthOverlayLeftEl.alt = '';
   depthOverlayLeftEl.decoding = 'async';
   depthOverlayLeftEl.loading = 'eager';
+  depthOverlayLeftEl.dataset.debugObjectId = AQUARIUM_DEPTH_OVERLAY_LEFT_ID;
+  depthOverlayLeftEl.dataset.label = 'Aquarium Left Depth Overlay';
   depthOverlayLeftEl.setAttribute('aria-hidden', 'true');
-  applyAquariumDepthOverlayLayout(depthOverlayLeftEl, 'left', spot.w, spot.h);
+  depthOverlayLeftEl.title = depthOverlayLeftEl.dataset.label;
+  applyAquariumDepthOverlayLayout(depthOverlayLeftEl, createDefaultAquariumDepthOverlayLayout('left', spot.w, spot.h));
+  const depthOverlayLeftLabel = document.createElement('span');
+  depthOverlayLeftLabel.className = 'hotspot-label';
+  depthOverlayLeftLabel.textContent = `${depthOverlayLeftEl.dataset.label} (${Math.round(parseFloat(depthOverlayLeftEl.style.left))}, ${Math.round(parseFloat(depthOverlayLeftEl.style.top))}) ${Math.round(parseFloat(depthOverlayLeftEl.style.width))}×${Math.round(parseFloat(depthOverlayLeftEl.style.height))}`;
+  depthOverlayLeftEl.appendChild(depthOverlayLeftLabel);
   addResizeHandles(depthOverlayLeftEl);
   const depthOverlayRightEl = document.createElement('img');
   depthOverlayRightEl.className = 'aquarium-depth-overlay aquarium-depth-overlay-right';
@@ -488,8 +497,15 @@ function createAquariumFishEffect() {
   depthOverlayRightEl.alt = '';
   depthOverlayRightEl.decoding = 'async';
   depthOverlayRightEl.loading = 'eager';
+  depthOverlayRightEl.dataset.debugObjectId = AQUARIUM_DEPTH_OVERLAY_RIGHT_ID;
+  depthOverlayRightEl.dataset.label = 'Aquarium Right Depth Overlay';
   depthOverlayRightEl.setAttribute('aria-hidden', 'true');
-  applyAquariumDepthOverlayLayout(depthOverlayRightEl, 'right', spot.w, spot.h);
+  depthOverlayRightEl.title = depthOverlayRightEl.dataset.label;
+  applyAquariumDepthOverlayLayout(depthOverlayRightEl, createDefaultAquariumDepthOverlayLayout('right', spot.w, spot.h));
+  const depthOverlayRightLabel = document.createElement('span');
+  depthOverlayRightLabel.className = 'hotspot-label';
+  depthOverlayRightLabel.textContent = `${depthOverlayRightEl.dataset.label} (${Math.round(parseFloat(depthOverlayRightEl.style.left))}, ${Math.round(parseFloat(depthOverlayRightEl.style.top))}) ${Math.round(parseFloat(depthOverlayRightEl.style.width))}×${Math.round(parseFloat(depthOverlayRightEl.style.height))}`;
+  depthOverlayRightEl.appendChild(depthOverlayRightLabel);
   addResizeHandles(depthOverlayRightEl);
   const frontCreatureLayerEl = document.createElement('div');
   frontCreatureLayerEl.className = 'aquarium-creature-layer aquarium-creature-layer-front';
@@ -1297,8 +1313,13 @@ function applyDebugEdit(event) {
   const dy = (event.clientY - state.debugEditStartY) / state.scale;
   const { left, top, w, h } = state.debugEditOrigRect;
   const el = state.debugEditEl;
+  const debugObjectId = el?.dataset?.debugObjectId;
   const MIN_SIZE = 20;
   if (state.debugEditType === 'move') {
+    if (debugObjectId) {
+      setAquariumDepthOverlayLayout(debugObjectId, { x: left + dx, y: top + dy, w, h });
+      return;
+    }
     el.style.left = `${left + dx}px`;
     el.style.top = `${top + dy}px`;
   } else {
@@ -1308,6 +1329,10 @@ function applyDebugEdit(event) {
     if (dir.includes('w')) { const clampedW = Math.max(MIN_SIZE, w - dx); newLeft = left + (w - clampedW); newW = clampedW; }
     if (dir.includes('s')) newH = Math.max(MIN_SIZE, h + dy);
     if (dir.includes('n')) { const clampedH = Math.max(MIN_SIZE, h - dy); newTop = top + (h - clampedH); newH = clampedH; }
+    if (debugObjectId) {
+      setAquariumDepthOverlayLayout(debugObjectId, { x: newLeft, y: newTop, w: newW, h: newH });
+      return;
+    }
     el.style.left = `${newLeft}px`; el.style.top = `${newTop}px`; el.style.width = `${newW}px`; el.style.height = `${newH}px`;
   }
   const label = el.querySelector('.hotspot-label');
