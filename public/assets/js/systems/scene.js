@@ -59,32 +59,29 @@ let sceneEventsBound = false;
 
 const AQUARIUM_DISNEY_CHARACTER_SPECS = Object.freeze([
   {
-    name: 'Nemo & Marlin',
-    palette: Object.freeze({
-      k: '#161616',
-      o: '#ff7a00',
-      w: '#fff4e0'
-    }),
-    pixels: Object.freeze([
-      '....................',
-      '..koook.....koook...',
-      '.koowook...koowook..',
-      'koowwoook.koowwoook.',
-      'koowwoook.koowwoook.',
-      '.koowook...koowook..',
-      '..koook.....koook...',
-      '....kk.......kk.....'
-    ]),
-    leftPct: 5,
-    topPct: 19,
-    widthPx: 58,
-    swimDistPx: 170,
-    durationSec: 12.4,
-    delaySec: -1.8,
-    bobA: -5,
-    bobB: 4,
-    bobC: -3
-  },
+  name: 'Nemo & Marlin Cousin',
+  palette: Object.freeze({
+    k: '#161616', // Outline
+    o: '#e66b00', // Slightly darker, less saturated orange
+    w: '#fffcf0'  // Creamier white
+  }),
+  pixels: Object.freeze([
+    '....oo....',
+    '..ooook...',
+    '.oowooook.', // Slightly wider mid-section
+    '..oookoo..', // Distinctive fin shape
+    '....oo....'
+  ]),
+  leftPct: 5,
+  topPct: 19,
+  widthPx: 58,
+  swimDistPx: 170,
+  durationSec: 12.4,
+  delaySec: -1.8,
+  bobA: -4, // Reduced bobbing for a calmer "cousin" vibe
+  bobB: 3,
+  bobC: -2
+},
   {
     name: 'Dory',
     palette: Object.freeze({
