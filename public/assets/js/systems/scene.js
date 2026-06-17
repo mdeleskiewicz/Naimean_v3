@@ -110,31 +110,32 @@ const AQUARIUM_DISNEY_CHARACTER_SPECS = Object.freeze([
     bobB: 3,
     bobC: -2
   },
-  {
-    name: 'Flounder',
+{
+    name: 'Stammer',
     palette: Object.freeze({
-      y: '#ffe347',
-      b: '#2b71ff'
+      y: '#ffd700', // A bit more golden than Flounder
+      b: '#1e40af', // A deeper, sharper blue
+      w: '#ffffff'  // Added white for a nervous "eye" detail
     }),
     pixels: Object.freeze([
       '................',
-      '....yyyyyyyy....',
-      '..yybbyyyybbyy..',
-      '.yybbbyyybbbbyy.',
-      'yybbbbyyyybbbbby',
-      '.yybbbyyybbbbyy.',
-      '..yybbyyyybbyy..',
-      '....yyyyyyyy....'
+      '....yyyyyy......',
+      '..yybbbyyyy.....',
+      '.yybbyyybbbyy...',
+      'yybbbyyyyybbbyy.', // Staggered profile
+      '.yybbyyybbbyy...',
+      '..yybbbyyyy.....',
+      '....yyyyyy......'
     ]),
-    leftPct: 11,
-    topPct: 55,
-    widthPx: 46,
-    swimDistPx: 194,
-    durationSec: 13.7,
-    delaySec: -3.1,
-    bobA: -4,
-    bobB: 3,
-    bobC: -3
+    leftPct: 15,
+    topPct: 45,
+    widthPx: 42,
+    swimDistPx: 180,
+    durationSec: 10.2, // Faster, "jittery" swim speed
+    delaySec: -2.5,
+    bobA: -8, // Wider bob range...
+    bobB: 6,  // ...with more force...
+    bobC: -5  // ...to simulate a "stuttering" swimming style
   },
   {
     name: 'Cleo',
