@@ -37,14 +37,14 @@ function waitForMediaPlaybackToEnd(mediaEl) {
 }
 
 function waitForRightMonitorInteractive(timeoutMs = BIG_TV_MONITOR_INTERACTIVE_WAIT_TIMEOUT_MS) {
-  if (isRightMonitorInteractive()) {
+  if (state._cb.isRightMonitorInteractive?.()) {
     return Promise.resolve(true);
   }
 
   return new Promise((resolve) => {
     const deadline = Date.now() + timeoutMs;
     const checkInteractiveState = () => {
-      if (isRightMonitorInteractive()) {
+      if (state._cb.isRightMonitorInteractive?.()) {
         resolve(true);
         return;
       }
