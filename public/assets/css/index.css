@@ -595,7 +595,7 @@
     /* These insets map every screen-window edge to the corrected right screen-hole edge after vertically flipping R_Frame.png in CSS.
        Subtract 1px on each side so the overlay slightly overlaps the transparent bevel and avoids visible seams. */
     .right-monitor-screen-window {
-      inset: calc(29.199% - 1px) calc(25.195% - 1px) calc(17.09% - 1px) calc(24.414% - 1px);
+      inset: calc(29.19921875% - 1px) calc(25.1953125% - 1px) calc(17.08984375% - 1px) calc(24.4140625% - 1px);
       transform: none;
     }
 
@@ -606,7 +606,7 @@
     }
 
     .monitor-group-right > .monitor-shadow-layer {
-      inset: calc(29.199% - 1px) calc(25.195% - 1px) calc(17.09% - 1px) calc(24.414% - 1px);
+      inset: calc(29.19921875% - 1px) calc(25.1953125% - 1px) calc(17.08984375% - 1px) calc(24.4140625% - 1px);
     }
 
     /* Middle overlay bounds already match the Commodore screen hole. */
