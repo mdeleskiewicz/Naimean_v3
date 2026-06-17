@@ -107,6 +107,15 @@ test('aquarium gui includes a creature manifest file for profile-to-asset checks
   assert.ok(Array.isArray(parsed), 'Expected aquarium creature manifest to be a JSON array.');
 });
 
+test('aquarium hotspot sequence starts with static before shrimp clips', () => {
+  const source = fs.readFileSync(path.join(repoRoot, 'public', 'assets', 'js', 'systems', 'aquarium.js'), 'utf8');
+
+  assert.match(
+    source,
+    /await runAquariumPlaybackSequence\(sequenceToken, \{ startWithStatic: true \}\);/,
+  );
+});
+
 test('aquarium uses fixed right-side filter bubbles and bubble-rock streams', () => {
   const source = fs.readFileSync(sceneJsPath, 'utf8');
   const aquariumBlock = getBlock(
