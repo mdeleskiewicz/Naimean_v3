@@ -56,10 +56,9 @@ export class HotspotStore {
     }
   }
 }
-// ─── Main worker entry router ──────────────────────────────────────────────────
-  // Note: Place any additional helper methods (like Aquarium, proxy, etc.) here if needed.
 
-} // End of HotspotStore class
+// ─── Main worker entry router ──────────────────────────────────────────────────
+// Note: Place any additional helper methods (like Aquarium, proxy, etc.) here if needed.
 
 export default {
   async fetch(request, env) {
