@@ -584,7 +584,7 @@ function createAquariumFishEffect() {
 
   const disneyFishPool = createShuffledCopy(AQUARIUM_DISNEY_CHARACTER_SPECS);
 
-  // Special guest: one random sea creature per load.
+  // Special guest: one random sea creature/item per load.
   const guests = [
     'snail',
     'starfish',

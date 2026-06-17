@@ -152,7 +152,8 @@ test('aquarium keeps shrimp/random creature flow while generic fish use Disney s
     'baby-barracuda',
     'little-crocodile'
   ].forEach((guest) => {
-    assert.match(aquariumBlock, new RegExp(`'${guest}'`), `Expected random guest roster to include ${guest}`);
+    const escapedGuest = guest.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    assert.match(aquariumBlock, new RegExp(`'${escapedGuest}'`), `Expected random guest roster to include ${guest}`);
   });
   assert.match(aquariumBlock, /appendAquariumDisneyFish\(el, disneyFishPool, /, 'Expected generic fish slots to render Disney sprites');
   assert.doesNotMatch(aquariumBlock, /for \(const spec of AQUARIUM_DISNEY_CHARACTER_SPECS\)/, 'Expected aquarium not to render the entire Disney roster at once');
