@@ -486,6 +486,56 @@ function submitCornerScoreInitials() {
   });
 }
 
+async function syncCornerScoreServerToLocalMad() {
+  const localScore = Number.isFinite(state.cornerScoreValue) ? Math.max(0, Math.floor(state.cornerScoreValue)) : 0;
+  const controller = new AbortController();
+  const timeoutId = window.setTimeout(() => controller.abort(), API_TIMEOUT_MS);
+  try {
+    const resetResponse = await fetch(CORNER_SCORE_API_URL, {
+      method: 'DELETE',
+      signal: controller.signal
+    });
+    if (!resetResponse.ok) {
+      return { ok: false, error: `Reset failed (${resetResponse.status})` };
+    }
+    const response = await fetch(CORNER_SCORE_API_URL, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ score: localScore, initials: 'MAD' }),
+      signal: controller.signal
+    });
+    if (!response.ok) {
+      return { ok: false, error: `Update failed (${response.status})` };
+    }
+    const payload = await response.json();
+    setCornerScoreHighScore(payload?.score, payload?.initials);
+    state.cornerScoreServerStats = {
+      totalBounces: Number.isFinite(payload?.totalBounces) ? Math.max(0, Math.floor(payload.totalBounces)) : 0,
+      totalNearMisses: Number.isFinite(payload?.totalNearMisses) ? Math.max(0, Math.floor(payload.totalNearMisses)) : 0,
+      totalScores: Number.isFinite(payload?.totalScores) ? Math.max(0, Math.floor(payload.totalScores)) : 0,
+      totalTimeMs: Number.isFinite(payload?.totalTimeMs) ? Math.max(0, Math.floor(payload.totalTimeMs)) : 0,
+      totalRuns: Number.isFinite(payload?.totalRuns) ? Math.max(0, Math.floor(payload.totalRuns)) : 0
+    };
+    renderServerStats();
+    const pbScore = Number.isFinite(payload?.pbScore) ? Math.max(0, Math.floor(payload.pbScore)) : 0;
+    const pbTimeMs = Number.isFinite(payload?.pbTimeMs) ? Math.max(0, Math.floor(payload.pbTimeMs)) : 0;
+    const pbBounces = Number.isFinite(payload?.pbBounces) ? Math.max(0, Math.floor(payload.pbBounces)) : 0;
+    const pbNearMisses = Number.isFinite(payload?.pbNearMisses) ? Math.max(0, Math.floor(payload.pbNearMisses)) : 0;
+    if (pbScore > 0 || pbTimeMs > 0 || pbBounces > 0 || pbNearMisses > 0) {
+      state.cornerScorePersonalBest = { score: pbScore, timeMs: pbTimeMs, bounces: pbBounces, nearMisses: pbNearMisses };
+      renderPersonalBestStats();
+    }
+    return { ok: true, score: state.cornerScoreHighScoreValue, initials: state.cornerScoreHighScoreInitials };
+  } catch (error) {
+    if (error?.name === 'AbortError') {
+      return { ok: false, error: 'Request timed out.' };
+    }
+    return { ok: false, error: 'CornerScore server sync failed.' };
+  } finally {
+    window.clearTimeout(timeoutId);
+  }
+}
+
 function unlockCornerScoreScoringAudioFromGesture() {
   const AudioContextClass = window.AudioContext || window.webkitAudioContext;
   if (!AudioContextClass) {
@@ -555,4 +605,4 @@ function activateRightMonitorCornerScoreMode() {
   state._cb.syncDvdScreensaverState?.();
 }
 
-export { sanitizeCornerScoreInitialsInput, playWrongAudio, hideCornerScoreStatus, showCornerScoreStatus, clearDvdMissIndicatorTimeout, hideDvdMissIndicator, hideAllDvdMissIndicators, showDvdMissIndicator, syncCornerScoreInitialsSubmitState, hideCornerScoreInitialsPrompt, showCornerScoreInitialsPrompt, syncCornerScoreInitialsPromptVisibility, renderCornerScore, setCornerScore, setCornerScoreHighScore, loadCornerScoreFromServer, queueCornerScoreUpdate, submitCornerScoreInitials, unlockCornerScoreScoringAudioFromGesture, playRightMonitorScoringNoise, activateRightMonitorCornerScoreMode, toggleBigTvHighScoreStats, getMedalForScore, formatElapsedMs, renderRunStats, renderPersonalBestStats, renderServerStats, startRunStats, stopRunStats, resetRunStats, recordBounce, recordNearMiss, loadPersonalBestFromStorage, savePersonalBestIfImproved };
+export { sanitizeCornerScoreInitialsInput, playWrongAudio, hideCornerScoreStatus, showCornerScoreStatus, clearDvdMissIndicatorTimeout, hideDvdMissIndicator, hideAllDvdMissIndicators, showDvdMissIndicator, syncCornerScoreInitialsSubmitState, hideCornerScoreInitialsPrompt, showCornerScoreInitialsPrompt, syncCornerScoreInitialsPromptVisibility, renderCornerScore, setCornerScore, setCornerScoreHighScore, loadCornerScoreFromServer, queueCornerScoreUpdate, submitCornerScoreInitials, syncCornerScoreServerToLocalMad, unlockCornerScoreScoringAudioFromGesture, playRightMonitorScoringNoise, activateRightMonitorCornerScoreMode, toggleBigTvHighScoreStats, getMedalForScore, formatElapsedMs, renderRunStats, renderPersonalBestStats, renderServerStats, startRunStats, stopRunStats, resetRunStats, recordBounce, recordNearMiss, loadPersonalBestFromStorage, savePersonalBestIfImproved };

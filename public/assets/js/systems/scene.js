@@ -42,10 +42,10 @@ import { clamp, isTextEntryTarget, measureSyncSection, scheduleNonCriticalTask, 
 import { createOverlays } from '../ui/overlays.js';
 import { consumeDiscordLoginFlowState, syncDiscordAuthBodyClass, syncDiscordButtonUi, syncLoginOverlayUi } from './login.js';
 import { loadCommodorePowerState, syncStoredCommodorePowerState, handlePageShow, cancelMonitorPowerTimeouts } from './monitors.js';
-import { playWrongAudio, unlockCornerScoreScoringAudioFromGesture } from './cornerScore.js';
+import { playWrongAudio, syncCornerScoreServerToLocalMad, unlockCornerScoreScoringAudioFromGesture } from './cornerScore.js';
 import { adjustDvdSpeed, stopBigTvDvdAnimation } from './dvd.js';
 import { stopRadioTuningLoopPlayback } from './flipClock.js';
-import { createHotspots, getRuntimeHotspotById, syncControlledOverlaysFromHotspots, consumeSaveResultFlash, hydrateHotspotsFromServer, hydrateNonCriticalSceneData, refreshDebugObjectActions, refreshDebugObjectSelectOptions, setHotspotDebugLockState, getSelectedDebugHotspotElement, saveDenUrlOverride, saveHotspots, hideSaveModal, encodeDebugSavePassword, hasMatchingDebugSaveCipher } from './hotspots.js';
+import { createHotspots, getRuntimeHotspotById, syncControlledOverlaysFromHotspots, consumeSaveResultFlash, hydrateHotspotsFromServer, hydrateNonCriticalSceneData, refreshDebugObjectActions, refreshDebugObjectSelectOptions, setHotspotDebugLockState, getSelectedDebugHotspotElement, saveDenUrlOverride, saveHotspots, hideSaveModal, encodeDebugSavePassword, hasMatchingDebugSaveCipher, ensureDebugSaveAccess } from './hotspots.js';
 import { getAquariumShrimpCount } from './aquariumEffect.js';
 
 const hasCoarsePointer = window.matchMedia('(pointer: coarse)').matches;
@@ -1094,6 +1094,31 @@ function bindSceneEvents() {
         e.preventDefault();
         saveDebugUrl();
       }
+    });
+  }
+  if (dom.debugCornerScoreSyncButton) {
+    const syncDebugCornerScore = async () => {
+      if (!ensureDebugSaveAccess()) return;
+      const buttonLabel = 'Set CornerScore server = local (MAD)';
+      dom.debugCornerScoreSyncButton.disabled = true;
+      dom.debugCornerScoreSyncButton.textContent = 'Syncing...';
+      const result = await syncCornerScoreServerToLocalMad();
+      if (result.ok) {
+        dom.debugCornerScoreSyncButton.textContent = 'Synced!';
+        if (dom.debugStatus) dom.debugStatus.textContent = `CornerScore server set to ${result.score} (${result.initials || 'MAD'}).`;
+      } else {
+        dom.debugCornerScoreSyncButton.textContent = 'Sync failed';
+        if (dom.debugStatus) dom.debugStatus.textContent = result.error || 'CornerScore server sync failed.';
+      }
+      window.setTimeout(() => {
+        if (dom.debugCornerScoreSyncButton) {
+          dom.debugCornerScoreSyncButton.textContent = buttonLabel;
+          dom.debugCornerScoreSyncButton.disabled = false;
+        }
+      }, 2000);
+    };
+    dom.debugCornerScoreSyncButton.addEventListener('click', () => {
+      void syncDebugCornerScore();
     });
   }
   dom.saveBtn?.addEventListener('click', saveHotspots);

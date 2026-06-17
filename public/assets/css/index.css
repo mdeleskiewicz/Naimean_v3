@@ -4007,7 +4007,8 @@
       outline-offset: 1px;
     }
 
-    #debug-url-save-btn {
+    #debug-url-save-btn,
+    #debug-corner-score-sync-btn {
       min-height: 28px;
       border-radius: 6px;
       border: 1px solid rgba(255, 255, 255, 0.35);
@@ -4016,6 +4017,11 @@
       font-size: 11px;
       letter-spacing: 0.05em;
       cursor: pointer;
+    }
+
+    #debug-corner-score-sync-btn:disabled {
+      opacity: 0.45;
+      cursor: default;
     }
 
     #debug-url-save-btn:disabled {
