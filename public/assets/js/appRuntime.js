@@ -22,9 +22,7 @@ export function bootstrapApp() {
     bootstrapScene();
   } catch (error) {
     console.error('[Naimean] App bootstrap failed:', error);
-    // Ensure scene is visible even if bootstrap fails
-    document.body.classList.remove('scene-loading');
-    document.body.classList.add('scene-ready');
+    // Let the outer error handler in index.js handle scene visibility
     throw error;
   }
 }

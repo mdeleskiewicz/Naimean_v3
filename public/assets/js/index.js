@@ -29,8 +29,10 @@ const failsafeTimer = setTimeout(forceSceneVisible, FAILSAFE_TIMEOUT_MS);
 
 // Mark scene as revealed when it loads normally
 window.addEventListener('naimean-scene-ready', () => {
-  sceneRevealed = true;
-  clearTimeout(failsafeTimer);
+  if (!sceneRevealed) {
+    sceneRevealed = true;
+    clearTimeout(failsafeTimer);
+  }
 }, { once: true });
 
 // Initialize app with error handling
@@ -38,5 +40,6 @@ try {
   bootstrapApp();
 } catch (error) {
   console.error('[Naimean] Bootstrap error:', error);
+  clearTimeout(failsafeTimer);
   forceSceneVisible();
 }
