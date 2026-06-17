@@ -631,6 +631,24 @@ function createOverlays() {
       });
       crViewEl.appendChild(crGrid);
 
+      // Helper to build a run-history table with a shared column structure
+      const CS_TABLE_COLUMNS = ['#', 'Score', 'Time', 'Bounces', 'Near Misses'];
+      function makeRunHistoryTable() {
+        const table = document.createElement('table');
+        table.className = 'big-tv-cs-panel-table';
+        const thead = document.createElement('thead');
+        const headerRow = document.createElement('tr');
+        CS_TABLE_COLUMNS.forEach((col) => {
+          const th = document.createElement('th');
+          th.textContent = col;
+          headerRow.appendChild(th);
+        });
+        thead.appendChild(headerRow);
+        const tbody = document.createElement('tbody');
+        table.append(thead, tbody);
+        return { table, tbody };
+      }
+
       // View: Personal Best (run history table)
       const pbViewEl2 = document.createElement('div');
       pbViewEl2.className = 'big-tv-cs-panel-view';
@@ -639,13 +657,8 @@ function createOverlays() {
       pbViewTitle.className = 'big-tv-cs-panel-title';
       pbViewTitle.textContent = 'Personal Best';
       pbViewEl2.appendChild(pbViewTitle);
-      const pbTable = document.createElement('table');
-      pbTable.className = 'big-tv-cs-panel-table';
-      const pbThead = document.createElement('thead');
-      pbThead.innerHTML = '<tr><th>#</th><th>Score</th><th>Time</th><th>Bounces</th><th>Near Misses</th></tr>';
-      const pbTbody = document.createElement('tbody');
+      const { table: pbTable, tbody: pbTbody } = makeRunHistoryTable();
       state.bigTvPbTableBodyEl = pbTbody;
-      pbTable.append(pbThead, pbTbody);
       pbViewEl2.appendChild(pbTable);
 
       // View: Server Best (run history table)
@@ -656,13 +669,8 @@ function createOverlays() {
       sbViewTitle.className = 'big-tv-cs-panel-title';
       sbViewTitle.textContent = 'Server Best';
       sbViewEl.appendChild(sbViewTitle);
-      const sbTable = document.createElement('table');
-      sbTable.className = 'big-tv-cs-panel-table';
-      const sbThead = document.createElement('thead');
-      sbThead.innerHTML = '<tr><th>#</th><th>Score</th><th>Time</th><th>Bounces</th><th>Near Misses</th></tr>';
-      const sbTbody = document.createElement('tbody');
+      const { table: sbTable, tbody: sbTbody } = makeRunHistoryTable();
       state.bigTvServerHsTableBodyEl = sbTbody;
-      sbTable.append(sbThead, sbTbody);
       sbViewEl.appendChild(sbTable);
 
       // View: Server Stats

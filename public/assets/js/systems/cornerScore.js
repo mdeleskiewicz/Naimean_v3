@@ -3,6 +3,7 @@ import { state } from '../core/state.js';
 import { isRightMonitorInteractive, wakeRightMonitorForCornerScore } from './monitors.js';
 
 const SERVER_STATS_VISIBLE_MS = 15_000;
+const BANNER_DISPLAY_DURATION_MS = 30_000;
 
 function sanitizeCornerScoreInitialsInput(value) {
   return String(value ?? '')
@@ -48,7 +49,7 @@ function showCornerScoreStatus(message, scoreValue = state.cornerScoreValue) {
   state.bigTvCornerScoreStatusTimeoutId = window.setTimeout(() => {
     state.bigTvCornerScoreStatusTimeoutId = null;
     hideCornerScoreStatus();
-  }, 30_000);
+  }, BANNER_DISPLAY_DURATION_MS);
 }
 
 function showPersonalBestBanner() {
@@ -62,7 +63,7 @@ function showPersonalBestBanner() {
     state.bigTvPersonalBestBannerTimeoutId = null;
     state.bigTvPersonalBestBannerEl?.classList.remove('is-active');
     state.bigTvPersonalBestBannerEl?.setAttribute('aria-hidden', 'true');
-  }, 30_000);
+  }, BANNER_DISPLAY_DURATION_MS);
 }
 
 function showServerHighScoreBanner() {
@@ -76,22 +77,48 @@ function showServerHighScoreBanner() {
     state.bigTvServerHighScoreBannerTimeoutId = null;
     state.bigTvServerHighScoreBannerEl?.classList.remove('is-active');
     state.bigTvServerHighScoreBannerEl?.setAttribute('aria-hidden', 'true');
-  }, 30_000);
+  }, BANNER_DISPLAY_DURATION_MS);
+}
+
+function makeScoreTableRow(rowNum, score, elapsedMs, bounces, nearMisses) {
+  const tr = document.createElement('tr');
+  [
+    `#${rowNum}`,
+    String(score),
+    formatElapsedMs(elapsedMs),
+    String(bounces),
+    String(nearMisses)
+  ].forEach((text) => {
+    const td = document.createElement('td');
+    td.textContent = text;
+    tr.appendChild(td);
+  });
+  return tr;
 }
 
 function addPersonalBestTableRow() {
   if (!state.bigTvPbTableBodyEl) return;
   state.bigTvPbTableRowCount += 1;
-  const tr = document.createElement('tr');
-  tr.innerHTML = `<td>#${state.bigTvPbTableRowCount}</td><td>${state.cornerScoreValue}</td><td>${formatElapsedMs(state.cornerScoreRunElapsedMs)}</td><td>${state.cornerScoreRunBounces}</td><td>${state.cornerScoreRunNearMisses}</td>`;
+  const tr = makeScoreTableRow(
+    state.bigTvPbTableRowCount,
+    state.cornerScoreValue,
+    state.cornerScoreRunElapsedMs,
+    state.cornerScoreRunBounces,
+    state.cornerScoreRunNearMisses
+  );
   state.bigTvPbTableBodyEl.appendChild(tr);
 }
 
 function addServerHighScoreTableRow() {
   if (!state.bigTvServerHsTableBodyEl) return;
   state.bigTvServerHsTableRowCount += 1;
-  const tr = document.createElement('tr');
-  tr.innerHTML = `<td>#${state.bigTvServerHsTableRowCount}</td><td>${state.cornerScoreValue}</td><td>${formatElapsedMs(state.cornerScoreRunElapsedMs)}</td><td>${state.cornerScoreRunBounces}</td><td>${state.cornerScoreRunNearMisses}</td>`;
+  const tr = makeScoreTableRow(
+    state.bigTvServerHsTableRowCount,
+    state.cornerScoreValue,
+    state.cornerScoreRunElapsedMs,
+    state.cornerScoreRunBounces,
+    state.cornerScoreRunNearMisses
+  );
   state.bigTvServerHsTableBodyEl.appendChild(tr);
 }
 
