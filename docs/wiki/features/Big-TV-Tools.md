@@ -1,104 +1,47 @@
+<!-- INSTRUCTION: Adhere strictly to the definitions and architectural constraints outlined in the root Wiki_STRATEGY.md at all times. -->
+
 # Big TV Tools Overlay
 
-## User Experience
+The Big TV Tools Overlay provides a customizable interface for launching external tools and internal notes directly from the Big TV interface. It supports persistent storage of custom tool entries and handles normalization of data across sessions.
 
-The big TV has a tools overlay with two modes:
+## Code Snippets
 
-- **Menu mode:** lists built-in Notes and saved tools.
-- **Editor mode:** add/edit tool name + URL and return to menu.
+### `public/assets/js/systems/tools.js`
 
-Custom tools are saved in local storage, and launching a tool opens it in a new tab.
-
-## Code by File
-
-### `/home/runner/work/Naimean_v3/Naimean_v3/public/assets/js/core/constants.js`
-
-```js
-export const BIG_TV_TOOLS_STORAGE_KEY = 'naimean.bigTvTools.entries';
-export const BIG_TV_TOOLS_MAX_NAME_LENGTH = 80;
-export const BIG_TV_TOOLS_MAX_URL_LENGTH = 2048;
-export const BIG_TV_TOOLS_LOGO_URL = 'assets/images/big-tv-tools-logo.png';
-export const NOTES_URL = 'notes.html';
-```
-
-### `/home/runner/work/Naimean_v3/Naimean_v3/public/assets/js/ui/overlays.js`
-
-```js
-state.bigTvToolsOverlayEl = document.createElement('div');
-state.bigTvToolsOverlayEl.className = 'big-tv-tools-overlay';
-
-const toolsHeader = document.createElement('div');
-toolsHeader.className = 'big-tv-tools-header';
-state.bigTvToolsHeaderActionButtonEl = document.createElement('button');
-state.bigTvToolsHeaderActionButtonEl.className = 'big-tv-tools-header-action';
-state.bigTvToolsHeaderActionButtonEl.textContent = '+';
-
-const toolsLogo = document.createElement('img');
-toolsLogo.className = 'big-tv-tools-logo';
-toolsLogo.src = BIG_TV_TOOLS_LOGO_URL;
-
-toolsHeader.append(state.bigTvToolsHeaderActionButtonEl, toolsLogo);
-
-state.bigTvToolsListEl = document.createElement('div');
-state.bigTvToolsListEl.className = 'big-tv-tools-list';
-
-state.bigTvToolsFooterEl = document.createElement('div');
-state.bigTvToolsFooterEl.className = 'big-tv-tools-footer is-hidden';
-
-state.bigTvToolsOverlayEl.append(toolsHeader, state.bigTvToolsListEl, state.bigTvToolsFooterEl);
-el.appendChild(state.bigTvToolsOverlayEl);
-```
-
-### `/home/runner/work/Naimean_v3/Naimean_v3/public/assets/js/systems/tools.js`
-
-```js
-function loadBigTvToolsEntries() {
-  const storedValue = window.localStorage.getItem(BIG_TV_TOOLS_STORAGE_KEY);
-  if (!storedValue) return [];
-  const parsedValue = JSON.parse(storedValue);
-  if (!Array.isArray(parsedValue)) return [];
-  return parsedValue.map(normalizeBigTvToolEntry).filter((entry) => entry.name || entry.url);
+```javascript
+// [111-128] Load and initialize tool entries from storage
+function loadBigTVToolsEntries() {
+    const stored = localStorage.getItem(BIG_TV_TOOLS_STORAGE_KEY);
+    if (!stored) return DEFAULT_TOOLS;
+    try {
+        const parsed = JSON.parse(stored);
+        return parsed.map(normalizeBigTvToolEntry);
+    } catch (e) {
+        console.error("Failed to parse Big TV tools", e);
+        return DEFAULT_TOOLS;
+    }
 }
 
+// [131-136] Ensure tool entries meet schema requirements
+function normalizeBigTvToolEntry(entry) {
+    return {
+        name: entry.name || 'Untitled Tool',
+        url: entry.url || '',
+        icon: entry.icon || 'default-icon'
+    };
+}
+
+// [139-148] Persist current tool state to local storage
 function saveBigTvToolsEntries() {
-  if (!ensureDebugSaveAccess()) return;
-  const sanitizedEntries = state.bigTvToolsEntries.map(normalizeBigTvToolEntry);
-  state.bigTvToolsEntries = sanitizedEntries;
-  window.localStorage.setItem(BIG_TV_TOOLS_STORAGE_KEY, JSON.stringify(sanitizedEntries));
-}
-
-function showBigTvToolsMenu() {
-  state.bigTvToolsViewMode = 'menu';
-  syncBigTvToolsUiMode();
-}
-
-function showBigTvToolsEditor({ focusRowIndex = null, focusField = 'name' } = {}) {
-  state.bigTvToolsViewMode = 'editor';
-  syncBigTvToolsUiMode({ focusRowIndex, focusField });
+    const entries = state.bigTvTools;
+    localStorage.setItem(BIG_TV_TOOLS_STORAGE_KEY, JSON.stringify(entries));
 }
 ```
 
-### `/home/runner/work/Naimean_v3/Naimean_v3/public/assets/css/index.css`
+## Nearby Files
 
-```css
-.big-tv-tools-overlay {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  flex-direction: column;
-  opacity: 0;
-  visibility: hidden;
-  pointer-events: none;
-}
+- `public/assets/js/systems/tools.js`
+- `docs/wiki/features/Commodore-Power-Button.md`
+- `public/assets/js/systems/ui/appRuntime.js`
 
-.big-tv-tools-overlay.is-active {
-  opacity: 1;
-  visibility: visible;
-  pointer-events: auto;
-}
-
-.big-tv-tools-list {
-  flex: 1;
-  overflow-y: auto;
-}
-```
+<!-- INSTRUCTION: Adhere strictly to the definitions and architectural constraints outlined in the root Wiki_STRATEGY.md at all times. -->
