@@ -52,12 +52,12 @@ test('right monitor frame is vertically corrected and uses flipped screen bounds
 
   assert.match(
     source,
-    /\.right-monitor-screen-window\s*\{[^}]*inset:\s*29\.297%\s+25\.26%\s+17\.09%\s+24\.414%;/s,
+    /\.right-monitor-screen-window\s*\{[^}]*inset:\s*calc\(29\.199% - 1px\)\s+calc\(25\.195% - 1px\)\s+calc\(17\.09% - 1px\)\s+calc\(24\.414% - 1px\);/s,
     'Expected right monitor screen bounds to align with the vertically flipped right frame hole',
   );
   assert.match(
     source,
-    /\.monitor-group-right\s*>\s*\.monitor-shadow-layer\s*\{[^}]*inset:\s*29\.297%\s+25\.26%\s+17\.09%\s+24\.414%;/s,
+    /\.monitor-group-right\s*>\s*\.monitor-shadow-layer\s*\{[^}]*inset:\s*calc\(29\.199% - 1px\)\s+calc\(25\.195% - 1px\)\s+calc\(17\.09% - 1px\)\s+calc\(24\.414% - 1px\);/s,
     'Expected right monitor shadow bounds to align with the vertically flipped right frame hole',
   );
   assert.match(
