@@ -63,6 +63,7 @@ const AQUARIUM_WILDLIFE_OVERRIDES_STORAGE_KEY = 'naimean.aquariumWildlife.overri
 const AQUARIUM_WILDLIFE_GUI_STYLE_ID = 'aquarium-wildlife-gui-style';
 const AQUARIUM_SHRIMP_VERTICAL_SPACE_PERCENT = 23;
 const DEFAULT_DISNEY_FISH_COUNT = 1;
+const AQUARIUM_GUI_ASSET_BASE_PATH = '/assets/aquarium_gui';
 const AQUARIUM_WILDLIFE_CREATURE_CLASS_NAMES = Object.freeze([
   'aquarium-disney-fish',
   'aquarium-shrimp',
@@ -380,6 +381,7 @@ function installAquariumWildlifeApi() {
 const AQUARIUM_DISNEY_CHARACTER_SPECS = Object.freeze([
   {
   name: 'Nemo & Marlin Cousin',
+  imageFilename: 'Nemo & Marlin Cousin.png',
   palette: Object.freeze({
     k: '#161616', // Outline
     o: '#e66b00', // Slightly darker, less saturated orange
@@ -588,6 +590,19 @@ function createPixelSpriteDataUrl({ pixels, palette }) {
   };
 }
 
+function getAquariumDisneyFishImageUrl(spec) {
+  if (!spec || typeof spec !== 'object') {
+    return '';
+  }
+  const fileName = typeof spec.imageFilename === 'string'
+    ? spec.imageFilename.trim()
+    : '';
+  if (!fileName) {
+    return '';
+  }
+  return `${AQUARIUM_GUI_ASSET_BASE_PATH}/${encodeURIComponent(fileName)}`;
+}
+
 function createShuffledCopy(items) {
   const shuffled = [...items];
   for (let index = shuffled.length - 1; index > 0; index -= 1) {
@@ -607,6 +622,7 @@ function takeAquariumDisneyFishSpec(specPool) {
 function appendAquariumDisneyFish(el, specPool, overrides = {}) {
   const spec = takeAquariumDisneyFishSpec(specPool);
   const spriteData = createPixelSpriteDataUrl(spec);
+  const imageUrl = getAquariumDisneyFishImageUrl(spec);
   const widthPx = overrides.widthPx ?? spec.widthPx;
   const fish = document.createElement('span');
   fish.className = 'aquarium-disney-fish';
@@ -617,6 +633,17 @@ function appendAquariumDisneyFish(el, specPool, overrides = {}) {
   fish.style.width = `${widthPx}px`;
   fish.style.height = `${Math.round((spriteData.rowCount / spriteData.columnCount) * widthPx)}px`;
   fish.style.backgroundImage = spriteData.dataUrl;
+  if (imageUrl) {
+    const probeImage = new Image();
+    const resolvedImageUrl = new URL(imageUrl, window.location.origin).href;
+    probeImage.onload = () => {
+      fish.style.backgroundImage = `url("${resolvedImageUrl}")`;
+    };
+    probeImage.onerror = () => {
+      fish.style.backgroundImage = spriteData.dataUrl;
+    };
+    probeImage.src = resolvedImageUrl;
+  }
   fish.style.setProperty('--fish-swim-dist', `${overrides.swimDistPx ?? spec.swimDistPx}px`);
   fish.style.setProperty('--fish-duration', `${(overrides.durationSec ?? spec.durationSec).toFixed(2)}s`);
   fish.style.setProperty('--fish-delay', `${(overrides.delaySec ?? spec.delaySec).toFixed(2)}s`);

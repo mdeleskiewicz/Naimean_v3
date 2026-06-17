@@ -211,6 +211,21 @@ test('aquarium keeps shrimp/random creature flow while generic fish use Disney s
   ].forEach((name) => {
     assert.match(disneySpecBlock, new RegExp(name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));
   });
+  assert.match(
+    disneySpecBlock,
+    /imageFilename:\s*'Nemo & Marlin Cousin\.png'/,
+    'Expected one Disney fish to be configured for a PNG asset in aquarium_gui',
+  );
+  assert.match(
+    source,
+    /const AQUARIUM_GUI_ASSET_BASE_PATH = '\/assets\/aquarium_gui';/,
+    'Expected aquarium GUI fish image assets to resolve under /assets/aquarium_gui',
+  );
+  assert.match(
+    source,
+    /function getAquariumDisneyFishImageUrl\(spec\) \{/,
+    'Expected aquarium to expose a helper for fish PNG asset URL resolution',
+  );
   assert.match(source, /import \{ getAquariumShrimpCount, resolveAquariumHorizontalMotion \} from '\.\/aquariumEffect\.js';/);
   assert.match(aquariumBlock, /applyAquariumHorizontalMotion\(\{/, 'Expected aquarium swimmers to use bounded horizontal motion');
   assert.match(aquariumBlock, /resolveAquariumHorizontalMotion\(\{\s*tankWidthPx: spot\.w,/, 'Expected generic fish to clamp travel inside the aquarium width');
@@ -253,6 +268,12 @@ test('aquarium keeps shrimp/random creature flow while generic fish use Disney s
     /appendAquariumDisneyFish\(getRandomAquariumCreatureLayer\(backCreatureLayerEl, frontCreatureLayerEl\), disneyFishPool, /,
     'Expected generic fish slots to render Disney sprites through the randomized front/back depth layers',
   );
+  assert.match(source, /const imageUrl = getAquariumDisneyFishImageUrl\(spec\);/);
+  assert.match(source, /fish\.style\.backgroundImage = spriteData\.dataUrl;/);
+  assert.match(source, /const resolvedImageUrl = new URL\(imageUrl, window\.location\.origin\)\.href;/);
+  assert.match(source, /probeImage\.onload = \(\) => \{\s*fish\.style\.backgroundImage = `url\("\$\{resolvedImageUrl\}"\)`;\s*\};/);
+  assert.match(source, /probeImage\.onerror = \(\) => \{\s*fish\.style\.backgroundImage = spriteData\.dataUrl;\s*\};/);
+  assert.match(source, /probeImage\.src = resolvedImageUrl;/);
   assert.match(
     aquariumBlock,
     /depthOverlayLeftEl\.className = 'aquarium-depth-overlay aquarium-depth-overlay-left';/,
