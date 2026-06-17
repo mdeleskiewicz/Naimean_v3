@@ -775,6 +775,7 @@ function createHotspots(hotspotList) {
       }
       if (spot.id === MONITOR_GROUP_RIGHT_CONTROL_ID) {
         if (state._cb.isRightMonitorShrimpLogoActive?.()) {
+          window.naimeanAquariumWildlife?.openGui?.();
           return void state._cb.transitionAquariumToDvdCornerScoreFromRightMonitor?.();
         }
         if (!state._cb.isRightMonitorInteractive?.()) return;
