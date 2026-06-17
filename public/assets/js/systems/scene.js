@@ -47,7 +47,7 @@ import { loadCommodorePowerState, syncStoredCommodorePowerState, handlePageShow,
 import { playWrongAudio, syncCornerScoreServerToLocalMad, unlockCornerScoreScoringAudioFromGesture } from './cornerScore.js';
 import { adjustDvdSpeed, stopBigTvDvdAnimation } from './dvd.js';
 import { stopRadioTuningLoopPlayback } from './flipClock.js';
-import { createHotspots, getRuntimeHotspotById, syncControlledOverlaysFromHotspots, consumeSaveResultFlash, hydrateHotspotsFromServer, hydrateNonCriticalSceneData, refreshDebugObjectActions, refreshDebugObjectSelectOptions, setHotspotDebugLockState, getSelectedDebugHotspotElement, saveDenUrlOverride, saveHotspots, hideSaveModal, encodeDebugSavePassword, hasMatchingDebugSaveCipher, ensureDebugSaveAccess } from './hotspots.js';
+import { createHotspots, getRuntimeHotspotById, syncControlledOverlaysFromHotspots, consumeSaveResultFlash, hydrateHotspotsFromServer, hydrateNonCriticalSceneData, refreshDebugObjectActions, refreshDebugObjectSelectOptions, setHotspotDebugLockState, getSelectedDebugHotspotElement, saveDenUrlOverride, saveHotspots, hideSaveModal, encodeDebugSavePassword, hasMatchingDebugSaveCipher, ensureDebugSaveAccess, addResizeHandles } from './hotspots.js';
 import { getAquariumShrimpCount } from './aquariumEffect.js';
 
 const hasCoarsePointer = window.matchMedia('(pointer: coarse)').matches;
@@ -481,6 +481,11 @@ function createAquariumFishEffect() {
   depthOverlayLeftEl.decoding = 'async';
   depthOverlayLeftEl.loading = 'eager';
   depthOverlayLeftEl.setAttribute('aria-hidden', 'true');
+  depthOverlayLeftEl.style.left = '0px';
+  depthOverlayLeftEl.style.top = '0px';
+  depthOverlayLeftEl.style.width = `${Math.round(spot.w)}px`;
+  depthOverlayLeftEl.style.height = `${Math.round(spot.h)}px`;
+  addResizeHandles(depthOverlayLeftEl);
   const depthOverlayRightEl = document.createElement('img');
   depthOverlayRightEl.className = 'aquarium-depth-overlay aquarium-depth-overlay-right';
   depthOverlayRightEl.src = AQUARIUM_DEPTH_OVERLAY_RIGHT_IMAGE_URL;
@@ -488,6 +493,11 @@ function createAquariumFishEffect() {
   depthOverlayRightEl.decoding = 'async';
   depthOverlayRightEl.loading = 'eager';
   depthOverlayRightEl.setAttribute('aria-hidden', 'true');
+  depthOverlayRightEl.style.left = '0px';
+  depthOverlayRightEl.style.top = '0px';
+  depthOverlayRightEl.style.width = `${Math.round(spot.w)}px`;
+  depthOverlayRightEl.style.height = `${Math.round(spot.h)}px`;
+  addResizeHandles(depthOverlayRightEl);
   const frontCreatureLayerEl = document.createElement('div');
   frontCreatureLayerEl.className = 'aquarium-creature-layer aquarium-creature-layer-front';
   const appendAquariumCreature = (creatureEl) => {
@@ -1235,10 +1245,20 @@ function onPointerDown(event) {
         startDebugEdit(event, hotspotEl, 'resize', handle.dataset.dir);
         return;
       }
+      const depthOverlayEl = handle.closest('.aquarium-depth-overlay');
+      if (depthOverlayEl) {
+        startDebugEdit(event, depthOverlayEl, 'resize', handle.dataset.dir);
+        return;
+      }
     }
     const hotspotEl = event.target.closest('.hotspot');
     if (hotspotEl && !hotspotEl.classList.contains('locked-debug-hotspot')) {
       startDebugEdit(event, hotspotEl, 'move', null);
+      return;
+    }
+    const depthOverlayEl = event.target.closest('.aquarium-depth-overlay');
+    if (depthOverlayEl) {
+      startDebugEdit(event, depthOverlayEl, 'move', null);
       return;
     }
   }

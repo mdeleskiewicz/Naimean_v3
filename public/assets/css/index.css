@@ -380,13 +380,15 @@
 
     .aquarium-depth-overlay {
       position: absolute;
-      inset: 0;
+      left: 0;
+      top: 0;
       width: 100%;
       height: 100%;
       object-fit: fill;
       pointer-events: none;
       user-select: none;
       z-index: 3;
+      transform: rotate(90deg);
     }
 
     .aquarium-depth-overlay-left {
@@ -395,6 +397,13 @@
 
     .aquarium-depth-overlay-right {
       object-position: right bottom;
+    }
+
+    body.debug .aquarium-depth-overlay {
+      outline: 2px solid rgba(255, 165, 0, 0.85);
+      cursor: move;
+      pointer-events: auto;
+      z-index: 10;
     }
 
     .aquarium-creature-layer {
