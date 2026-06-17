@@ -27,6 +27,7 @@ import {
   LOCKED_DEBUG_HOTSPOT_IDS,
   MIN_HOTSPOT_SIZE,
   MONITOR_GROUP_LEFT_CONTROL_ID,
+  MONITOR_GROUP_MIDDLE_CONTROL_ID,
   MONITOR_GROUP_RIGHT_CONTROL_ID,
   NEDRY_GATE_TRIGGER_HOTSPOT_IDS,
   NEON_SIGN_HOTSPOT_ID,
@@ -773,12 +774,24 @@ function createHotspots(hotspotList) {
         state._cb.toggleBigTvCornerScoreWidgetMode?.();
         return;
       }
+      if (spot.id === MONITOR_GROUP_MIDDLE_CONTROL_ID) {
+        if (state._cb.isCloudflareCardModeActive?.()) {
+          state._cb.openCloudflareDashboard?.();
+        }
+        return;
+      }
       if (spot.id === MONITOR_GROUP_RIGHT_CONTROL_ID) {
         if (state._cb.isRightMonitorShrimpLogoActive?.()) {
           window.naimeanAquariumWildlife?.openGui?.();
           return void state._cb.transitionAquariumToDvdCornerScoreFromRightMonitor?.();
         }
         if (!state._cb.isRightMonitorInteractive?.()) return;
+        // If the CloudFlare icon is on the right monitor (GitHub mode active, CF card not yet active),
+        // trigger the CloudFlare card
+        if (state.isGithubScreensaverMode && !state.isCloudflareCardMode) {
+          state._cb.activateCloudflareCardMode?.();
+          return;
+        }
         state._cb.toggleRightMonitorDisplayMode?.();
         return;
       }

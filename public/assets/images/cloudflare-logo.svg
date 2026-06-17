@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 120" fill="none">
+  <!-- CloudFlare orange cloud / flame shape -->
+  <g>
+    <!-- Main cloud body -->
+    <path d="M130 82 C130 82 136 60 120 52 C118 44 110 38 100 38 C90 38 82 44 78 52 C64 50 54 60 54 74 C54 88 64 98 78 98 L130 98 C142 98 150 90 150 80 C150 70 142 64 130 64 Z" fill="#F48120"/>
+    <!-- Upper flame tip -->
+    <path d="M100 20 C100 20 112 36 104 44 C104 44 106 30 96 28 C96 28 102 24 100 20 Z" fill="#FAAD3F"/>
+    <!-- White highlight on cloud -->
+    <path d="M78 88 C70 88 64 82 64 74 C64 70 66 66 70 64 C70 62 74 58 78 58 L124 58 C128 58 132 62 132 66 C136 66 140 70 140 74 C140 82 134 88 126 88 Z" fill="rgba(255,255,255,0.15)"/>
+  </g>
+</svg>

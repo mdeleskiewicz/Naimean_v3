@@ -29,6 +29,13 @@ import {
   GITHUB_V3_AGENTS_URL,
   GITHUB_V3_WIKI_URL,
   GITHUB_V3_ACTIONS_URL,
+  CLOUDFLARE_SCREENSAVER_LOGO_URL,
+  CLOUDFLARE_GAMEPIECE_IMAGE_URL,
+  CLOUDFLARE_VIDEO_URL,
+  CLOUDFLARE_LOGS_URL,
+  CLOUDFLARE_DURABLE_OBJECTS_URL,
+  CLOUDFLARE_TRIGGERS_URL,
+  CLOUDFLARE_DEPLOYMENTS_URL,
   LEFT_MONITOR_SIDE_FRAME_IMAGE_URL,
   LEFT_MONITOR_IMAGE_URLS,
   MONITOR_GROUP_LEFT_ID,
@@ -335,6 +342,8 @@ function syncGithubQuadrantOverlayVisibility() {
 
 function deactivateGithubScreensaverMode() {
   if (!state.isGithubScreensaverMode) return;
+  // Deactivate CloudFlare card mode first (it depends on GitHub mode)
+  state._cb.deactivateCloudflareCardMode?.();
   state.isGithubScreensaverMode = false;
   state.githubScreensaverSequenceToken += 1;
   if (state.bigTvDvdLogoEl) {
@@ -343,6 +352,7 @@ function deactivateGithubScreensaverMode() {
   }
   syncGithubShelfObjectImage();
   syncGithubQuadrantOverlayVisibility();
+  state._cb.syncCloudflareRightMonitorOverlays?.();
 }
 
 async function activateGithubScreensaverMode() {
@@ -386,6 +396,7 @@ async function activateGithubScreensaverMode() {
     state.bigTvGithubQuadrantEl.querySelectorAll('.github-quadrant-btn').forEach((btn) => btn.classList.remove('is-active'));
   }
   syncGithubQuadrantOverlayVisibility();
+  state._cb.syncCloudflareRightMonitorOverlays?.();
   state._cb.restoreBigTvDvdLoop?.();
 }
 
@@ -758,7 +769,31 @@ function createOverlays() {
         selector.appendChild(segment);
       });
       windowEl.appendChild(selector);
-      // GitHub quadrant overlay (left monitor): shown when GitHub screensaver mode is active.
+      // CloudFlare quadrant overlay (left monitor): shown when CloudFlare card mode is active.
+      state.leftMonitorCloudflareQuadrantEl = document.createElement('div');
+      state.leftMonitorCloudflareQuadrantEl.className = 'left-monitor-cloudflare-quadrant-overlay';
+      state.leftMonitorCloudflareQuadrantEl.setAttribute('aria-hidden', 'true');
+      const cfQuadrantButtons = [
+        { label: 'Logs',            url: CLOUDFLARE_LOGS_URL,            pos: 'top-left' },
+        { label: 'Durable Objects', url: CLOUDFLARE_DURABLE_OBJECTS_URL, pos: 'top-right' },
+        { label: 'Triggers',        url: CLOUDFLARE_TRIGGERS_URL,        pos: 'bottom-left' },
+        { label: 'Deployments',     url: CLOUDFLARE_DEPLOYMENTS_URL,     pos: 'bottom-right' }
+      ];
+      cfQuadrantButtons.forEach(({ label, url, pos }) => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = `cf-quadrant-btn cf-quadrant-btn-${pos}`;
+        btn.setAttribute('aria-label', `CloudFlare ${label}`);
+        btn.textContent = label;
+        btn.addEventListener('pointerdown', (e) => e.stopPropagation());
+        btn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          btn.classList.add('is-active');
+          window.open(url, '_blank', 'noopener,noreferrer');
+        });
+        state.leftMonitorCloudflareQuadrantEl.appendChild(btn);
+      });
+      windowEl.appendChild(state.leftMonitorCloudflareQuadrantEl);
       state.bigTvGithubQuadrantEl = document.createElement('div');
       state.bigTvGithubQuadrantEl.className = 'big-tv-github-quadrant-overlay left-monitor-github-quadrant-overlay';
       state.bigTvGithubQuadrantEl.setAttribute('aria-hidden', 'true');
@@ -970,6 +1005,37 @@ function createOverlays() {
       state.leftMonitorShrimpCardEl.setAttribute('aria-hidden', 'true');
       windowEl.appendChild(state.leftMonitorShrimpCardEl);
 
+      // Card 5: CloudFlare
+      state.leftMonitorCloudflareCardEl = document.createElement('div');
+      state.leftMonitorCloudflareCardEl.className = 'left-monitor-card left-monitor-cloudflare-card';
+      state.leftMonitorCloudflareCardEl.setAttribute('aria-hidden', 'true');
+
+      const cfCardGrid = document.createElement('div');
+      cfCardGrid.className = 'left-monitor-card-grid cloudflare-card-grid';
+
+      const cfCardQuadrants = [
+        { label: 'Logs',             url: CLOUDFLARE_LOGS_URL,             cls: 'cf-card-quad-ul' },
+        { label: 'Durable Objects',  url: CLOUDFLARE_DURABLE_OBJECTS_URL,  cls: 'cf-card-quad-ur' },
+        { label: 'Triggers',         url: CLOUDFLARE_TRIGGERS_URL,         cls: 'cf-card-quad-ll' },
+        { label: 'Deployments',      url: CLOUDFLARE_DEPLOYMENTS_URL,      cls: 'cf-card-quad-lr' }
+      ];
+
+      cfCardQuadrants.forEach(({ label, url, cls }) => {
+        const quadBtn = document.createElement('button');
+        quadBtn.type = 'button';
+        quadBtn.className = `left-monitor-card-quadrant cloudflare-card-btn ${cls}`;
+        quadBtn.textContent = label;
+        quadBtn.setAttribute('aria-label', `CloudFlare ${label}`);
+        quadBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          window.open(url, '_blank', 'noopener,noreferrer');
+        });
+        cfCardGrid.appendChild(quadBtn);
+      });
+
+      state.leftMonitorCloudflareCardEl.appendChild(cfCardGrid);
+      windowEl.appendChild(state.leftMonitorCloudflareCardEl);
+
       state.leftMonitorStaticOverlayEl = document.createElement('div');
       state.leftMonitorStaticOverlayEl.className = 'overlay-static-layer';
       state.leftMonitorStaticVideoEl = document.createElement('video');
@@ -1004,6 +1070,34 @@ function createOverlays() {
       shadowLayer.className = 'monitor-shadow-layer';
       state.commodoreShadowOverlayEl = shadowLayer;
       el.appendChild(shadowLayer);
+
+      // Layer 2: CloudFlare video overlay (shown when CF card mode is active)
+      state.middleMonitorCloudflareOverlayEl = document.createElement('div');
+      state.middleMonitorCloudflareOverlayEl.className = 'middle-monitor-cloudflare-overlay';
+      state.middleMonitorCloudflareOverlayEl.setAttribute('aria-hidden', 'true');
+      state.middleMonitorCloudflareOverlayEl.setAttribute('role', 'region');
+      state.middleMonitorCloudflareOverlayEl.setAttribute('aria-label', 'CloudFlare dashboard video');
+      // CloudFlare video
+      state.middleMonitorCloudflareVideoEl = document.createElement('video');
+      state.middleMonitorCloudflareVideoEl.className = 'middle-monitor-cloudflare-video';
+      state.middleMonitorCloudflareVideoEl.src = CLOUDFLARE_VIDEO_URL;
+      state.middleMonitorCloudflareVideoEl.muted = true;
+      state.middleMonitorCloudflareVideoEl.defaultMuted = true;
+      state.middleMonitorCloudflareVideoEl.playsInline = true;
+      state.middleMonitorCloudflareVideoEl.setAttribute('webkit-playsinline', '');
+      state.middleMonitorCloudflareVideoEl.style.display = 'none';
+      state.middleMonitorCloudflareOverlayEl.appendChild(state.middleMonitorCloudflareVideoEl);
+      // Static interlude video
+      state.middleMonitorCloudflareStaticVideoEl = document.createElement('video');
+      state.middleMonitorCloudflareStaticVideoEl.className = 'middle-monitor-cloudflare-static-video';
+      state.middleMonitorCloudflareStaticVideoEl.src = AQUARIUM_STATIC_VIDEO_URL;
+      state.middleMonitorCloudflareStaticVideoEl.muted = true;
+      state.middleMonitorCloudflareStaticVideoEl.defaultMuted = true;
+      state.middleMonitorCloudflareStaticVideoEl.playsInline = true;
+      state.middleMonitorCloudflareStaticVideoEl.setAttribute('webkit-playsinline', '');
+      state.middleMonitorCloudflareStaticVideoEl.style.display = 'none';
+      state.middleMonitorCloudflareOverlayEl.appendChild(state.middleMonitorCloudflareStaticVideoEl);
+      el.appendChild(state.middleMonitorCloudflareOverlayEl);
     }
 
     if (overlay.id === COMMODORE_POWER_BUTTON_OVERLAY_ID) {
@@ -1117,6 +1211,28 @@ function createOverlays() {
       shrimpLogoImg.src = STARSHRIMP_LOGO_IMAGE_URL;
       state.rightMonitorShrimpLogoOverlayEl.appendChild(shrimpLogoImg);
       windowEl.appendChild(state.rightMonitorShrimpLogoOverlayEl);
+
+      // CloudFlare icon overlay (shown on right monitor when GitHub screensaver mode is active)
+      state.rightMonitorCloudflareIconOverlayEl = document.createElement('div');
+      state.rightMonitorCloudflareIconOverlayEl.className = 'right-monitor-cloudflare-icon-overlay';
+      state.rightMonitorCloudflareIconOverlayEl.setAttribute('aria-hidden', 'true');
+      const cfIconImg = document.createElement('img');
+      cfIconImg.className = 'right-monitor-cloudflare-icon-image';
+      cfIconImg.src = CLOUDFLARE_SCREENSAVER_LOGO_URL;
+      cfIconImg.alt = 'CloudFlare';
+      state.rightMonitorCloudflareIconOverlayEl.appendChild(cfIconImg);
+      windowEl.appendChild(state.rightMonitorCloudflareIconOverlayEl);
+
+      // Cornerscore gamepiece overlay (shown on right monitor when CloudFlare card mode is active)
+      state.rightMonitorCornerpieceOverlayEl = document.createElement('div');
+      state.rightMonitorCornerpieceOverlayEl.className = 'right-monitor-cornerpiece-overlay';
+      state.rightMonitorCornerpieceOverlayEl.setAttribute('aria-hidden', 'true');
+      const cornerpieceImg = document.createElement('img');
+      cornerpieceImg.className = 'right-monitor-cornerpiece-image';
+      cornerpieceImg.src = CLOUDFLARE_GAMEPIECE_IMAGE_URL;
+      cornerpieceImg.alt = '';
+      state.rightMonitorCornerpieceOverlayEl.appendChild(cornerpieceImg);
+      windowEl.appendChild(state.rightMonitorCornerpieceOverlayEl);
       el.appendChild(windowEl);
       el.appendChild(frameLayer); // topmost: appended after shadow/content so DOM order ↔ z-index order
       applyDvdColorStep();
@@ -1411,6 +1527,18 @@ state._cb.activateCalendarMode = activateCalendarMode;
 state._cb.activateGithubScreensaverMode = activateGithubScreensaverMode;
 state._cb.deactivateGithubScreensaverMode = deactivateGithubScreensaverMode;
 state._cb.activateLeftMonitorQuadrant = activateLeftMonitorQuadrant;
+state._cb.restoreGithubDvdLogo = function restoreGithubDvdLogo() {
+  if (state.bigTvDvdLogoEl) {
+    state.bigTvDvdLogoEl.src = GITHUB_SCREENSAVER_LOGO_URL;
+    state.bigTvDvdLogoEl.classList.add('is-github-mode-logo');
+  }
+};
+state._cb.restoreDefaultDvdLogo = function restoreDefaultDvdLogo() {
+  if (state.bigTvDvdLogoEl) {
+    state.bigTvDvdLogoEl.src = BIG_TV_SCREENSAVER_LOGO_URL;
+    state.bigTvDvdLogoEl.classList.remove('is-github-mode-logo');
+  }
+};
 
 export {
   syncBigTvContentVisibility,

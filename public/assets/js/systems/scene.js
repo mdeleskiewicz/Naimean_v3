@@ -1950,6 +1950,7 @@ function initializeScene() {
   measureSyncSection('naimean-initial-resize', resize);
   if (saveResultFlash && dom.debugStatus) dom.debugStatus.textContent = saveResultFlash;
   hydrateHotspotsFromServer({ hasSaveResultFlash: Boolean(saveResultFlash) });
+  state._cb.restoreCloudflareCardState?.();
   scheduleNonCriticalTask(hydrateNonCriticalSceneData);
 }
 

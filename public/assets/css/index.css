@@ -726,6 +726,34 @@
       z-index: 2;
     }
 
+    .middle-monitor-cloudflare-overlay {
+      position: absolute;
+      inset: 0;
+      z-index: 3;
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+      background: #fff;
+      display: flex;
+      align-items: stretch;
+      justify-content: center;
+      transition: opacity 200ms ease;
+    }
+
+    .middle-monitor-cloudflare-overlay.is-active {
+      opacity: 1;
+      visibility: visible;
+      pointer-events: auto;
+    }
+
+    .middle-monitor-cloudflare-video,
+    .middle-monitor-cloudflare-static-video {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      background: #fff;
+    }
+
     .commodore-power-button-overlay {
       overflow: visible;
       z-index: 2;
@@ -1170,6 +1198,83 @@
       transform: translateY(0);
     }
 
+    /* CloudFlare Card */
+    .left-monitor-cloudflare-card {
+      background: rgba(244, 129, 32, 0.06);
+    }
+
+    .cloudflare-card-grid {
+      gap: clamp(2px, 1.5%, 6px);
+      padding: clamp(4px, 2%, 10px);
+    }
+
+    .cloudflare-card-btn {
+      background: linear-gradient(135deg, rgba(244, 129, 32, 0.15), rgba(250, 173, 63, 0.1));
+      border: 1px solid rgba(244, 129, 32, 0.5);
+      border-radius: 6px;
+      color: #f8c68a;
+      font-size: clamp(9px, 4cqw, 16px);
+      font-weight: 700;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      padding: clamp(8px, 3%, 16px);
+    }
+
+    .cloudflare-card-btn:hover {
+      background: linear-gradient(135deg, rgba(244, 129, 32, 0.28), rgba(250, 173, 63, 0.2));
+      border-color: rgba(244, 129, 32, 0.8);
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(244, 129, 32, 0.25);
+    }
+
+    .cloudflare-card-btn:active {
+      transform: translateY(0);
+    }
+
+    /* CloudFlare left monitor quadrant overlay (positional navigation) */
+    .left-monitor-cloudflare-quadrant-overlay {
+      position: absolute;
+      inset: 0;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      grid-template-rows: 1fr 1fr;
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+      z-index: 10;
+      transition: opacity 0.2s ease, visibility 0.2s ease;
+    }
+
+    .left-monitor-cloudflare-quadrant-overlay.is-active {
+      opacity: 1;
+      visibility: visible;
+      pointer-events: auto;
+    }
+
+    .cf-quadrant-btn {
+      background: rgba(244, 129, 32, 0.08);
+      border: 1px solid rgba(244, 129, 32, 0.3);
+      color: #f8c68a;
+      font-size: clamp(8px, 3.5cqw, 14px);
+      font-weight: 700;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: background 0.15s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 4px;
+    }
+
+    .cf-quadrant-btn:hover {
+      background: rgba(244, 129, 32, 0.2);
+    }
+
+    .cf-quadrant-btn.is-active {
+      background: rgba(244, 129, 32, 0.3);
+    }
+
     /* Logged In Card */
     .logged-in-card-grid {
       gap: clamp(2px, 1.5%, 6px);
@@ -1337,6 +1442,58 @@
     .right-monitor-shrimp-logo-overlay.is-active {
       opacity: 1;
       visibility: visible;
+    }
+
+    .right-monitor-cloudflare-icon-overlay {
+      position: absolute;
+      inset: 0;
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+      z-index: 5;
+      background: #1b1b1b;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: opacity 200ms ease;
+    }
+
+    .right-monitor-cloudflare-icon-overlay.is-active {
+      opacity: 1;
+      visibility: visible;
+      pointer-events: auto;
+    }
+
+    .right-monitor-cloudflare-icon-image {
+      width: 70%;
+      height: 70%;
+      object-fit: contain;
+      filter: drop-shadow(0 0 12px rgba(244, 129, 32, 0.6));
+    }
+
+    .right-monitor-cornerpiece-overlay {
+      position: absolute;
+      inset: 0;
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+      z-index: 5;
+      background: #1b1b1b;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: opacity 200ms ease;
+    }
+
+    .right-monitor-cornerpiece-overlay.is-active {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    .right-monitor-cornerpiece-image {
+      width: 60%;
+      height: 60%;
+      object-fit: contain;
     }
 
     .right-monitor-corner-score-overlay {

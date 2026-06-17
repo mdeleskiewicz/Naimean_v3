@@ -2,6 +2,7 @@ import {
   LEFT_MONITOR_CARD_CORNERSCORE,
   LEFT_MONITOR_CARD_DISCORD,
   LEFT_MONITOR_CARD_GITHUB,
+  LEFT_MONITOR_CARD_CLOUDFLARE,
   LEFT_MONITOR_CARD_LOGGED_IN,
   LEFT_MONITOR_CARD_SHRIMP,
   LEFT_MONITOR_CARD_NONE,
@@ -50,6 +51,9 @@ async function activateLeftMonitorCard(cardType) {
       break;
     case LEFT_MONITOR_CARD_GITHUB:
       showGithubCard();
+      break;
+    case LEFT_MONITOR_CARD_CLOUDFLARE:
+      showCloudflareCard();
       break;
     case LEFT_MONITOR_CARD_LOGGED_IN:
       showLoggedInCard();
@@ -146,6 +150,10 @@ function hideAllLeftMonitorCardOverlays() {
   if (state.leftMonitorGithubCardEl) {
     state.leftMonitorGithubCardEl.classList.remove('is-active');
     state.leftMonitorGithubCardEl.setAttribute('aria-hidden', 'true');
+  }
+  if (state.leftMonitorCloudflareCardEl) {
+    state.leftMonitorCloudflareCardEl.classList.remove('is-active');
+    state.leftMonitorCloudflareCardEl.setAttribute('aria-hidden', 'true');
   }
   if (state.leftMonitorLoggedInCardEl) {
     state.leftMonitorLoggedInCardEl.classList.remove('is-active');
@@ -268,7 +276,23 @@ function showShrimpCard() {
 }
 
 /**
- * Trigger CornerScore card when corner score game is active
+ * Show the CloudFlare card
+ */
+function showCloudflareCard() {
+  if (!state.leftMonitorCloudflareCardEl) return;
+
+  state.leftMonitorCloudflareCardEl.classList.add('is-active');
+  state.leftMonitorCloudflareCardEl.setAttribute('aria-hidden', 'false');
+}
+
+/**
+ * Trigger CloudFlare card
+ */
+function triggerCloudflareCard() {
+  void activateLeftMonitorCard(LEFT_MONITOR_CARD_CLOUDFLARE);
+}
+
+/**
  */
 function triggerCornerScoreCard() {
   if (state.isDvdCornerCountEnabled) {
@@ -319,6 +343,7 @@ state._cb.activateLeftMonitorCard = activateLeftMonitorCard;
 state._cb.triggerCornerScoreCard = triggerCornerScoreCard;
 state._cb.triggerDiscordCard = triggerDiscordCard;
 state._cb.triggerGithubCard = triggerGithubCard;
+state._cb.triggerCloudflareCard = triggerCloudflareCard;
 state._cb.triggerLoggedInCard = triggerLoggedInCard;
 state._cb.triggerShrimpCard = triggerShrimpCard;
 state._cb.resetLeftMonitorCard = resetLeftMonitorCard;
@@ -329,6 +354,7 @@ export {
   triggerCornerScoreCard,
   triggerDiscordCard,
   triggerGithubCard,
+  triggerCloudflareCard,
   triggerLoggedInCard,
   triggerShrimpCard,
   resetLeftMonitorCard,
