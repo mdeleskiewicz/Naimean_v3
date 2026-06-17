@@ -2432,10 +2432,51 @@
       transform: none;
     }
 
+    .left-monitor-github-quadrant-overlay::before,
+    .left-monitor-github-quadrant-overlay::after {
+      content: '';
+      position: absolute;
+      pointer-events: none;
+      background: rgba(46, 255, 107, 0.95);
+      box-shadow:
+        0 0 6px rgba(46, 255, 107, 0.95),
+        0 0 14px rgba(46, 255, 107, 0.75);
+      z-index: 3;
+    }
+
+    .left-monitor-github-quadrant-overlay::before {
+      top: 0;
+      bottom: 0;
+      left: calc(50% - 0.5px);
+      width: 1px;
+    }
+
+    .left-monitor-github-quadrant-overlay::after {
+      left: 0;
+      right: 0;
+      top: calc(50% - 0.5px);
+      height: 1px;
+    }
+
     .left-monitor-github-quadrant-overlay .github-quadrant-btn {
-      font: 700 clamp(8px, min(5.76cqw, 6.72cqh), 17.6px) / 1 "Trebuchet MS", "Arial Black", sans-serif;
+      font: 700 clamp(9.6px, min(6.912cqw, 8.064cqh), 21.12px) / 1 "Trebuchet MS", "Arial Black", sans-serif;
       padding: clamp(3px, 1.2%, 8px) clamp(4px, 1.6%, 10px);
       letter-spacing: 0.04em;
+      color: rgba(186, 255, 194, 0.95);
+      text-shadow:
+        0 0 4px rgba(68, 255, 120, 0.95),
+        0 0 10px rgba(46, 255, 107, 0.88),
+        0 0 18px rgba(35, 175, 86, 0.7);
+    }
+
+    .left-monitor-github-quadrant-overlay .github-quadrant-btn:hover,
+    .left-monitor-github-quadrant-overlay .github-quadrant-btn:focus-visible,
+    .left-monitor-github-quadrant-overlay .github-quadrant-btn.is-active {
+      color: #d9ffe0;
+      text-shadow:
+        0 0 5px rgba(88, 255, 142, 1),
+        0 0 12px rgba(46, 255, 107, 0.95),
+        0 0 22px rgba(36, 201, 95, 0.8);
     }
 
     .big-tv-tools-overlay {
