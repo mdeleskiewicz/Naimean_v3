@@ -1,80 +1,14 @@
+URGENT: Fix src/worker.js. It currently contains placeholder text:
+[Include your isUserPreferences and roomStateMatch handlers here] ...
+This is invalid JavaScript and is causing Cloudflare Error 1101.
 
-import { jsonResponse, JSON_HEADERS } from './core/utils';
+Restore the last known-good full Worker implementation from git history, not a stub.
 
-// ─── Durable Object Class Wrapper ─────────────────────────────────────────────
-export class HotspotStore {
-  constructor(state, env) {
-    this.state = state;
-    this.env = env;
-  }
-
-  async fetch(request) {
-    const url = new URL(request.url);
-    const { pathname } = url;
-
-    // Wrapped logic to avoid top-level return
-    const initResult = await this.handleInitialization(pathname);
-    if (initResult) return initResult;
-
-    // Continue from HotspotStore.fetch
-    const isUserPreferences = pathname === '/api/user-preferences';
-    const roomStateMatch = pathname.match(/^\/api\/room-state\/([^/]+)$/);
-
-    if (request.method === 'OPTIONS' && (isUserPreferences || roomStateMatch)) {
-      const methods = 'GET, PUT, OPTIONS';
-      return new Response(null, {
-        status: 204,
-        headers: { ...JSON_HEADERS, 'access-control-allow-methods': methods }
-      });
-    }
-
-    // ... [Include your isUserPreferences and roomStateMatch handlers here] ...
-
-    return jsonResponse({ error: 'Method not allowed.' }, 405);
-  }
-
-  // --- Helper methods ---
-  async handleInitialization(pathname) {
-    if (pathname === '/api/fetch-drive-notes') {
-      const FOLDER_ID = '13mnHEVznrsh_Lw1RZNhK7wWDV57ZRXyb';
-      const API_KEY = this.env.GOOGLE_DRIVE_API_KEY;
-      const res = await fetch(`https://www.googleapis.com/drive/v3/files?q='${FOLDER_ID}'+in+parents&key=${API_KEY}`);
-      const data = await res.json();
-      return jsonResponse(data.files || []);
-    }
-    return null;
-  }
-
-  userIdFromRequest(request) {
-    return "default-user";
-  }
-
-  async parseJsonBody(request) {
-    try {
-      return { body: await request.json(), error: null };
-    } catch (e) {
-      return { body: null, error: jsonResponse({ error: 'Invalid JSON' }, 400) };
-    }
-  }
-}
-
-// ─── Main worker entry router ──────────────────────────────────────────────────
-// Note: Place any additional helper methods (like Aquarium, proxy, etc.) here if needed.
-
-export default {
-  async fetch(request, env) {
-    const url = new URL(request.url);
-    const { pathname } = url;
-
-    // Static Asset Routing
-    // Serving static assets directly from ASSETS binding
-    if (pathname.startsWith('/assets/')) {
-        return env.ASSETS.fetch(request);
-    }
-
-    // Direct requests to the Durable Object
-    const id = env.HOTSPOT_STORE.idFromName('global');
-    const obj = env.HOTSPOT_STORE.get(id);
-    return obj.fetch(request);
-  }
-};
+Requirements:
+1. Keep export class HotspotStore.
+2. Keep export default { fetch(request, env) }.
+3. Serve static assets through env.ASSETS.
+4. Route /, /den, /den.html, and /index.html to /index.html.
+5. Route /api/hotspots, /api/chapel-hotspots, /api/arcade-url-overrides, /api/corner-score, /api/notes, /api/calendar-events, /api/user-preferences, and /api/room-state/:roomId to the Durable Object.
+6. Do not leave placeholder text anywhere.
+7. Run npm test and npx wrangler deploy --dry-run before deploying.
