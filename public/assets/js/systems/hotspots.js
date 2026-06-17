@@ -679,7 +679,10 @@ function createHotspots(hotspotList) {
       }
       if (WHITEBOARD_HOTSPOT_IDS.has(spot.id)) return void window.open(getHotspotEffectiveUrl(spot.id) || WHITEBOARD_HOTSPOT_URLS[spot.id] || WHITEBOARD_HOTSPOT_URLS.whiteboard, '_blank', 'noopener,noreferrer');
       if (AQUARIUM_HOTSPOT_IDS.has(spot.id)) return void state._cb.playAquariumHotspotSequence?.();
-      if (spot.id === NEON_SIGN_HOTSPOT_ID) return void state._cb.repopulateAquariumShrimp?.();
+      if (spot.id === NEON_SIGN_HOTSPOT_ID) {
+        state._cb.repopulateAquariumShrimp?.();
+        return void state._cb.triggerShrimpCard?.();
+      }
       if (
         NEDRY_GATE_TRIGGER_HOTSPOT_IDS.has(spot.id) &&
         spot.id !== MONITOR_GROUP_RIGHT_CONTROL_ID &&

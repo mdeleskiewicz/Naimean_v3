@@ -312,7 +312,8 @@ const DEFAULT_HOTSPOTS = [
   { id: 'ashtray-smoke-effect-control', x: 2925, y: 45, w: 280, h: 1680 },
   { id: 'ashtray-cigarette-effect-control', x: 2922, y: 1682, w: 148, h: 44 },
   { id: 'monitor-group-left-control', x: 929, y: 987, w: 776, h: 495 },
-  { id: 'github-shelf-object-control', x: 2379, y: 497, w: 130, h: 130 }
+  { id: 'github-shelf-object-control', x: 2379, y: 497, w: 130, h: 130 },
+  { id: 'neon-sign', x: 2230, y: 530, w: 520, h: 250 }
 ];
 const LEGACY_HOTSPOT_ID_ALIASES = new Map([
   ['overlay-ashtray-smoke-control', 'ashtray-smoke-effect-control'],

@@ -88,6 +88,7 @@ export const WHITEBOARD_HOTSPOT_IDS = new Set([
 ]);
 export const HOTSPOT_READABLE_LABELS = new Map([
   ['chapel', 'Chapel'],
+  ['neon-sign', 'Starshrimp Neon Sign'],
   ...WHITEBOARD_TASK_HOTSPOTS.map(({ id, label }) => [id, label])
 ]);
 export const AQUARIUM_HOTSPOT_IDS = new Set(['aquarium']);
@@ -399,7 +400,8 @@ export const defaultHotspots = [
   { id: ASHTRAY_SMOKE_CONTROL_ID, x: 2925, y: 45, w: 280, h: 1680 },
   { id: ASHTRAY_CIGARETTE_CONTROL_ID, x: 2922, y: 1682, w: 148, h: 44 },
   { id: MONITOR_GROUP_LEFT_CONTROL_ID, x: 929, y: 987, w: 776, h: 495 },
-  { id: GITHUB_SHELF_OBJECT_CONTROL_ID, x: 2379, y: 497, w: 130, h: 130 }
+  { id: GITHUB_SHELF_OBJECT_CONTROL_ID, x: 2379, y: 497, w: 130, h: 130 },
+  { id: NEON_SIGN_HOTSPOT_ID, x: 2230, y: 530, w: 520, h: 250 }
 ];
 
 // Overlay placeholders over transparent screen cutouts.
