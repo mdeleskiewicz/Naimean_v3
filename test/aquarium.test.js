@@ -16,6 +16,7 @@ import { getAquariumShrimpCount, resolveAquariumHorizontalMotion } from '../publ
 const repoRoot = path.resolve(import.meta.dirname, '..');
 const sceneJsPath = path.join(repoRoot, 'public', 'assets', 'js', 'systems', 'scene.js');
 const indexCssPath = path.join(repoRoot, 'public', 'assets', 'css', 'index.css');
+const aquariumManifestPath = path.join(repoRoot, 'public', 'assets', 'aquarium_gui', 'manifest.json');
 
 function getBlock(source, startMarker, endMarker) {
   const start = source.indexOf(startMarker);
@@ -86,6 +87,24 @@ test('neon sign hotspot repopulates aquarium townsfolk and triggers the shrimp c
     source,
     /if \(spot\.id === NEON_SIGN_HOTSPOT_ID\) \{\s*state\._cb\.repopulateAquariumShrimp\?\.\(\);\s*return void state\._cb\.triggerShrimpCard\?\.\(\);\s*\}/,
   );
+});
+
+test('aquarium wildlife gui includes required profile management constants and controls', () => {
+  const source = fs.readFileSync(sceneJsPath, 'utf8');
+
+  assert.match(source, /AQUARIUM_CREATURE_PROFILE_MANIFEST_URL = `\$\{AQUARIUM_GUI_ASSET_BASE_PATH\}\/manifest\.json`;/);
+  assert.match(source, /AQUARIUM_DOE_NAMES = Object\.freeze\(\['Jane Doe', 'John Doe'\]\);/);
+  assert.match(source, /data-action="save-aquarium-state"/);
+  assert.match(source, /data-action="factory-reset"/);
+  assert.match(source, /data-role="save-auth-profile"/);
+  assert.match(source, /fetch\(AQUARIUM_CREATURE_ROOM_STATE_PATH/);
+  assert.match(source, /key: AQUARIUM_CREATURE_ROOM_STATE_KEY/);
+});
+
+test('aquarium gui includes a creature manifest file for profile-to-asset checks', () => {
+  const manifestRaw = fs.readFileSync(aquariumManifestPath, 'utf8');
+  const parsed = JSON.parse(manifestRaw);
+  assert.ok(Array.isArray(parsed), 'Expected aquarium creature manifest to be a JSON array.');
 });
 
 test('aquarium hotspot sequence starts with static before shrimp clips', () => {
