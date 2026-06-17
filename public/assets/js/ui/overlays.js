@@ -475,13 +475,13 @@ function createOverlays() {
       state.bigTvGithubQuadrantEl = document.createElement('div');
       state.bigTvGithubQuadrantEl.className = 'big-tv-github-quadrant-overlay';
       state.bigTvGithubQuadrantEl.setAttribute('aria-hidden', 'true');
-      const githubQuadrants = [
+      const leftMonitorGithubQuadrants = [
         { label: 'Issues',  url: GITHUB_V3_ISSUES_URL,  pos: 'top-left' },
         { label: 'Agents',  url: GITHUB_V3_AGENTS_URL,  pos: 'top-right' },
         { label: 'Wiki',    url: GITHUB_V3_WIKI_URL,    pos: 'bottom-left' },
         { label: 'Actions', url: GITHUB_V3_ACTIONS_URL, pos: 'bottom-right' }
       ];
-      githubQuadrants.forEach(({ label, url, pos }) => {
+      leftMonitorGithubQuadrants.forEach(({ label, url, pos }) => {
         const btn = document.createElement('button');
         btn.type = 'button';
         btn.className = `github-quadrant-btn github-quadrant-btn-${pos}`;
@@ -941,14 +941,14 @@ function createOverlays() {
       const githubCardGrid = document.createElement('div');
       githubCardGrid.className = 'left-monitor-card-grid github-card-grid';
       
-      const githubQuadrants = [
+      const githubCardQuadrants = [
         { label: 'Issues', url: GITHUB_V3_ISSUES_URL, cls: 'github-card-quad-ul' },
         { label: 'Agent', url: GITHUB_V3_AGENTS_URL, cls: 'github-card-quad-ur' },
         { label: 'Wiki', url: GITHUB_V3_WIKI_URL, cls: 'github-card-quad-ll' },
         { label: 'Actions', url: GITHUB_V3_ACTIONS_URL, cls: 'github-card-quad-lr' }
       ];
       
-      githubQuadrants.forEach(({ label, url, cls }) => {
+      githubCardQuadrants.forEach(({ label, url, cls }) => {
         const quadBtn = document.createElement('button');
         quadBtn.type = 'button';
         quadBtn.className = `left-monitor-card-quadrant github-card-btn ${cls}`;
