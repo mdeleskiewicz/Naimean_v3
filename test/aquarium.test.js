@@ -10,7 +10,7 @@ import {
   AQUARIUM_DEPTH_OVERLAY_RIGHT_OFFSET_RATIO,
   AQUARIUM_DEPTH_OVERLAY_TOP_RATIO,
 } from '../public/assets/js/core/constants.js';
-import { getRandomShrimpClipUrl } from '../public/assets/js/systems/aquarium.js';
+import { getRandomShrimpClipUrl, repopulateAquariumShrimp } from '../public/assets/js/systems/aquarium.js';
 import { getAquariumShrimpCount, resolveAquariumHorizontalMotion } from '../public/assets/js/systems/aquariumEffect.js';
 
 const repoRoot = path.resolve(import.meta.dirname, '..');
@@ -45,6 +45,40 @@ test('getRandomShrimpClipUrl selects from state clip catalog and refills queue',
     state.aquariumShrimpClips = originalClips;
     state.aquariumShrimpClipQueue = originalQueue;
   }
+});
+
+test('repopulateAquariumShrimp refreshes clip queue and rerenders aquarium townsfolk', () => {
+  const originalClips = state.aquariumShrimpClips;
+  const originalQueue = state.aquariumShrimpClipQueue;
+  const originalRenderAquariumFishEffect = state._cb.renderAquariumFishEffect;
+  let renderCalls = 0;
+
+  try {
+    state.aquariumShrimpClips = ['clip-a.mp4', 'clip-b.mp4', 'clip-c.mp4'];
+    state.aquariumShrimpClipQueue = ['stale-clip.mp4'];
+    state._cb.renderAquariumFishEffect = () => {
+      renderCalls += 1;
+    };
+
+    repopulateAquariumShrimp();
+
+    assert.equal(state.aquariumShrimpClipQueue.length, state.aquariumShrimpClips.length);
+    assert.deepEqual(new Set(state.aquariumShrimpClipQueue), new Set(state.aquariumShrimpClips));
+    assert.equal(renderCalls, 1);
+  } finally {
+    state.aquariumShrimpClips = originalClips;
+    state.aquariumShrimpClipQueue = originalQueue;
+    state._cb.renderAquariumFishEffect = originalRenderAquariumFishEffect;
+  }
+});
+
+test('neon sign hotspot repopulates aquarium townsfolk and triggers the shrimp card', () => {
+  const source = fs.readFileSync(path.join(repoRoot, 'public', 'assets', 'js', 'systems', 'hotspots.js'), 'utf8');
+
+  assert.match(
+    source,
+    /if \(spot\.id === NEON_SIGN_HOTSPOT_ID\) \{\s*state\._cb\.repopulateAquariumShrimp\?\.\(\);\s*return void state\._cb\.triggerShrimpCard\?\.\(\);\s*\}/,
+  );
 });
 
 test('aquarium uses fixed right-side filter bubbles and bubble-rock streams', () => {
@@ -160,9 +194,9 @@ test('aquarium keeps shrimp/random creature flow while generic fish use Disney s
   );
 
   [
-    'Nemo & Marlin',
-    'Dory',
-    'Flounder',
+    'Nemo & Marlin Cousin',
+    'Doreee',
+    'Stammer',
     'Cleo',
     'Bubbles',
     'Gurgle',

@@ -1621,6 +1621,7 @@ function bootstrapScene() {
 }
 
 state._cb.renderHotspotLayers = renderHotspotLayers;
+state._cb.renderAquariumFishEffect = createAquariumFishEffect;
 state._cb.resize = resize;
 
 export {
