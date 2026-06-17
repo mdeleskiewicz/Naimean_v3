@@ -672,7 +672,13 @@ function createOverlays() {
       state.bigTvToolsHeaderActionButtonEl.className = 'big-tv-tools-header-action';
       state.bigTvToolsHeaderActionButtonEl.textContent = '+';
       state.bigTvToolsHeaderActionButtonEl.addEventListener('click', () => {
-        if (state.bigTvToolsViewMode === 'editor') state._cb.showBigTvToolsOverlay?.();
+        if (state.bigTvToolsViewMode === 'editor') {
+          state._cb.showBigTvToolsOverlay?.();
+        } else if (state.bigTvToolsViewMode === 'orchestration-list') {
+          state._cb.showBigTvToolsOverlay?.();
+        } else if (state.bigTvToolsViewMode === 'orchestration-detail') {
+          state._cb.showDenOrchCardsList?.();
+        }
       });
       const toolsLogo = document.createElement('img');
       toolsLogo.className = 'big-tv-tools-logo';
@@ -681,7 +687,10 @@ function createOverlays() {
       state.bigTvToolsHintEl = document.createElement('p');
       state.bigTvToolsHintEl.className = 'big-tv-tools-hint';
       state.bigTvToolsHintEl.textContent = 'Press + to add a tool.';
-      toolsHeader.append(state.bigTvToolsHintEl);
+      state.bigTvToolsHeaderTitleEl = document.createElement('span');
+      state.bigTvToolsHeaderTitleEl.className = 'big-tv-tools-header-title';
+      state.bigTvToolsHeaderTitleEl.hidden = true;
+      toolsHeader.append(state.bigTvToolsHintEl, state.bigTvToolsHeaderTitleEl);
       state.bigTvToolsListEl = document.createElement('div');
       state.bigTvToolsListEl.className = 'big-tv-tools-list';
       state.bigTvToolsFooterEl = document.createElement('div');
