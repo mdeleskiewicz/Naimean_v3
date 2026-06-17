@@ -29,7 +29,7 @@ import {
   GITHUB_V3_AGENTS_URL,
   GITHUB_V3_WIKI_URL,
   GITHUB_V3_ACTIONS_URL,
-  KID_DANCING_GIF_URL,
+  MIDDLE_MONITOR_SHRIMP_DANCER_IMAGE_URL,
   CLOUDFLARE_SCREENSAVER_LOGO_URL,
   CLOUDFLARE_GAMEPIECE_IMAGE_URL,
   CLOUDFLARE_VIDEO_URL,
@@ -190,10 +190,12 @@ function syncLeftMonitorSelectionUi() {
 }
 
 function getDiscordQuadrantDefinitions() {
+  const showInventoryPlaceholder = () => {
+    // Reserved until the inventory surface ships.
+  };
   return [
     { label: 'Tools', action: () => state._cb.setLeftMonitorState?.('tools'), cls: 'discord-card-quad-ul' },
-    // Reserved until the inventory surface ships.
-    { label: 'Inventory', action: () => {}, cls: 'discord-card-quad-ur' },
+    { label: 'Inventory', action: showInventoryPlaceholder, cls: 'discord-card-quad-ur' },
     { label: 'Cal.Dot', action: () => state._cb.setLeftMonitorState?.('calendar'), cls: 'discord-card-quad-ll' },
     { label: 'Notes', action: () => window.open('/notes.html', '_blank'), cls: 'discord-card-quad-lr' }
   ];
@@ -1118,7 +1120,7 @@ function createOverlays() {
       state.middleMonitorShrimpDancerOverlayEl.setAttribute('aria-hidden', 'true');
       const shrimpDancerImg = document.createElement('img');
       shrimpDancerImg.className = 'middle-monitor-shrimp-dancer-image';
-      shrimpDancerImg.src = KID_DANCING_GIF_URL;
+      shrimpDancerImg.src = MIDDLE_MONITOR_SHRIMP_DANCER_IMAGE_URL;
       shrimpDancerImg.alt = '';
       state.middleMonitorShrimpDancerOverlayEl.appendChild(shrimpDancerImg);
       el.appendChild(state.middleMonitorShrimpDancerOverlayEl);

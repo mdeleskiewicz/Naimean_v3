@@ -3,6 +3,7 @@ import { state } from './state.js';
 
 // About 3 seconds at 60fps before a progressing video is treated as stalled.
 const STALLED_MEDIA_FRAME_THRESHOLD = 180;
+const PLAYBACK_PROGRESS_THRESHOLD_S = 0.01;
 
 function waitForMediaPlaybackToEnd(mediaEl) {
   return new Promise((resolve) => {
@@ -45,7 +46,7 @@ function waitForMediaPlaybackToEnd(mediaEl) {
       if (mediaEl.ended || mediaEl.paused) {
         return;
       }
-      if (mediaEl.currentTime > lastPlaybackTime + 0.01) {
+      if (mediaEl.currentTime > lastPlaybackTime + PLAYBACK_PROGRESS_THRESHOLD_S) {
         hasObservedProgress = true;
         lastPlaybackTime = mediaEl.currentTime;
         stalledFrameCount = 0;
