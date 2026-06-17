@@ -585,7 +585,7 @@ function createAquariumFishEffect() {
   const disneyFishPool = createShuffledCopy(AQUARIUM_DISNEY_CHARACTER_SPECS);
 
   // Special guest: one random sea creature per load.
-  const guests = ['snail', 'starfish', 'turtle', 'jellyfish', 'nautilus', 'octopus'];
+  const guests = ['snail', 'starfish', 'turtle', 'jellyfish', 'nautilus', 'octopus', 'frog', 'manta-ray', 'shark', 'electric-eel', 'moray-eel'];
   const guestType = guests[Math.floor(Math.random() * guests.length)];
 
   if (guestType === 'snail') {
@@ -682,6 +682,86 @@ function createAquariumFishEffect() {
     octopus.style.setProperty('--octopus-duration', `${duration.toFixed(2)}s`);
     octopus.style.setProperty('--octopus-delay', `${delay.toFixed(2)}s`);
     el.appendChild(octopus);
+  } else if (guestType === 'frog') {
+    const size = 18 + Math.floor(Math.random() * 8);
+    const left = 10 + Math.floor(Math.random() * 60);
+    const hopDist = 40 + Math.floor(Math.random() * 40);
+    const duration = 10 + Math.random() * 8;
+    const delay = -(Math.random() * duration);
+    const frog = document.createElement('span');
+    frog.className = 'aquarium-frog';
+    frog.textContent = '🐸';
+    frog.style.fontSize = `${size}px`;
+    frog.style.bottom = '4%';
+    frog.style.left = `${left}%`;
+    frog.style.setProperty('--frog-hop-dist', `${hopDist}px`);
+    frog.style.setProperty('--frog-duration', `${duration.toFixed(2)}s`);
+    frog.style.setProperty('--frog-delay', `${delay.toFixed(2)}s`);
+    el.appendChild(frog);
+  } else if (guestType === 'manta-ray') {
+    const size = 22 + Math.floor(Math.random() * 10);
+    const top = 20 + Math.floor(Math.random() * 45);
+    const swimDist = 200 + Math.floor(Math.random() * 120);
+    const duration = 22 + Math.random() * 14;
+    const delay = -(Math.random() * duration);
+    const manta = document.createElement('span');
+    manta.className = 'aquarium-manta-ray';
+    manta.textContent = '🐡';
+    manta.style.fontSize = `${size}px`;
+    manta.style.top = `${top}%`;
+    manta.style.left = '3%';
+    manta.style.setProperty('--manta-swim-dist', `${swimDist}px`);
+    manta.style.setProperty('--manta-duration', `${duration.toFixed(2)}s`);
+    manta.style.setProperty('--manta-delay', `${delay.toFixed(2)}s`);
+    el.appendChild(manta);
+  } else if (guestType === 'shark') {
+    const size = 20 + Math.floor(Math.random() * 8);
+    const top = 15 + Math.floor(Math.random() * 50);
+    const swimDist = 220 + Math.floor(Math.random() * 130);
+    const duration = 12 + Math.random() * 8;
+    const delay = -(Math.random() * duration);
+    const shark = document.createElement('span');
+    shark.className = 'aquarium-shark';
+    shark.textContent = '🦈';
+    shark.style.fontSize = `${size}px`;
+    shark.style.top = `${top}%`;
+    shark.style.left = '2%';
+    shark.style.setProperty('--shark-swim-dist', `${swimDist}px`);
+    shark.style.setProperty('--shark-duration', `${duration.toFixed(2)}s`);
+    shark.style.setProperty('--shark-delay', `${delay.toFixed(2)}s`);
+    el.appendChild(shark);
+  } else if (guestType === 'electric-eel') {
+    const size = 22 + Math.floor(Math.random() * 10);
+    const top = 30 + Math.floor(Math.random() * 40);
+    const swimDist = 190 + Math.floor(Math.random() * 100);
+    const duration = 16 + Math.random() * 10;
+    const delay = -(Math.random() * duration);
+    const eel = document.createElement('span');
+    eel.className = 'aquarium-electric-eel';
+    eel.textContent = '🐍';
+    eel.style.fontSize = `${size}px`;
+    eel.style.top = `${top}%`;
+    eel.style.left = '4%';
+    eel.style.setProperty('--electric-eel-swim-dist', `${swimDist}px`);
+    eel.style.setProperty('--electric-eel-duration', `${duration.toFixed(2)}s`);
+    eel.style.setProperty('--electric-eel-delay', `${delay.toFixed(2)}s`);
+    el.appendChild(eel);
+  } else if (guestType === 'moray-eel') {
+    const size = 24 + Math.floor(Math.random() * 10);
+    const top = 35 + Math.floor(Math.random() * 35);
+    const swimDist = 170 + Math.floor(Math.random() * 90);
+    const duration = 18 + Math.random() * 10;
+    const delay = -(Math.random() * duration);
+    const moray = document.createElement('span');
+    moray.className = 'aquarium-moray-eel';
+    moray.textContent = '🐍';
+    moray.style.fontSize = `${size}px`;
+    moray.style.top = `${top}%`;
+    moray.style.left = '6%';
+    moray.style.setProperty('--moray-swim-dist', `${swimDist}px`);
+    moray.style.setProperty('--moray-duration', `${duration.toFixed(2)}s`);
+    moray.style.setProperty('--moray-delay', `${delay.toFixed(2)}s`);
+    el.appendChild(moray);
   }
 
   // Generic fish slots: 1 or 2 fish drawn from the Disney sprite roster.
