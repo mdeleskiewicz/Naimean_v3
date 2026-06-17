@@ -9,24 +9,45 @@ const hotspotsJsPath = path.join(repoRoot, 'public', 'assets', 'js', 'systems', 
 const loginJsPath = path.join(repoRoot, 'public', 'assets', 'js', 'systems', 'login.js');
 const toolsJsPath = path.join(repoRoot, 'public', 'assets', 'js', 'systems', 'tools.js');
 
-test('DVD quadrant click paths require Discord auth before launching actions', () => {
+test('GitHub quadrants bypass Discord auth while the Login quadrant still starts OAuth', () => {
   const overlaysSource = fs.readFileSync(overlaysJsPath, 'utf8');
   const hotspotsSource = fs.readFileSync(hotspotsJsPath, 'utf8');
+  const loginSource = fs.readFileSync(loginJsPath, 'utf8');
 
   assert.match(
     overlaysSource,
-    /segment\.addEventListener\('click', async \(\) => \{[\s\S]*ensureDiscordAuthForQuadrantAction/,
-    'Expected left monitor segment clicks to gate quadrant actions behind Discord auth',
+    /segment\.addEventListener\('click', \(\) => \{[\s\S]*shouldAutoStartDiscordLoginOnNextLoginActivation = nextState === 'login' && !state\.discordAuthState\?\.authenticated[\s\S]*activateLeftMonitorQuadrant\(nextState\)/,
+    'Expected the Login quadrant click path to mark unauthenticated users for Discord OAuth before activating login mode',
+  );
+  assert.doesNotMatch(
+    overlaysSource,
+    /segment\.addEventListener\('click', \(\) => \{[\s\S]*ensureDiscordAuthForQuadrantAction/,
+    'Expected left monitor quadrant selection to stop forcing Discord auth before reaching the Login quadrant',
   );
   assert.match(
     overlaysSource,
-    /btn\.addEventListener\('click', async \(e\) => \{[\s\S]*ensureDiscordAuthForQuadrantAction[\s\S]*window\.open\(url, '_blank', 'noopener,noreferrer'\)/,
-    'Expected GitHub/DVD quadrant button clicks to require Discord auth before opening URLs',
+    /btn\.addEventListener\('click', \(e\) => \{[\s\S]*window\.open\(url, '_blank', 'noopener,noreferrer'\)/,
+    'Expected GitHub quadrant buttons to open their URLs directly',
+  );
+  assert.doesNotMatch(
+    overlaysSource,
+    /btn\.addEventListener\('click', \(e\) => \{[\s\S]*ensureDiscordAuthForQuadrantAction[\s\S]*window\.open\(url, '_blank', 'noopener,noreferrer'\)/,
+    'Expected GitHub quadrant button clicks to stop forcing Discord auth before opening URLs',
   );
   assert.match(
     hotspotsSource,
-    /if \(spot\.id === MONITOR_GROUP_LEFT_CONTROL_ID\) \{[\s\S]*ensureDiscordAuthForQuadrantAction[\s\S]*githubBtn\.click\(\)[\s\S]*leftMonitorSegmentButtonsByState\.get/,
-    'Expected left monitor hotspot quadrant routing to require Discord auth',
+    /if \(spot\.id === MONITOR_GROUP_LEFT_CONTROL_ID\) \{[\s\S]*if \(state\.isGithubScreensaverMode && state\.bigTvGithubQuadrantEl\) \{[\s\S]*githubBtn\.click\(\)[\s\S]*leftMonitorSegmentButtonsByState\.get/,
+    'Expected left monitor hotspot routing to keep forwarding GitHub quadrants and standard monitor quadrants',
+  );
+  assert.doesNotMatch(
+    hotspotsSource,
+    /if \(spot\.id === MONITOR_GROUP_LEFT_CONTROL_ID\) \{[\s\S]*ensureDiscordAuthForQuadrantAction/,
+    'Expected left monitor hotspot quadrant routing to stop forcing Discord auth before routing clicks',
+  );
+  assert.match(
+    loginSource,
+    /beginDiscordLoginFlow[\s\S]*window\.location\.assign\('\/api\/discord\/auth'\);/,
+    'Expected the Login quadrant flow to remain the place that sends users into Discord OAuth',
   );
 });
 

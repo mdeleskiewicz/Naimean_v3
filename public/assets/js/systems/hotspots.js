@@ -647,22 +647,16 @@ function createHotspots(hotspotList) {
         const relX = (event.clientX - hotspotRect.left) / hotspotRect.width;
         const relY = (event.clientY - hotspotRect.top) / hotspotRect.height;
         const pos = `${relY < 0.5 ? 'top' : 'bottom'}-${relX < 0.5 ? 'left' : 'right'}`;
-        void (async () => {
-          const isAuthenticated = await state._cb.ensureDiscordAuthForQuadrantAction?.();
-          if (!isAuthenticated) {
+        if (state.isGithubScreensaverMode && state.bigTvGithubQuadrantEl) {
+          const githubBtn = state.bigTvGithubQuadrantEl.querySelector(`.github-quadrant-btn-${pos}`);
+          if (!githubBtn) {
+            console.warn(`GitHub quadrant button not found for position: ${pos}`);
             return;
           }
-          if (state.isGithubScreensaverMode && state.bigTvGithubQuadrantEl) {
-            const githubBtn = state.bigTvGithubQuadrantEl.querySelector(`.github-quadrant-btn-${pos}`);
-            if (!githubBtn) {
-              console.warn(`GitHub quadrant button not found for position: ${pos}`);
-              return;
-            }
-            githubBtn.click();
-            return;
-          }
-          state.leftMonitorSegmentButtonsByState.get(monitorStateByPos[pos])?.click();
-        })();
+          githubBtn.click();
+          return;
+        }
+        state.leftMonitorSegmentButtonsByState.get(monitorStateByPos[pos])?.click();
         return;
       }
       if (spot.id === DISCORD_OVERLAY_CONTROL_ID) {
