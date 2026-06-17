@@ -672,9 +672,7 @@ function createOverlays() {
       state.bigTvToolsHeaderActionButtonEl.className = 'big-tv-tools-header-action';
       state.bigTvToolsHeaderActionButtonEl.textContent = '+';
       state.bigTvToolsHeaderActionButtonEl.addEventListener('click', () => {
-        if (state.bigTvToolsViewMode === 'editor') {
-          state._cb.showBigTvToolsOverlay?.();
-        } else if (state.bigTvToolsViewMode === 'orchestration-list') {
+        if (state.bigTvToolsViewMode === 'editor' || state.bigTvToolsViewMode === 'orchestration-list') {
           state._cb.showBigTvToolsOverlay?.();
         } else if (state.bigTvToolsViewMode === 'orchestration-detail') {
           state._cb.showDenOrchCardsList?.();

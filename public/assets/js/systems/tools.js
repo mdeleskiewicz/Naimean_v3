@@ -83,9 +83,10 @@ function saveDenOrchCards() {
     return;
   }
   try {
+    const defaultsById = new Map(DEN_ORCH_CARD_DEFAULTS.map((d) => [d.id, d]));
     const overrides = {};
-    state.bigTvOrchCardsEntries.forEach((entry, i) => {
-      const def = DEN_ORCH_CARD_DEFAULTS[i];
+    state.bigTvOrchCardsEntries.forEach((entry) => {
+      const def = defaultsById.get(entry.id);
       if (!def) return;
       const normalized = normalizeDenOrchCardEntry(def, entry);
       const hasChange = normalized.name !== def.name ||
