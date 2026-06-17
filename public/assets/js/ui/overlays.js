@@ -942,9 +942,9 @@ function createOverlays() {
       githubCardGrid.className = 'left-monitor-card-grid github-card-grid';
       
       const githubQuadrants = [
-        { label: 'Code', url: GITHUB_V3_WIKI_URL, cls: 'github-card-quad-ul' },
+        { label: 'Issues', url: GITHUB_V3_ISSUES_URL, cls: 'github-card-quad-ul' },
         { label: 'Agent', url: GITHUB_V3_AGENTS_URL, cls: 'github-card-quad-ur' },
-        { label: 'Issues', url: GITHUB_V3_ISSUES_URL, cls: 'github-card-quad-ll' },
+        { label: 'Wiki', url: GITHUB_V3_WIKI_URL, cls: 'github-card-quad-ll' },
         { label: 'Actions', url: GITHUB_V3_ACTIONS_URL, cls: 'github-card-quad-lr' }
       ];
       
