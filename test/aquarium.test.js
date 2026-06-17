@@ -230,6 +230,16 @@ test('aquarium keeps shrimp/random creature flow while generic fish use Disney s
   );
   assert.match(
     aquariumBlock,
+    /const depthOverlayLeftImageEl = document\.createElement\('img'\);[\s\S]*depthOverlayLeftImageEl\.className = 'aquarium-depth-overlay-image';[\s\S]*depthOverlayLeftImageEl\.draggable = false;[\s\S]*depthOverlayLeftEl\.appendChild\(depthOverlayLeftImageEl\);/,
+    'Expected the left aquarium depth overlay to use an inner image with native drag disabled so resize anchors can render',
+  );
+  assert.match(
+    aquariumBlock,
+    /const depthOverlayRightImageEl = document\.createElement\('img'\);[\s\S]*depthOverlayRightImageEl\.className = 'aquarium-depth-overlay-image';[\s\S]*depthOverlayRightImageEl\.draggable = false;[\s\S]*depthOverlayRightEl\.appendChild\(depthOverlayRightImageEl\);/,
+    'Expected the right aquarium depth overlay to use an inner image with native drag disabled so resize anchors can render',
+  );
+  assert.match(
+    aquariumBlock,
     /appendAquariumCreature\(shrimp\);/,
     'Expected shrimp to be assigned to randomized depth layers',
   );
@@ -266,8 +276,8 @@ test('aquarium depth overlays are vertically flipped in CSS', () => {
   const cssSource = fs.readFileSync(indexCssPath, 'utf8');
   assert.match(
     cssSource,
-    /\.aquarium-depth-overlay\s*\{[\s\S]*transform:\s*rotate\(90deg\)\s*scaleY\(-1\);/,
-    'Expected aquarium depth overlays to be rotated and vertically flipped',
+    /\.aquarium-depth-overlay-image\s*\{[\s\S]*transform:\s*rotate\(90deg\)\s*scaleY\(-1\);/,
+    'Expected aquarium depth overlay images to be rotated and vertically flipped',
   );
 });
 

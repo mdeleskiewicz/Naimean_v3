@@ -384,18 +384,29 @@
       top: 0;
       width: 100%;
       height: 100%;
-      object-fit: fill;
       pointer-events: none;
       user-select: none;
       z-index: 3;
-      transform: rotate(90deg) scaleY(-1);
+      touch-action: none;
     }
 
-    .aquarium-depth-overlay-left {
+    .aquarium-depth-overlay-image {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: fill;
+      pointer-events: none;
+      user-select: none;
+      transform: rotate(90deg) scaleY(-1);
+      transform-origin: center;
+    }
+
+    .aquarium-depth-overlay-left .aquarium-depth-overlay-image {
       object-position: left bottom;
     }
 
-    .aquarium-depth-overlay-right {
+    .aquarium-depth-overlay-right .aquarium-depth-overlay-image {
       object-position: right bottom;
     }
 
