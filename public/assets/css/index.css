@@ -388,7 +388,7 @@
       pointer-events: none;
       user-select: none;
       z-index: 3;
-      transform: rotate(90deg);
+      transform: rotate(90deg) scaleY(-1);
     }
 
     .aquarium-depth-overlay-left {

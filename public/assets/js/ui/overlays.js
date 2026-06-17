@@ -45,6 +45,7 @@ import {
   FLIP_CLOCK_OVERLAY_ID,
   overlayDefaults
 } from '../core/constants.js';
+import { applyAquariumDepthOverlayLayout } from '../core/aquariumDepthOverlayLayout.js';
 import { state } from '../core/state.js';
 import { clamp } from '../core/utils.js';
 import { applyDvdColorStep } from '../systems/dvd.js';
@@ -627,10 +628,7 @@ function createOverlays() {
       aquariumDepthOverlayLeftEl.decoding = 'async';
       aquariumDepthOverlayLeftEl.loading = 'eager';
       aquariumDepthOverlayLeftEl.setAttribute('aria-hidden', 'true');
-      aquariumDepthOverlayLeftEl.style.left = '0px';
-      aquariumDepthOverlayLeftEl.style.top = '0px';
-      aquariumDepthOverlayLeftEl.style.width = `${rect.w}px`;
-      aquariumDepthOverlayLeftEl.style.height = `${rect.h}px`;
+      applyAquariumDepthOverlayLayout(aquariumDepthOverlayLeftEl, 'left', rect.w, rect.h);
       addDepthOverlayResizeHandles(aquariumDepthOverlayLeftEl);
       el.appendChild(aquariumDepthOverlayLeftEl);
       const aquariumDepthOverlayRightEl = document.createElement('img');
@@ -640,10 +638,7 @@ function createOverlays() {
       aquariumDepthOverlayRightEl.decoding = 'async';
       aquariumDepthOverlayRightEl.loading = 'eager';
       aquariumDepthOverlayRightEl.setAttribute('aria-hidden', 'true');
-      aquariumDepthOverlayRightEl.style.left = '0px';
-      aquariumDepthOverlayRightEl.style.top = '0px';
-      aquariumDepthOverlayRightEl.style.width = `${rect.w}px`;
-      aquariumDepthOverlayRightEl.style.height = `${rect.h}px`;
+      applyAquariumDepthOverlayLayout(aquariumDepthOverlayRightEl, 'right', rect.w, rect.h);
       addDepthOverlayResizeHandles(aquariumDepthOverlayRightEl);
       el.appendChild(aquariumDepthOverlayRightEl);
 

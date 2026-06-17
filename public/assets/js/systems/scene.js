@@ -40,6 +40,7 @@ import {
 } from '../core/constants.js';
 import { state } from '../core/state.js';
 import { dom } from '../core/domRefs.js';
+import { applyAquariumDepthOverlayLayout } from '../core/aquariumDepthOverlayLayout.js';
 import { clamp, isTextEntryTarget, measureSyncSection, scheduleNonCriticalTask, sourceHotspotsToRuntime } from '../core/utils.js';
 import { createOverlays } from '../ui/overlays.js';
 import { consumeDiscordLoginFlowState, syncDiscordAuthBodyClass, syncDiscordButtonUi, syncLoginOverlayUi } from './login.js';
@@ -478,10 +479,7 @@ function createAquariumFishEffect() {
   depthOverlayLeftEl.decoding = 'async';
   depthOverlayLeftEl.loading = 'eager';
   depthOverlayLeftEl.setAttribute('aria-hidden', 'true');
-  depthOverlayLeftEl.style.left = '0px';
-  depthOverlayLeftEl.style.top = '0px';
-  depthOverlayLeftEl.style.width = `${Math.round(spot.w)}px`;
-  depthOverlayLeftEl.style.height = `${Math.round(spot.h)}px`;
+  applyAquariumDepthOverlayLayout(depthOverlayLeftEl, 'left', spot.w, spot.h);
   addResizeHandles(depthOverlayLeftEl);
   const depthOverlayRightEl = document.createElement('img');
   depthOverlayRightEl.className = 'aquarium-depth-overlay aquarium-depth-overlay-right';
@@ -490,10 +488,7 @@ function createAquariumFishEffect() {
   depthOverlayRightEl.decoding = 'async';
   depthOverlayRightEl.loading = 'eager';
   depthOverlayRightEl.setAttribute('aria-hidden', 'true');
-  depthOverlayRightEl.style.left = '0px';
-  depthOverlayRightEl.style.top = '0px';
-  depthOverlayRightEl.style.width = `${Math.round(spot.w)}px`;
-  depthOverlayRightEl.style.height = `${Math.round(spot.h)}px`;
+  applyAquariumDepthOverlayLayout(depthOverlayRightEl, 'right', spot.w, spot.h);
   addResizeHandles(depthOverlayRightEl);
   const frontCreatureLayerEl = document.createElement('div');
   frontCreatureLayerEl.className = 'aquarium-creature-layer aquarium-creature-layer-front';

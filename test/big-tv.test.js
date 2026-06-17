@@ -92,6 +92,16 @@ test('Nedry gate video is lazy-loaded in aquarium overlay setup', () => {
     /state\.nedryGateVideoEl\.preload = 'none';/,
     'Expected the Nedry gate video element to opt out of eager preloading',
   );
+  assert.match(
+    aquariumBlock,
+    /applyAquariumDepthOverlayLayout\(aquariumDepthOverlayLeftEl, 'left', rect\.w, rect\.h\);/,
+    'Expected the left aquarium overlay image to use the separated layout helper in the big-TV overlay',
+  );
+  assert.match(
+    aquariumBlock,
+    /applyAquariumDepthOverlayLayout\(aquariumDepthOverlayRightEl, 'right', rect\.w, rect\.h\);/,
+    'Expected the right aquarium overlay image to use the separated layout helper in the big-TV overlay',
+  );
   assert.doesNotMatch(
     aquariumBlock,
     /state\.nedryGateVideoEl\.src = NEDRY_GATE_VIDEO_URL;/,
