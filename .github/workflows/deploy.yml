@@ -18,8 +18,6 @@ jobs:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
         run: |
-          # The '|| true' ensures that even if wrangler fails, the script continues
-          # and creates the log file so the upload step doesn't crash.
           npx wrangler deploy --config wrangler.toml --color=always > raw-deploy.log 2>&1 || true
           sed 's/\x1b\[[0-9;]*m//g' raw-deploy.log > full-deploy-log.txt
           
@@ -32,24 +30,18 @@ jobs:
         if: always()
         continue-on-error: true
         env:
-          REFRESH_TOKEN: ${{ secrets.GDRIVE_REFRESH_TOKEN }}
-          CLIENT_ID: ${{ secrets.GDRIVE_CLIENT_ID }}
-          CLIENT_SECRET: ${{ secrets.GDRIVE_CLIENT_SECRET }}
+          GDRIVE_CREDENTIALS: ${{ secrets.GDRIVE_CREDENTIALS }}
         run: |
           pip install google-api-python-client google-auth
+          echo "$GDRIVE_CREDENTIALS" > credentials.json
           python3 - <<EOF
           import os
-          from google.oauth2.credentials import Credentials
+          from google.oauth2 import service_account
           from googleapiclient.discovery import build
           from googleapiclient.http import MediaFileUpload
 
-          creds = Credentials(
-              None,
-              refresh_token=os.environ['REFRESH_TOKEN'],
-              token_uri='https://oauth2.googleapis.com/token',
-              client_id=os.environ['CLIENT_ID'],
-              client_secret=os.environ['CLIENT_SECRET']
-          )
+          # Authenticate using the service account JSON
+          creds = service_account.Credentials.from_service_account_file('credentials.json')
           
           service = build('drive', 'v3', credentials=creds)
           
