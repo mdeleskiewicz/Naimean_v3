@@ -1,6 +1,7 @@
 import { BIG_TV_MONITOR_INTERACTIVE_WAIT_TIMEOUT_MS, MEDIA_ENDED_PAUSE_TOLERANCE_S, MONITOR_INTERACTIVE_POLL_INTERVAL_MS } from './constants.js';
 import { state } from './state.js';
 
+// About 3 seconds at 60fps before a progressing video is treated as stalled.
 const STALLED_MEDIA_FRAME_THRESHOLD = 180;
 
 function waitForMediaPlaybackToEnd(mediaEl) {
