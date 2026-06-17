@@ -307,6 +307,28 @@ function appendAquariumDisneyFish(el, specPool, overrides = {}) {
   return fish;
 }
 
+function appendAquariumBubblerStream(el, { leftPct, bottomPct, bubbleCount = 5, riseMin = 230, riseMax = 370 }) {
+  for (let index = 0; index < bubbleCount; index += 1) {
+    const bubble = document.createElement('span');
+    bubble.className = 'aquarium-bubble';
+    const size = 2 + Math.floor(Math.random() * 4);
+    const horizontalJitter = (Math.random() * 5) - 2.5;
+    const rise = riseMin + Math.floor(Math.random() * Math.max(1, riseMax - riseMin));
+    const wobble = -8 + Math.floor(Math.random() * 17);
+    const duration = 3.8 + (Math.random() * 3.2);
+    const delay = (index * 0.45) + (Math.random() * 0.5);
+    bubble.style.width = `${size}px`;
+    bubble.style.height = `${size}px`;
+    bubble.style.left = `${leftPct + horizontalJitter}%`;
+    bubble.style.bottom = `${bottomPct}%`;
+    bubble.style.setProperty('--bubble-rise', `${rise}px`);
+    bubble.style.setProperty('--bubble-wobble', `${wobble}px`);
+    bubble.style.setProperty('--bubble-duration', `${duration.toFixed(2)}s`);
+    bubble.style.setProperty('--bubble-delay', `${delay.toFixed(2)}s`);
+    el.appendChild(bubble);
+  }
+}
+
 function createSceneTiles() {
   dom.sceneLayer.textContent = '';
   SCENE_TILE_IMAGE_URLS.forEach((sources, index) => {
@@ -584,8 +606,8 @@ function createAquariumFishEffect() {
 
   const disneyFishPool = createShuffledCopy(AQUARIUM_DISNEY_CHARACTER_SPECS);
 
-  // Special guest: one random sea creature per load.
-  const guests = ['snail', 'starfish', 'turtle', 'jellyfish', 'nautilus', 'octopus', 'frog', 'manta-ray', 'shark', 'electric-eel', 'moray-eel'];
+  // Special guest: one random sea creature/item per load.
+  const guests = ['snail', 'starfish', 'turtle', 'jellyfish', 'nautilus', 'octopus', 'frog', 'manta-ray', 'shark', 'electric-eel', 'moray-eel', 'bubble-chest', 'coral', 'anemone', 'toy-diver', 'cthulhu-bubbler', 'skull-bubbler'];
   const guestType = guests[Math.floor(Math.random() * guests.length)];
 
   if (guestType === 'snail') {
@@ -762,6 +784,73 @@ function createAquariumFishEffect() {
     moray.style.setProperty('--moray-duration', `${duration.toFixed(2)}s`);
     moray.style.setProperty('--moray-delay', `${delay.toFixed(2)}s`);
     el.appendChild(moray);
+  } else if (guestType === 'bubble-chest') {
+    const chest = document.createElement('span');
+    chest.className = 'aquarium-bubble-chest';
+    chest.textContent = '🧰';
+    chest.style.fontSize = `${22 + Math.floor(Math.random() * 8)}px`;
+    const leftPct = 18 + Math.floor(Math.random() * 55);
+    chest.style.left = `${leftPct}%`;
+    chest.style.bottom = '4%';
+    chest.style.setProperty('--chest-delay', `${(Math.random() * 3.5).toFixed(2)}s`);
+    el.appendChild(chest);
+    appendAquariumBubblerStream(el, { leftPct: leftPct + 1.4, bottomPct: 11, bubbleCount: 6, riseMin: 250, riseMax: 390 });
+  } else if (guestType === 'coral') {
+    const coral = document.createElement('span');
+    coral.className = 'aquarium-coral';
+    coral.textContent = '🪸';
+    coral.style.fontSize = `${26 + Math.floor(Math.random() * 10)}px`;
+    coral.style.left = `${12 + Math.floor(Math.random() * 66)}%`;
+    coral.style.bottom = '3%';
+    coral.style.setProperty('--coral-delay', `${(Math.random() * 4).toFixed(2)}s`);
+    el.appendChild(coral);
+  } else if (guestType === 'anemone') {
+    const anemone = document.createElement('span');
+    anemone.className = 'aquarium-anemone';
+    anemone.textContent = '🌺';
+    anemone.style.fontSize = `${24 + Math.floor(Math.random() * 9)}px`;
+    anemone.style.left = `${16 + Math.floor(Math.random() * 62)}%`;
+    anemone.style.bottom = '4%';
+    anemone.style.setProperty('--anemone-delay', `${(Math.random() * 3.4).toFixed(2)}s`);
+    el.appendChild(anemone);
+  } else if (guestType === 'toy-diver') {
+    const size = 26 + Math.floor(Math.random() * 10);
+    const top = 28 + Math.floor(Math.random() * 40);
+    const swimDist = 150 + Math.floor(Math.random() * 90);
+    const duration = 15 + Math.random() * 10;
+    const delay = -(Math.random() * duration);
+    const diver = document.createElement('span');
+    diver.className = 'aquarium-toy-diver';
+    diver.textContent = '🤿';
+    diver.style.fontSize = `${size}px`;
+    diver.style.top = `${top}%`;
+    diver.style.left = '6%';
+    diver.style.setProperty('--toy-diver-swim-dist', `${swimDist}px`);
+    diver.style.setProperty('--toy-diver-duration', `${duration.toFixed(2)}s`);
+    diver.style.setProperty('--toy-diver-delay', `${delay.toFixed(2)}s`);
+    el.appendChild(diver);
+  } else if (guestType === 'cthulhu-bubbler') {
+    const cthulhu = document.createElement('span');
+    cthulhu.className = 'aquarium-cthulhu-bubbler';
+    cthulhu.textContent = '🐙';
+    cthulhu.style.fontSize = `${30 + Math.floor(Math.random() * 8)}px`;
+    const leftPct = 14 + Math.floor(Math.random() * 62);
+    cthulhu.style.left = `${leftPct}%`;
+    cthulhu.style.bottom = '3%';
+    cthulhu.style.setProperty('--cthulhu-delay', `${(Math.random() * 4.2).toFixed(2)}s`);
+    el.appendChild(cthulhu);
+    appendAquariumBubblerStream(el, { leftPct: leftPct + 2, bottomPct: 13, bubbleCount: 7, riseMin: 260, riseMax: 410 });
+  } else if (guestType === 'skull-bubbler') {
+    const skull = document.createElement('span');
+    skull.className = 'aquarium-skull-bubbler';
+    skull.textContent = '💀';
+    skull.style.fontSize = `${24 + Math.floor(Math.random() * 8)}px`;
+    const leftPct = 20 + Math.floor(Math.random() * 58);
+    skull.style.left = `${leftPct}%`;
+    skull.style.bottom = '4%';
+    skull.style.setProperty('--skull-delay', `${(Math.random() * 4).toFixed(2)}s`);
+    el.appendChild(skull);
+    appendAquariumBubblerStream(el, { leftPct: leftPct + 1.2, bottomPct: 10, bubbleCount: 6, riseMin: 240, riseMax: 370 });
   }
 
   // Generic fish slots: 1 or 2 fish drawn from the Disney sprite roster.

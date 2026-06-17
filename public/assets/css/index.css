@@ -3392,6 +3392,123 @@
       100% { transform: translate3d(0, 0, 0) scaleX(1); }
     }
 
+    /* --- bubble chest --- */
+    .aquarium-bubble-chest {
+      position: absolute;
+      line-height: 1;
+      user-select: none;
+      will-change: transform;
+      filter: drop-shadow(0 1px 1px rgba(8, 22, 38, 0.45));
+      animation: aquarium-bubble-chest-wobble 5.8s ease-in-out infinite;
+      animation-delay: var(--chest-delay, 0s);
+    }
+
+    @keyframes aquarium-bubble-chest-wobble {
+      0%   { transform: translate3d(0, 0, 0) rotate(0deg); }
+      26%  { transform: translate3d(0, -1px, 0) rotate(-3deg); }
+      50%  { transform: translate3d(0, 0, 0) rotate(2deg); }
+      74%  { transform: translate3d(0, -1px, 0) rotate(-2deg); }
+      100% { transform: translate3d(0, 0, 0) rotate(0deg); }
+    }
+
+    /* --- coral --- */
+    .aquarium-coral {
+      position: absolute;
+      line-height: 1;
+      user-select: none;
+      will-change: transform;
+      filter: drop-shadow(0 1px 1px rgba(8, 22, 38, 0.42));
+      animation: aquarium-coral-sway 6.4s ease-in-out infinite;
+      animation-delay: var(--coral-delay, 0s);
+    }
+
+    @keyframes aquarium-coral-sway {
+      0%   { transform: translate3d(0, 0, 0) rotate(0deg); }
+      24%  { transform: translate3d(-1px, -1px, 0) rotate(-4deg); }
+      52%  { transform: translate3d(1px, 0, 0) rotate(3deg); }
+      78%  { transform: translate3d(-1px, -1px, 0) rotate(-2deg); }
+      100% { transform: translate3d(0, 0, 0) rotate(0deg); }
+    }
+
+    /* --- anemone --- */
+    .aquarium-anemone {
+      position: absolute;
+      line-height: 1;
+      user-select: none;
+      will-change: transform;
+      filter: drop-shadow(0 1px 1px rgba(8, 22, 38, 0.42));
+      animation: aquarium-anemone-wave 4.8s ease-in-out infinite;
+      animation-delay: var(--anemone-delay, 0s);
+    }
+
+    @keyframes aquarium-anemone-wave {
+      0%   { transform: translate3d(0, 0, 0) rotate(0deg) scale(1); }
+      30%  { transform: translate3d(-1px, -2px, 0) rotate(-5deg) scale(1.02); }
+      58%  { transform: translate3d(1px, -1px, 0) rotate(4deg) scale(0.98); }
+      82%  { transform: translate3d(-1px, -2px, 0) rotate(-3deg) scale(1.01); }
+      100% { transform: translate3d(0, 0, 0) rotate(0deg) scale(1); }
+    }
+
+    /* --- toy diver --- */
+    .aquarium-toy-diver {
+      position: absolute;
+      line-height: 1;
+      user-select: none;
+      will-change: transform;
+      animation: aquarium-toy-diver-swim var(--toy-diver-duration, 18s) ease-in-out infinite;
+      animation-delay: var(--toy-diver-delay, 0s);
+    }
+
+    @keyframes aquarium-toy-diver-swim {
+      0%   { transform: translate3d(0, 0, 0) scaleX(1) rotate(-6deg); }
+      20%  { transform: translate3d(calc(var(--toy-diver-swim-dist, 180px) * 0.20), -8px, 0) scaleX(1) rotate(2deg); }
+      40%  { transform: translate3d(calc(var(--toy-diver-swim-dist, 180px) * 0.45),  7px, 0) scaleX(1) rotate(-3deg); }
+      48%  { transform: translate3d(var(--toy-diver-swim-dist, 180px), 0, 0) scaleX(1) rotate(0deg); }
+      50%  { transform: translate3d(var(--toy-diver-swim-dist, 180px), 0, 0) scaleX(-1) rotate(0deg); }
+      68%  { transform: translate3d(calc(var(--toy-diver-swim-dist, 180px) * 0.70), -8px, 0) scaleX(-1) rotate(3deg); }
+      86%  { transform: translate3d(calc(var(--toy-diver-swim-dist, 180px) * 0.25),  7px, 0) scaleX(-1) rotate(-2deg); }
+      98%  { transform: translate3d(0, 0, 0) scaleX(-1) rotate(6deg); }
+      100% { transform: translate3d(0, 0, 0) scaleX(1) rotate(-6deg); }
+    }
+
+    /* --- cthulhu bubbler --- */
+    .aquarium-cthulhu-bubbler {
+      position: absolute;
+      line-height: 1;
+      user-select: none;
+      will-change: transform, filter;
+      filter: hue-rotate(120deg) saturate(1.25) brightness(0.95);
+      animation: aquarium-cthulhu-bobbler 6.2s ease-in-out infinite;
+      animation-delay: var(--cthulhu-delay, 0s);
+    }
+
+    @keyframes aquarium-cthulhu-bobbler {
+      0%   { transform: translate3d(0, 0, 0) rotate(0deg); }
+      22%  { transform: translate3d(-1px, -2px, 0) rotate(-4deg); }
+      48%  { transform: translate3d(1px, 0, 0) rotate(3deg); }
+      72%  { transform: translate3d(-1px, -1px, 0) rotate(-3deg); }
+      100% { transform: translate3d(0, 0, 0) rotate(0deg); }
+    }
+
+    /* --- skull bubbler --- */
+    .aquarium-skull-bubbler {
+      position: absolute;
+      line-height: 1;
+      user-select: none;
+      will-change: transform;
+      filter: drop-shadow(0 1px 1px rgba(8, 22, 38, 0.45));
+      animation: aquarium-skull-bobble 6s ease-in-out infinite;
+      animation-delay: var(--skull-delay, 0s);
+    }
+
+    @keyframes aquarium-skull-bobble {
+      0%   { transform: translate3d(0, 0, 0) rotate(0deg); }
+      28%  { transform: translate3d(-1px, -1px, 0) rotate(-2deg); }
+      54%  { transform: translate3d(1px, 0, 0) rotate(2deg); }
+      80%  { transform: translate3d(-1px, -1px, 0) rotate(-2deg); }
+      100% { transform: translate3d(0, 0, 0) rotate(0deg); }
+    }
+
     /* --- Disney pixel-fish roster --- */
     .aquarium-disney-fish {
       position: absolute;
