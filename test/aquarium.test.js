@@ -132,11 +132,31 @@ test('aquarium keeps shrimp/random creature flow while generic fish use Disney s
   });
   assert.match(source, /import { getAquariumShrimpCount } from '\.\/aquariumEffect\.js';/);
   assert.match(aquariumBlock, /const shrimpCount = getAquariumShrimpCount\(\);/, 'Expected aquarium to keep the shrimp population flow');
-  assert.match(
-    aquariumBlock,
-    /const guests = \['snail', 'starfish', 'turtle', 'jellyfish', 'nautilus', 'octopus', 'frog', 'manta-ray', 'shark', 'electric-eel', 'moray-eel'\];/,
-    'Expected aquarium to keep the random sea-creature guest mix',
-  );
+  [
+    'snail',
+    'starfish',
+    'turtle',
+    'jellyfish',
+    'nautilus',
+    'octopus',
+    'frog',
+    'manta-ray',
+    'shark',
+    'electric-eel',
+    'moray-eel',
+    'bubble-chest',
+    'coral',
+    'anemone',
+    'toy-diver',
+    'cthulhu-bubbler',
+    'skull-bubbler',
+  ].forEach((guestType) => {
+    assert.match(
+      aquariumBlock,
+      new RegExp(`'${guestType.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}'`),
+      `Expected aquarium guest mix to include ${guestType}`,
+    );
+  });
   assert.match(aquariumBlock, /appendAquariumDisneyFish\(el, disneyFishPool, /, 'Expected generic fish slots to render Disney sprites');
   assert.doesNotMatch(aquariumBlock, /for \(const spec of AQUARIUM_DISNEY_CHARACTER_SPECS\)/, 'Expected aquarium not to render the entire Disney roster at once');
   assert.match(source, /aquarium-disney-fish/, 'Expected aquarium fish to render as Disney pixel sprites');
