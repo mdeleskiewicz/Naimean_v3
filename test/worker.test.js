@@ -168,6 +168,8 @@ test('HotspotStore GET returns default hotspots when storage is empty', async ()
   assert.deepEqual(findHotspotById(body.hotspots, 'overlay-commodore-screen-control'), { id: 'overlay-commodore-screen-control', x: 1323, y: 982, w: 923, h: 665 });
   assert.deepEqual(findHotspotById(body.hotspots, 'monitor-group-left-control'), { id: 'monitor-group-left-control', x: 929, y: 987, w: 776, h: 495 });
   assert.deepEqual(findHotspotById(body.hotspots, 'monitor-group-right-control'), { id: 'monitor-group-right-control', x: 1869, y: 990, w: 780, h: 495 });
+  assert.deepEqual(findHotspotById(body.hotspots, 'ashtray-smoke-effect-control'), { id: 'ashtray-smoke-effect-control', x: 2925, y: 45, w: 280, h: 1680 });
+  assert.deepEqual(findHotspotById(body.hotspots, 'ashtray-cigarette-effect-control'), { id: 'ashtray-cigarette-effect-control', x: 2922, y: 1682, w: 148, h: 44 });
   assert.deepEqual(findHotspotById(body.hotspots, 'rca_apps'), { id: 'rca_apps', x: 392, y: 357, w: 436, h: 294 });
   assert.deepEqual(findHotspotById(body.hotspots, 'cap-ex_totals'), { id: 'cap-ex_totals', x: 868, y: 755, w: 402, h: 100 });
   assert.deepEqual(findHotspotById(body.hotspots, 'github-shelf-object-control'), { id: 'github-shelf-object-control', x: 2379, y: 497, w: 130, h: 130 });
@@ -227,6 +229,30 @@ test('HotspotStore POST sanitizes, clamps and stores hotspot payloads', async ()
   assert.equal(calls.put[0].key, 'hotspots');
   assert.deepEqual(calls.put[0].value, body.hotspots);
   assert.deepEqual(getStored(), body.hotspots);
+});
+
+test('HotspotStore POST accepts current ashtray hotspot ids and legacy ashtray aliases', async () => {
+  const { state } = makeState(undefined);
+  const store = new HotspotStore(state);
+
+  const response = await store.fetch(
+    new Request('https://example.com/api/hotspots', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({
+        hotspots: [
+          { id: 'ashtray-smoke-effect-control', x: 3000, y: 80, w: 260, h: 1500 },
+          { id: 'overlay-ashtray-cigarette-control', x: 3001, y: 1700, w: 166, h: 52 }
+        ]
+      })
+    })
+  );
+
+  const body = await response.json();
+
+  assert.equal(response.status, 200);
+  assert.deepEqual(findHotspotById(body.hotspots, 'ashtray-smoke-effect-control'), { id: 'ashtray-smoke-effect-control', x: 3000, y: 80, w: 260, h: 1500 });
+  assert.deepEqual(findHotspotById(body.hotspots, 'ashtray-cigarette-effect-control'), { id: 'ashtray-cigarette-effect-control', x: 3001, y: 1700, w: 166, h: 52 });
 });
 
 test('HotspotStore returns 405 for unsupported methods', async () => {
@@ -1860,6 +1886,30 @@ test('functions HotspotStore GET returns saved hotspots when storage has data', 
 
   assert.equal(response.status, 200);
   assert.deepEqual(body.hotspots[0], { id: 'noahs-arcade', x: 10, y: 20, w: 100, h: 200 });
+});
+
+test('functions HotspotStore POST accepts current ashtray hotspot ids', async () => {
+  const { state } = makeFunctionsState(undefined);
+  const store = new FunctionsHotspotStore(state);
+
+  const response = await store.fetch(
+    new Request('https://example.com/api/hotspots', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({
+        hotspots: [
+          { id: 'ashtray-smoke-effect-control', x: 2988, y: 64, w: 255, h: 1440 },
+          { id: 'ashtray-cigarette-effect-control', x: 2992, y: 1710, w: 160, h: 48 }
+        ]
+      })
+    })
+  );
+
+  const body = await response.json();
+
+  assert.equal(response.status, 200);
+  assert.deepEqual(findHotspotById(body.hotspots, 'ashtray-smoke-effect-control'), { id: 'ashtray-smoke-effect-control', x: 2988, y: 64, w: 255, h: 1440 });
+  assert.deepEqual(findHotspotById(body.hotspots, 'ashtray-cigarette-effect-control'), { id: 'ashtray-cigarette-effect-control', x: 2992, y: 1710, w: 160, h: 48 });
 });
 
 test('functions HotspotStore POST rejects invalid JSON', async () => {

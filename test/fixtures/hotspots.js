@@ -19,11 +19,15 @@ const DEFAULT_HOTSPOTS = [
   { id: 'overlay-commodore-power-button-control', x: 1977, y: 1528, w: 55, h: 39 },
   { id: 'monitor-group-right-control', x: 1869, y: 990, w: 780, h: 495 },
   { id: 'overlay-flip-clock-control', x: 848, y: 1439, w: 329, h: 136 },
-  { id: 'overlay-ashtray-smoke-control', x: 2925, y: 45, w: 280, h: 1680 },
-  { id: 'overlay-ashtray-cigarette-control', x: 2922, y: 1682, w: 148, h: 44 },
+  { id: 'ashtray-smoke-effect-control', x: 2925, y: 45, w: 280, h: 1680 },
+  { id: 'ashtray-cigarette-effect-control', x: 2922, y: 1682, w: 148, h: 44 },
   { id: 'monitor-group-left-control', x: 929, y: 987, w: 776, h: 495 },
   { id: 'github-shelf-object-control', x: 2379, y: 497, w: 130, h: 130 }
 ];
+const LEGACY_HOTSPOT_ID_ALIASES = new Map([
+  ['overlay-ashtray-smoke-control', 'ashtray-smoke-effect-control'],
+  ['overlay-ashtray-cigarette-control', 'ashtray-cigarette-effect-control']
+]);
 
 const HOTSPOT_LIMITS = {
   minX: 0,
@@ -56,13 +60,17 @@ function isFiniteNumber(value) {
   return typeof value === 'number' && Number.isFinite(value);
 }
 
+function normalizeHotspotId(id) {
+  return LEGACY_HOTSPOT_ID_ALIASES.get(id) || id;
+}
+
 function sanitizeHotspots(input) {
   if (!Array.isArray(input)) return DEFAULT_HOTSPOTS;
 
   const entriesById = new Map();
   input.forEach((entry) => {
     if (!entry || typeof entry !== 'object' || typeof entry.id !== 'string') return;
-    entriesById.set(entry.id, entry);
+    entriesById.set(normalizeHotspotId(entry.id), entry);
   });
 
   return DEFAULT_HOTSPOTS.map((fallback) => {
