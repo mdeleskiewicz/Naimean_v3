@@ -150,7 +150,13 @@ test('aquarium keeps shrimp/random creature flow while generic fish use Disney s
     'snapping-turtle',
     'vampire-octopus',
     'baby-barracuda',
-    'little-crocodile'
+    'little-crocodile',
+    'bubble-chest',
+    'coral',
+    'anemone',
+    'toy-diver',
+    'cthulhu-bubbler',
+    'skull-bubbler',
   ].forEach((guest) => {
     const escapedGuest = guest.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
     assert.match(aquariumBlock, new RegExp(`'${escapedGuest}'`), `Expected random guest roster to include ${guest}`);
