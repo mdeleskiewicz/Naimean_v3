@@ -341,17 +341,27 @@ function createSceneTiles() {
     const tile = document.createElement('picture');
     tile.className = 'scene-tile';
     tile.style.left = `${index * TILE_WIDTH}px`;
-    const avifSource = document.createElement('source');
-    avifSource.type = 'image/avif';
-    avifSource.srcset = sources.avif;
-    const webpSource = document.createElement('source');
-    webpSource.type = 'image/webp';
-    webpSource.srcset = sources.webp;
     const image = document.createElement('img');
     image.src = sources.png;
     image.alt = '';
-    image.loading = index === 0 ? 'eager' : 'lazy';
-    tile.append(avifSource, webpSource, image);
+    // Tile 1 (den_computer) is the initial camera position on all devices.
+    // Tile 0 (den_arcade) is also visible on wide desktop viewports.
+    // On iOS, skip tile 0 eager-loading to avoid fetching the large PNG off-screen.
+    // On iOS, skip AVIF/WebP <source> elements: large AVIF tiles can partially
+    // decode on iOS Safari, leaving black regions in the scene.
+    const isEager = isIOSDevice ? index === 1 : index <= 1;
+    image.loading = isEager ? 'eager' : 'lazy';
+    if (!isIOSDevice) {
+      const avifSource = document.createElement('source');
+      avifSource.type = 'image/avif';
+      avifSource.srcset = sources.avif;
+      const webpSource = document.createElement('source');
+      webpSource.type = 'image/webp';
+      webpSource.srcset = sources.webp;
+      tile.append(avifSource, webpSource, image);
+    } else {
+      tile.append(image);
+    }
     dom.sceneLayer.appendChild(tile);
   });
 }
@@ -1430,11 +1440,45 @@ function initializeScene() {
 }
 
 function markSceneReady() {
-  window.requestAnimationFrame(() => {
-    document.body.classList.remove('scene-loading');
-    document.body.classList.add('scene-ready');
-    window.dispatchEvent(new Event('naimean-scene-ready'));
-  });
+  const TILE_LOAD_TIMEOUT_MS = 3000;
+
+  const revealScene = () => {
+    window.requestAnimationFrame(() => {
+      document.body.classList.remove('scene-loading');
+      document.body.classList.add('scene-ready');
+      window.dispatchEvent(new Event('naimean-scene-ready'));
+    });
+  };
+
+  // Wait for the initially-visible tile to finish loading before revealing the
+  // scene. DESK_CENTER_X falls in tile index 1 (den_computer) on all devices.
+  const initialTileIndex = Math.floor(DESK_CENTER_X / TILE_WIDTH);
+  const tileImgs = dom.sceneLayer?.querySelectorAll?.('.scene-tile img');
+  const initialTileImg = tileImgs?.[initialTileIndex];
+
+  if (!initialTileImg || initialTileImg.complete) {
+    revealScene();
+    return;
+  }
+
+  let revealed = false;
+  const timeoutId = window.setTimeout(() => {
+    if (!revealed) {
+      revealed = true;
+      revealScene();
+    }
+  }, TILE_LOAD_TIMEOUT_MS);
+
+  const onSettled = () => {
+    if (!revealed) {
+      revealed = true;
+      window.clearTimeout(timeoutId);
+      revealScene();
+    }
+  };
+
+  initialTileImg.addEventListener('load', onSettled, { once: true });
+  initialTileImg.addEventListener('error', onSettled, { once: true });
 }
 
 function initScene() {
