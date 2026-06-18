@@ -3,82 +3,21 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <title>Naimean Den</title>
-  <meta name="description" content="Naimean — an interactive virtual den with arcade, chapel, aquarium, and more." />
-  <meta property="og:type" content="website" />
-  <meta property="og:site_name" content="Naimean" />
-  <meta property="og:url" content="https://naimean.com/" />
-  <meta property="og:title" content="Naimean Den" />
-  <meta property="og:description" content="Explore the Naimean interactive virtual den." />
-  <meta property="og:image" content="https://naimean.com/assets/images/den_computer.png" />
-  <meta name="twitter:card" content="summary_large_image" />
-  <meta name="twitter:title" content="Naimean Den" />
-  <meta name="twitter:description" content="Explore the Naimean interactive virtual den." />
-  <meta name="twitter:image" content="https://naimean.com/assets/images/den_computer.png" />
-  <link rel="preload" as="image" type="image/avif" href="assets/images/den_computer.avif" fetchpriority="high" />
-  <link rel="stylesheet" href="assets/css/index.css" />
+  <title>Naimean Index Debug</title>
+  <style>
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: #050814;
+      color: #39ff14;
+      font-family: monospace;
+      padding: 40px;
+    }
+  </style>
 </head>
-<body class="scene-loading">
-  <div id="viewport" aria-label="Den side-scrolling scene">
-    <div id="stage">
-      <div id="world">
-        <div class="layer" id="scene-layer" aria-hidden="true"></div>
-        <div class="layer" id="hotspot-layer" aria-label="Interactive hotspots"></div>
-        <div class="layer" id="screen-overlay-layer" aria-hidden="true"></div>
-        <div class="layer" id="effects-layer" aria-hidden="true"></div>
-      </div>
-    </div>
-  </div>
-  <div id="discord-session-chip" class="discord-session-chip" hidden>
-    <button
-      id="discord-session-chip-button"
-      class="discord-session-chip-button"
-      type="button"
-      aria-haspopup="true"
-      aria-expanded="false"
-      aria-label="Discord session"
-    >
-      <img id="discord-session-chip-avatar" class="discord-session-chip-avatar" alt="Discord avatar" />
-      <span id="discord-session-chip-label" class="discord-session-chip-label"></span>
-    </button>
-    <div id="discord-session-chip-menu" class="discord-session-chip-menu" hidden>
-      <button id="discord-session-logout-btn" class="discord-session-logout-btn" type="button">Log Out</button>
-    </div>
-  </div>
-  <button id="debug-toggle-btn" type="button" aria-label="Toggle debug mode">🐛</button>
-  <button id="save-hotspots-btn" type="button" aria-label="Save hotspot positions">Save</button>
-  <div id="debug-object-controls" aria-label="Debug object controls">
-    <label for="debug-object-select">Object</label>
-    <select id="debug-object-select" aria-label="Select object for debug lock state"></select>
-    <div id="debug-object-actions">
-      <button id="debug-object-lock-btn" class="debug-object-action-btn" type="button">Lock</button>
-      <button id="debug-object-unlock-btn" class="debug-object-action-btn" type="button">Unlock</button>
-    </div>
-    <div id="debug-url-row" hidden>
-      <label for="debug-url-input">URL</label>
-      <input type="url" id="debug-url-input" spellcheck="false" placeholder="https://…" autocomplete="off" />
-      <button id="debug-url-save-btn" type="button">Save URL</button>
-    </div>
-    <button id="debug-corner-score-sync-btn" type="button">Set CornerScore server = local (MAD)</button>
-    <button id="debug-corner-score-clear-btn" type="button">Clear CornerScore (server + local)</button>
-  </div>
-  <div id="save-modal" class="hidden" role="dialog" aria-modal="true" aria-labelledby="save-modal-title">
-    <div id="save-modal-inner">
-      <p id="save-modal-title">Unable to save to the server — copy the code below to update source manually</p>
-      <textarea id="save-modal-textarea" readonly spellcheck="false"></textarea>
-      <div id="save-modal-actions">
-        <button type="button" class="save-modal-btn primary" id="save-modal-copy-btn">Copy to clipboard</button>
-        <button type="button" class="save-modal-btn" id="save-modal-close-btn">Close</button>
-      </div>
-    </div>
-  </div>
-  <div id="discord-error-toast" class="hidden" role="alert">
-    <span id="discord-error-toast-msg"></span>
-    <button type="button" id="discord-error-toast-close" aria-label="Dismiss">✕</button>
-  </div>
-  <div id="debug-status" class="sr-only" role="status" aria-live="polite"></div>
-
-    <script src="assets/js/sync-badge.js"></script>
-    <script type="module" src="assets/js/index.js"></script>
+<body>
+  <h1>Index HTML Loaded</h1>
+  <p>No JS loaded.</p>
+  <p>If this page does not redirect, the problem is in assets/js/index.js or sync-badge.js.</p>
 </body>
 </html>
