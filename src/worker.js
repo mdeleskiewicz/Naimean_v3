@@ -1,3 +1,50 @@
+const JSON_HEADERS = {
+  "content-type": "application/json; charset=utf-8",
+  "access-control-allow-origin": "*",
+  "access-control-allow-headers": "content-type, authorization",
+  "cache-control": "no-store",
+};
+
+function jsonResponse(data, status = 200) {
+  return new Response(JSON.stringify(data, null, 2), {
+    status,
+    headers: JSON_HEADERS,
+  });
+}
+
+function makeAssetRequest(request, pathname) {
+  const url = new URL(request.url);
+  url.pathname = pathname;
+  return new Request(url.toString(), request);
+}
+
+async function serveAsset(request, env, pathname) {
+  if (!env.ASSETS) {
+    return new Response("Missing ASSETS binding", { status: 500 });
+  }
+
+  const assetReq = pathname ? makeAssetRequest(request, pathname) : request;
+  const res = await env.ASSETS.fetch(assetReq);
+
+  const headers = new Headers(res.headers);
+  headers.set("cache-control", "no-store");
+  headers.set("x-naimean-worker", "asset-worker-v2");
+
+  if (pathname === "/index.html" || assetReq.url.includes("/index.html")) {
+    headers.set("content-type", "text/html; charset=utf-8");
+  }
+
+  return new Response(res.body, {
+    status: res.status,
+    statusText: res.statusText,
+    headers,
+  });
+}
+
+async function serveIndex(request, env) {
+  return serveAsset(request, env, "/index.html");
+}
+
 export class HotspotStore {
   constructor(state, env) {
     this.state = state;
@@ -5,46 +52,144 @@ export class HotspotStore {
   }
 
   async fetch(request) {
-    return new Response(
-      JSON.stringify({
+    const url = new URL(request.url);
+    const pathname = url.pathname;
+
+    if (request.method === "OPTIONS") {
+      return new Response(null, {
+        status: 204,
+        headers: {
+          ...JSON_HEADERS,
+          "access-control-allow-methods": "GET, POST, PUT, DELETE, OPTIONS",
+        },
+      });
+    }
+
+    if (pathname === "/api/health") {
+      return jsonResponse({
         ok: true,
-        worker: "api-alive",
+        worker: "asset-worker-v2",
         time: new Date().toISOString(),
-      }),
-      { headers: { "content-type": "application/json" } }
-    );
+      });
+    }
+
+    const roomMatch = pathname.match(/^\/api\/room-state\/([^/]+)$/);
+
+    const key = roomMatch
+      ? `room-state:${decodeURIComponent(roomMatch[1])}`
+      : pathname.replace(/^\/api\//, "");
+
+    if (!key || key === pathname) {
+      return jsonResponse({ ok: false, error: "Unknown API route", pathname }, 404);
+    }
+
+    if (request.method === "GET") {
+      const value = await this.state.storage.get(key);
+
+      if (value !== undefined && value !== null) {
+        return jsonResponse(value);
+      }
+
+      if (
+        key === "hotspots" ||
+        key === "chapel-hotspots" ||
+        key === "notes" ||
+        key === "calendar-events"
+      ) {
+        return jsonResponse([]);
+      }
+
+      return jsonResponse({});
+    }
+
+    if (request.method === "POST" || request.method === "PUT") {
+      let body;
+
+      try {
+        body = await request.json();
+      } catch {
+        return jsonResponse({ ok: false, error: "Invalid JSON body" }, 400);
+      }
+
+      await this.state.storage.put(key, body);
+
+      return jsonResponse({
+        ok: true,
+        key,
+        data: body,
+        updated_at: new Date().toISOString(),
+      });
+    }
+
+    if (request.method === "DELETE") {
+      await this.state.storage.delete(key);
+      return jsonResponse({ ok: true, key, deleted: true });
+    }
+
+    return jsonResponse({ ok: false, error: "Method not allowed" }, 405);
   }
 }
 
 export default {
   async fetch(request, env) {
-    const url = new URL(request.url);
+    try {
+      const url = new URL(request.url);
+      const pathname = url.pathname;
 
-    if (url.pathname.startsWith("/api/")) {
-      const id = env.HOTSPOT_STORE.idFromName("global");
-      return env.HOTSPOT_STORE.get(id).fetch(request);
-    }
-
-    return new Response(
-      `<!doctype html>
-<html>
-<head>
-  <meta charset="utf-8">
-  <title>Naimean Debug</title>
-</head>
-<body style="background:#050814;color:#39ff14;font-family:monospace;padding:40px">
-  <h1>Naimean Worker Loaded</h1>
-  <p>No redirect happened.</p>
-  <p>Worker is serving hardcoded HTML.</p>
-</body>
-</html>`,
-      {
-        headers: {
-          "content-type": "text/html; charset=utf-8",
-          "cache-control": "no-store",
-          "x-naimean-worker": "hardcoded-html-debug",
-        },
+      if (request.method === "OPTIONS") {
+        return new Response(null, {
+          status: 204,
+          headers: {
+            ...JSON_HEADERS,
+            "access-control-allow-methods": "GET, POST, PUT, DELETE, OPTIONS",
+          },
+        });
       }
-    );
+
+      if (pathname.startsWith("/api/")) {
+        if (!env.HOTSPOT_STORE) {
+          return jsonResponse({
+            ok: false,
+            error: "Missing HOTSPOT_STORE binding",
+          }, 500);
+        }
+
+        const id = env.HOTSPOT_STORE.idFromName("global");
+        const obj = env.HOTSPOT_STORE.get(id);
+        return obj.fetch(request);
+      }
+
+      if (
+        pathname === "/" ||
+        pathname === "/den" ||
+        pathname === "/den.html" ||
+        pathname === "/index.html"
+      ) {
+        return serveIndex(request, env);
+      }
+
+      const assetResponse = await serveAsset(request, env);
+
+      if (assetResponse.status !== 404) {
+        return assetResponse;
+      }
+
+      const acceptsHtml = request.headers.get("accept")?.includes("text/html");
+
+      if (acceptsHtml) {
+        return serveIndex(request, env);
+      }
+
+      return assetResponse;
+    } catch (err) {
+      return jsonResponse(
+        {
+          ok: false,
+          error: "Worker exception",
+          message: err?.message || String(err),
+        },
+        500
+      );
+    }
   },
 };
