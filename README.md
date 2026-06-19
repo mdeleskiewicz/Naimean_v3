@@ -3,10 +3,15 @@ This is a Cloudflare Worker + static-assets app for an interactive virtual “de
 
 The core split is:
 
-Backend/runtime: /home/runner/work/Naimean_v3/Naimean_v3/src/worker.js
-Frontend pages/assets: /home/runner/work/Naimean_v3/Naimean_v3/public
-Cloudflare config: /home/runner/work/Naimean_v3/Naimean_v3/wrangler.toml
-Tests: /home/runner/work/Naimean_v3/Naimean_v3/test
+Backend/runtime: 
+- /home/runner/work/Naimean_v3/Naimean_v3/src/worker.js
+Frontend pages/assets:
+- /home/runner/work/Naimean_v3/Naimean_v3/public
+Cloudflare config:
+- /home/runner/work/Naimean_v3/Naimean_v3/wrangler.toml
+Tests:
+- /home/runner/work/Naimean_v3/Naimean_v3/test
+
 The real architecture
 1. One Worker is the server
 /home/runner/work/Naimean_v3/Naimean_v3/src/worker.js is the single entrypoint.
