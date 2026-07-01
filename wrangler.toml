@@ -1,4 +1,4 @@
-name = "naimeav3"
+name = "naimeanprojectpages"
 main = "src/worker.js"
 compatibility_date = "2026-06-15"
 compatibility_flags = ["nodejs_compat"]
