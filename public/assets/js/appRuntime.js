@@ -24,6 +24,7 @@ export function bootstrapApp() {
     initDomRefs();
     observePerformanceMetrics();
     bootstrapScene();
+    bootstrapMaestro();
 
     console.info('[Naimean] App runtime bootstrapped.');
   } catch (error) {
