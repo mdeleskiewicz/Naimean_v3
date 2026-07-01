@@ -13,6 +13,7 @@ import './ui/overlays.js';
 import './systems/leftMonitorCards.js';
 import './systems/cloudflare.js';
 import './cards/cardOrchestrator.js';
+import { bootstrapMaestro } from './maestro/maestro.js';
 import { observePerformanceMetrics } from './systems/performance.js';
 import { bootstrapScene } from './systems/scene.js';
 
