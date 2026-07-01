@@ -334,7 +334,7 @@
       overflow: hidden;
       border-radius: 6px;
       pointer-events: none;
-      z-index: 2;
+      z-index: 5;
       opacity: 0;
       visibility: hidden;
       background: #040506;
