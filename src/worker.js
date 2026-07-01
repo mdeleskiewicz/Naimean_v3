@@ -12,25 +12,29 @@ function jsonResponse(data, status = 200) {
   });
 }
 
-function makeAssetRequest(request, pathname) {
-  const url = new URL(request.url);
-  url.pathname = pathname;
-  return new Request(url.toString(), request);
-}
-
-async function serveAsset(request, env, pathname) {
+async function serveAsset(request, env, pathname = null) {
   if (!env.ASSETS) {
     return new Response("Missing ASSETS binding", { status: 500 });
   }
 
-  const assetReq = pathname ? makeAssetRequest(request, pathname) : request;
+  const url = new URL(request.url);
+
+  if (pathname) {
+    url.pathname = pathname;
+  }
+
+  const assetReq = new Request(url.toString(), {
+    method: "GET",
+    headers: request.headers,
+  });
+
   const res = await env.ASSETS.fetch(assetReq);
 
   const headers = new Headers(res.headers);
   headers.set("cache-control", "no-store");
-  headers.set("x-naimean-worker", "asset-worker-v2");
+  headers.set("x-naimean-worker", "asset-worker-v3");
 
-  if (pathname === "/index.html" || assetReq.url.includes("/index.html")) {
+  if ((pathname || url.pathname) === "/index.html") {
     headers.set("content-type", "text/html; charset=utf-8");
   }
 
@@ -68,7 +72,7 @@ export class HotspotStore {
     if (pathname === "/api/health") {
       return jsonResponse({
         ok: true,
-        worker: "asset-worker-v2",
+        worker: "asset-worker-v3",
         time: new Date().toISOString(),
       });
     }
@@ -148,10 +152,13 @@ export default {
 
       if (pathname.startsWith("/api/")) {
         if (!env.HOTSPOT_STORE) {
-          return jsonResponse({
-            ok: false,
-            error: "Missing HOTSPOT_STORE binding",
-          }, 500);
+          return jsonResponse(
+            {
+              ok: false,
+              error: "Missing HOTSPOT_STORE binding",
+            },
+            500
+          );
         }
 
         const id = env.HOTSPOT_STORE.idFromName("global");
@@ -168,7 +175,7 @@ export default {
         return serveIndex(request, env);
       }
 
-      const assetResponse = await serveAsset(request, env);
+      const assetResponse = await serveAsset(request, env, pathname);
 
       if (assetResponse.status !== 404) {
         return assetResponse;
