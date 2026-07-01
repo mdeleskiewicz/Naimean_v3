@@ -6,6 +6,10 @@ function getAquariumShrimpCount() {
   return 6;
 }
 
+function getRandomAquariumDepthLayer() {
+  return Math.random() < 0.5 ? 'back' : 'front';
+}
+
 function resolveAquariumHorizontalMotion({
   tankWidthPx,
   startLeftPct,
@@ -54,7 +58,12 @@ function resolveAquariumHorizontalMotion({
     startLeftPct: tankWidth > 0 ? Number(((startLeftPx / tankWidth) * 100).toFixed(2)) : 0,
     swimDistPx: Math.max(0, Math.round(Math.min(requestedSwimDistPx, availableRoomPx))),
     swimsRight: directionRight,
+    depthLayer: getRandomAquariumDepthLayer(),
   };
 }
 
-export { getAquariumShrimpCount, resolveAquariumHorizontalMotion };
+export {
+  getAquariumShrimpCount,
+  getRandomAquariumDepthLayer,
+  resolveAquariumHorizontalMotion,
+};
