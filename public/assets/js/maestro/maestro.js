@@ -1,147 +1,99 @@
-// public/assets/js/maestro/maestro.js
-
 import { sceneBus, MAESTRO_EVENTS } from './sceneBus.js';
+import { navigationStack } from './navigationStack.js';
+import { sourceManager } from './sourceManager.js';
+import { queueManager } from './queueManager.js';
+import { fixtureManager } from './fixtureManager.js';
+import { displayRouter } from './displayRouter.js';
 
-const DEFAULT_STATE = Object.freeze({
-  initialized: false,
-
-  source: 'naimean',
-
-  muted: true,
-  volume: 0,
-
-  nowPlaying: null,
-
-  queue: [],
-
-  owner: null,
-
-  fixtures: {},
-
-  displays: {},
-});
-
-const state = structuredClone(DEFAULT_STATE);
-
-function initialize() {
-  if (state.initialized) {
-    return state;
-  }
-
-  state.initialized = true;
-
-  console.info('[MAESTRO] Initialized.');
-
-  sceneBus.emit(MAESTRO_EVENTS.READY, {
-    state: getState(),
-  });
-
-  return state;
-}
+let initialized = false;
 
 function getState() {
-  return structuredClone(state);
+  return {
+    source: sourceManager.getActiveSource(),
+    sources: sourceManager.getSources(),
+    navigation: navigationStack.getNavigationState(),
+    playback: queueManager.getPlaybackState(),
+    fixtures: fixtureManager.getFixtures(),
+    displays: displayRouter.getDisplayState(),
+    naimeanSections: sourceManager.getNaimeanLibrarySections(),
+  };
 }
 
-function setSource(source) {
-  state.source = source;
-
-  sceneBus.emit(MAESTRO_EVENTS.SOURCE_SELECTED, {
-    source,
-  });
+function selectSource(sourceId) {
+  const source = sourceManager.selectSource(sourceId);
+  sceneBus.emit(MAESTRO_EVENTS.SOURCE_SELECTED, { source });
+  return source;
 }
 
-function setMuted(muted) {
-  state.muted = Boolean(muted);
-
-  sceneBus.emit(
-    state.muted
-      ? MAESTRO_EVENTS.PLAYBACK_MUTED
-      : MAESTRO_EVENTS.PLAYBACK_UNMUTED,
-    {
-      muted: state.muted,
-      volume: state.volume,
-    }
-  );
+function navigate(screenId, params = {}) {
+  const nav = navigationStack.pushScreen(screenId, params);
+  sceneBus.emit(MAESTRO_EVENTS.NAVIGATE, nav);
+  return nav;
 }
 
-function setVolume(volume) {
-  state.volume = Math.max(0, Math.min(100, Number(volume)));
-
-  sceneBus.emit(MAESTRO_EVENTS.TRIGGER, {
-    type: 'volume_changed',
-    volume: state.volume,
-  });
+function back() {
+  const nav = navigationStack.back();
+  sceneBus.emit(MAESTRO_EVENTS.BACK, nav);
+  return nav;
 }
 
-function setNowPlaying(track) {
-  state.nowPlaying = track;
-
-  sceneBus.emit(MAESTRO_EVENTS.NOW_PLAYING_CHANGED, {
-    track,
-  });
+function queueMedia(item) {
+  const queued = queueManager.addToQueue(item);
+  sceneBus.emit(MAESTRO_EVENTS.MEDIA_QUEUED, { item: queued, queue: queueManager.getQueue() });
+  sceneBus.emit(MAESTRO_EVENTS.QUEUE_UPDATED, { queue: queueManager.getQueue() });
+  return queued;
 }
 
-function setQueue(queue) {
-  state.queue = [...queue];
-
-  sceneBus.emit(MAESTRO_EVENTS.QUEUE_UPDATED, {
-    queue: getQueue(),
-  });
+function playMedia(item, user = null) {
+  const playback = queueManager.play(item, user);
+  displayRouter.routeMusicCard();
+  sceneBus.emit(MAESTRO_EVENTS.PLAYBACK_STARTED, playback);
+  sceneBus.emit(MAESTRO_EVENTS.NOW_PLAYING_CHANGED, playback);
+  return playback;
 }
 
-function addToQueue(item) {
-  state.queue.push(item);
-
-  sceneBus.emit(MAESTRO_EVENTS.QUEUE_UPDATED, {
-    queue: getQueue(),
-    added: item,
-  });
+function mute() {
+  const playback = queueManager.setMuted(true);
+  sceneBus.emit(MAESTRO_EVENTS.PLAYBACK_MUTED, playback);
+  return playback;
 }
 
-function removeFromQueue(index) {
-  if (index < 0 || index >= state.queue.length) {
-    return;
-  }
-
-  const removed = state.queue.splice(index, 1)[0];
-
-  sceneBus.emit(MAESTRO_EVENTS.QUEUE_UPDATED, {
-    queue: getQueue(),
-    removed,
-  });
+function unmute(volume = 35) {
+  const playback = queueManager.setVolume(volume);
+  sceneBus.emit(MAESTRO_EVENTS.PLAYBACK_UNMUTED, playback);
+  return playback;
 }
 
-function clearQueue() {
-  state.queue.length = 0;
+function initializeMaestro() {
+  if (initialized) return getState();
+  initialized = true;
+  fixtureManager.initializeDefaultFixtures();
 
-  sceneBus.emit(MAESTRO_EVENTS.QUEUE_UPDATED, {
-    queue: [],
-  });
+  const api = {
+    sceneBus,
+    getState,
+    selectSource,
+    navigate,
+    back,
+    queueMedia,
+    playMedia,
+    mute,
+    unmute,
+    sourceManager,
+    queueManager,
+    fixtureManager,
+    displayRouter,
+    navigationStack,
+  };
+
+  window.MAESTRO = api;
+  sceneBus.emit(MAESTRO_EVENTS.READY, getState());
+  console.info('[MAESTRO] Orchestrator ready. Use window.MAESTRO.getState() for current state.');
+  return getState();
 }
 
-function getQueue() {
-  return [...state.queue];
-}
+// Initialize once the browser reaches module execution. This is intentionally non-invasive:
+// no DOM is required, and existing one-off systems continue to work while they migrate to triggers.
+initializeMaestro();
 
-export const maestro = Object.freeze({
-  initialize,
-
-  getState,
-
-  setSource,
-
-  setMuted,
-
-  setVolume,
-
-  setNowPlaying,
-
-  setQueue,
-  addToQueue,
-  removeFromQueue,
-  clearQueue,
-  getQueue,
-});
-
-export default maestro;
+export { initializeMaestro };
