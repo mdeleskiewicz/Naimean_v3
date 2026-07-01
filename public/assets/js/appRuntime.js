@@ -19,12 +19,14 @@ import { bootstrapScene } from './systems/scene.js';
 export function bootstrapApp() {
   try {
     window.performance?.mark?.('naimean-js-boot-start');
+
     initDomRefs();
     observePerformanceMetrics();
     bootstrapScene();
+
+    console.info('[Naimean] App runtime bootstrapped.');
   } catch (error) {
     console.error('[Naimean] App bootstrap failed:', error);
-    // Let the outer error handler in index.js handle scene visibility
     throw error;
   }
 }
